@@ -1,0 +1,13 @@
+/src/kaspaweb/**
+
+/build/**
+/coverage/**
+/docs/*
+!/docs/*.js
+!/docs/tools/
+/jsdoc/**
+/templates/**
+/tests/bench/**
+/tests/fixtures/**
+/tests/performance/**
+/tmp/**
