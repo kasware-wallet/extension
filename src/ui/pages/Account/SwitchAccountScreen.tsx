@@ -4,7 +4,7 @@ import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { Account, IScannedGroup } from '@/shared/types';
 import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
-import { useAccountBalance, useCurrentAccount, useFetchBalancesCallback } from '@/ui/state/accounts/hooks';
+import { useAccountBalance, useCurrentAccount, useFetchBalancesCallback, useReloadAccounts } from '@/ui/state/accounts/hooks';
 import { accountActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
@@ -146,6 +146,7 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
 export default function SwitchAccountScreen() {
   const navigate = useNavigate();
   const keyring = useCurrentKeyring();
+  const reloadAccounts = useReloadAccounts();
   const wallet = useWallet();
   const tools = useTools();
   const fetchBalances = useFetchBalancesCallback();
@@ -167,6 +168,7 @@ export default function SwitchAccountScreen() {
     if (result == null || result == undefined) {
       tools.showTip('no more address with balance');
     } else {
+      reloadAccounts()
       const count = result.address_arr.length;
       tools.toastSuccess(`found ${count} addresses`);
     }

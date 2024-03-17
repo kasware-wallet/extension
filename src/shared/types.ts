@@ -192,6 +192,17 @@ export interface IKaspaUTXO {
   // }[];
 }
 
+export interface IKaspaUTXOWithoutBigint {
+  address: string;
+  outpoint: { index: number; transactionId: string };
+  utxoEntry: {
+    amount: string;
+    blockDaaScore: string;
+    isCoinbase: boolean;
+    scriptPublicKey: string;
+  };
+}
+
 export interface UTXO {
   txid: string;
   vout: number;

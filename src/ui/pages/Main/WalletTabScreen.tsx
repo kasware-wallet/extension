@@ -21,10 +21,11 @@ import {
   useWalletConfig
 } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
-import { handleTransactions, useWallet } from '@/ui/utils';
+import { handleTransactions, satoshisToAmount, shortAddress, useWallet } from '@/ui/utils';
 
 import { accountActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
+import { useFetchUtxosCallback, useUtxos } from '@/ui/state/transactions/hooks';
 import { useNavigate } from '../MainRoute';
 
 const $noBreakStyle: CSSProperties = {
@@ -166,6 +167,11 @@ export default function WalletTabScreen() {
       key: 'activity',
       label: 'Activity',
       children: <ActivityTab transactionInfos={transactionInfos} />
+    },
+    {
+      key: 'utxos-list',
+      label: 'UTXO',
+      children: <UTXOTab />
     }
   ];
 
@@ -351,6 +357,42 @@ function ActivityTab({ transactionInfos }: { transactionInfos: ITransactionInfo[
                   <Text text={new Date(e.block_time).toLocaleString()} preset="sub" />
                 </Row>
               </Column>
+            </Row>
+          </Card>
+        ))}
+      </div>
+    );
+  } else {
+    return (
+      <Row justifyCenter>
+        <Text text="No data" mt="md" />
+      </Row>
+    );
+  }
+}
+
+function UTXOTab() {
+  const utxos = useUtxos();
+  const currentAccount = useCurrentAccount();
+  const fetchUtxos = useFetchUtxosCallback();
+  useEffect(() => {
+    fetchUtxos();
+  }, [currentAccount]);
+  const navigate = useNavigate();
+  if (utxos && utxos.length > 0) {
+    return (
+      <div>
+        {utxos.map((e) => (
+          <Card
+            key={e.outpoint.transactionId}
+            classname="card-select"
+            mt="md"
+            onClick={(event) => {
+              navigate('UtxoDetailScreen', { utxoDetail: e });
+            }}>
+            <Row full justifyBetween mt="sm">
+              <Text text={`${satoshisToAmount(Number(e.utxoEntry.amount))} kas`} />
+              <Text text={shortAddress(e.outpoint.transactionId)} preset="sub" />
             </Row>
           </Card>
         ))}

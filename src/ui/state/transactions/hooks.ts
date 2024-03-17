@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react';
 
-import { IResultPsbtHex, RawTxInfo, ToAddressInfo } from '@/shared/types';
+import { IKaspaUTXOWithoutBigint, IResultPsbtHex, RawTxInfo, ToAddressInfo } from '@/shared/types';
 import { useTools } from '@/ui/components/ActionComponent';
-import { satoshisToAmount, satoshisToBTC, sleep, useWallet } from '@/ui/utils';
+import { satoshisToAmount, sleep, useWallet } from '@/ui/utils';
 
 import { AppState } from '..';
 import { useAccountAddress, useCurrentAccount } from '../accounts/hooks';
@@ -11,7 +11,7 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { transactionsActions } from './reducer';
 
 export function useTransactionsState(): AppState['transactions'] {
-  return useAppSelector(state => state.transactions);
+  return useAppSelector((state) => state.transactions);
 }
 
 export function useBitcoinTx() {
@@ -31,7 +31,7 @@ export function usePrepareSendBTCCallback() {
       // toAmount is satoshis unit
       toAmount,
       feeRate,
-      enableRBF,
+      enableRBF
     }: {
       toAddressInfo: ToAddressInfo;
       toAmount: number;
@@ -42,12 +42,13 @@ export function usePrepareSendBTCCallback() {
       if (_utxos.length === 0) {
         _utxos = await fetchUtxos();
       }
-      const safeBalance = _utxos.filter(v => v.inscriptions.length == 0).reduce((pre, cur) => pre + cur.satoshis, 0);
+      // const safeBalance = _utxos.filter(v => v?.inscriptions.length == 0).reduce((pre, cur) => pre + cur?.satoshis, 0);
+      const safeBalance = _utxos.reduce((pre, cur) => pre + Number(cur?.utxoEntry.amount), 0);
       if (safeBalance < toAmount) {
         throw new Error(
           `Insufficient balance. Non-Inscription balance(${satoshisToAmount(
-            safeBalance,
-          )} KAS) is lower than ${satoshisToAmount(toAmount)} KAS `,
+            safeBalance
+          )} KAS) is lower than ${satoshisToAmount(toAmount)} KAS `
         );
       }
 
@@ -62,7 +63,7 @@ export function usePrepareSendBTCCallback() {
           to: toAddressInfo.address,
           btcUtxos: _utxos,
           enableRBF,
-          feeRate,
+          feeRate
         });
       } else {
         psbtHex = await wallet.sendBTC({
@@ -70,12 +71,12 @@ export function usePrepareSendBTCCallback() {
           amount: toAmount,
           btcUtxos: _utxos,
           enableRBF,
-          feeRate,
+          feeRate
         });
         // psbtHex = result.psbtHex;
         // fee = result.fee;
       }
-      const result:IResultPsbtHex = JSON.parse(psbtHex);
+      const result: IResultPsbtHex = JSON.parse(psbtHex);
       const rawtx = psbtHex;
       const fee = result.fee;
       // const psbt = bitcoin.Psbt.fromHex(psbtHex);
@@ -91,18 +92,18 @@ export function usePrepareSendBTCCallback() {
           rawtx,
           psbtHex,
           fromAddress,
-          feeRate,
-        }),
+          feeRate
+        })
       );
       const rawTxInfo: RawTxInfo = {
         psbtHex,
         rawtx,
         toAddressInfo,
-        fee,
+        fee
       };
       return rawTxInfo;
     },
-    [dispatch, wallet, fromAddress, utxos, fetchUtxos],
+    [dispatch, wallet, fromAddress, utxos, fetchUtxos]
   );
 }
 
@@ -115,7 +116,7 @@ export function usePushBitcoinTxCallback() {
       const ret = {
         success: false,
         txid: '',
-        error: '',
+        error: ''
       };
       try {
         tools.showLoading(true);
@@ -140,7 +141,7 @@ export function usePushBitcoinTxCallback() {
 
       return ret;
     },
-    [dispatch, wallet],
+    [dispatch, wallet]
   );
 }
 
@@ -161,7 +162,7 @@ export function usePrepareSendOrdinalsInscriptionCallback() {
       inscriptionId,
       feeRate,
       outputValue,
-      enableRBF,
+      enableRBF
     }: {
       toAddressInfo: ToAddressInfo;
       inscriptionId: string;
@@ -180,7 +181,7 @@ export function usePrepareSendOrdinalsInscriptionCallback() {
         feeRate,
         outputValue,
         enableRBF,
-        btcUtxos,
+        btcUtxos
       });
       // const psbt = bitcoin.Psbt.fromHex(psbtHex);
       // const rawtx = psbt.extractTransaction().toHex();
@@ -192,17 +193,17 @@ export function usePrepareSendOrdinalsInscriptionCallback() {
           fromAddress,
           // inscription,
           feeRate,
-          outputValue,
-        }),
+          outputValue
+        })
       );
       const rawTxInfo: RawTxInfo = {
         psbtHex,
         rawtx,
-        toAddressInfo,
+        toAddressInfo
       };
       return rawTxInfo;
     },
-    [dispatch, wallet, fromAddress, utxos],
+    [dispatch, wallet, fromAddress, utxos]
   );
 }
 
@@ -217,7 +218,7 @@ export function usePrepareSendOrdinalsInscriptionsCallback() {
       toAddressInfo,
       inscriptionIds,
       feeRate,
-      enableRBF,
+      enableRBF
     }: {
       toAddressInfo: ToAddressInfo;
       inscriptionIds: string[];
@@ -238,7 +239,7 @@ export function usePrepareSendOrdinalsInscriptionsCallback() {
         inscriptionIds,
         feeRate,
         enableRBF,
-        btcUtxos,
+        btcUtxos
       });
       // const psbt = bitcoin.Psbt.fromHex(psbtHex);
       // const rawtx = psbt.extractTransaction().toHex();
@@ -248,17 +249,17 @@ export function usePrepareSendOrdinalsInscriptionsCallback() {
           rawtx,
           psbtHex,
           fromAddress,
-          feeRate,
-        }),
+          feeRate
+        })
       );
       const rawTxInfo: RawTxInfo = {
         psbtHex,
         rawtx,
-        toAddressInfo,
+        toAddressInfo
       };
       return rawTxInfo;
     },
-    [dispatch, wallet, fromAddress, utxos],
+    [dispatch, wallet, fromAddress, utxos]
   );
 }
 
@@ -273,7 +274,7 @@ export function useCreateSplitTxCallback() {
       inscriptionId,
       feeRate,
       outputValue,
-      enableRBF,
+      enableRBF
     }: {
       inscriptionId: string;
       feeRate: number;
@@ -290,7 +291,7 @@ export function useCreateSplitTxCallback() {
         feeRate,
         outputValue,
         enableRBF,
-        btcUtxos,
+        btcUtxos
       });
       // const psbt = bitcoin.Psbt.fromHex(psbtHex);
       // const rawtx = psbt.extractTransaction().toHex();
@@ -302,19 +303,19 @@ export function useCreateSplitTxCallback() {
           fromAddress,
           // inscription,
           feeRate,
-          outputValue,
-        }),
+          outputValue
+        })
       );
       const rawTxInfo: RawTxInfo = {
         psbtHex,
         rawtx,
         toAddressInfo: {
-          address: fromAddress,
-        },
+          address: fromAddress
+        }
       };
       return { rawTxInfo, splitedCount };
     },
-    [dispatch, wallet, fromAddress, utxos],
+    [dispatch, wallet, fromAddress, utxos]
   );
 }
 
@@ -327,7 +328,7 @@ export function usePushOrdinalsTxCallback() {
       const ret = {
         success: false,
         txid: '',
-        error: '',
+        error: ''
       };
       try {
         tools.showLoading(true);
@@ -354,7 +355,7 @@ export function usePushOrdinalsTxCallback() {
 
       return ret;
     },
-    [dispatch, wallet],
+    [dispatch, wallet]
   );
 }
 
@@ -391,17 +392,17 @@ export function useFetchAssetUtxosAtomicalsFTCallback() {
       dispatch(transactionsActions.setAssetUtxosAtomicalsFT(data));
       return data;
     },
-    [wallet, account],
+    [wallet, account]
   );
 }
 
 export function useSafeBalance() {
-  const utxos = useUtxos();
+  const utxos: IKaspaUTXOWithoutBigint[] = useUtxos();
   return useMemo(() => {
-    // const satoshis = utxos.filter((v) => v.inscriptions.length === 0).reduce((pre, cur) => pre + cur.satoshis, 0);
-    // return satoshisToBTC(satoshis);
-    const satoshis = utxos.reduce((pre, cur) => pre + cur.satoshis, 0);
-    return satoshisToBTC(satoshis);
+    const sompi = utxos.reduce((agg, curr) => {
+      return Number(curr.utxoEntry.amount) + agg;
+    }, 0);
+    return satoshisToAmount(sompi);
   }, [utxos]);
 }
 
@@ -416,7 +417,7 @@ export function usePrepareSendAtomicalsNFTCallback() {
       toAddressInfo,
       atomicalId,
       feeRate,
-      enableRBF,
+      enableRBF
     }: {
       toAddressInfo: ToAddressInfo;
       atomicalId: string;
@@ -433,7 +434,7 @@ export function usePrepareSendAtomicalsNFTCallback() {
         atomicalId,
         feeRate,
         enableRBF,
-        btcUtxos,
+        btcUtxos
       });
       // const psbt = bitcoin.Psbt.fromHex(psbtHex);
       // const rawtx = psbt.extractTransaction().toHex();
@@ -444,17 +445,17 @@ export function usePrepareSendAtomicalsNFTCallback() {
           psbtHex,
           fromAddress,
           // inscription,
-          feeRate,
-        }),
+          feeRate
+        })
       );
       const rawTxInfo: RawTxInfo = {
         psbtHex,
         rawtx,
-        toAddressInfo,
+        toAddressInfo
       };
       return rawTxInfo;
     },
-    [dispatch, wallet, fromAddress, utxos],
+    [dispatch, wallet, fromAddress, utxos]
   );
 }
 
@@ -467,7 +468,7 @@ export function usePushAtomicalsTxCallback() {
       const ret = {
         success: false,
         txid: '',
-        error: '',
+        error: ''
       };
       try {
         tools.showLoading(true);
@@ -494,7 +495,7 @@ export function usePushAtomicalsTxCallback() {
 
       return ret;
     },
-    [dispatch, wallet],
+    [dispatch, wallet]
   );
 }
 
@@ -512,7 +513,7 @@ export function usePrepareSendArc20Callback() {
       ticker,
       amount,
       feeRate,
-      enableRBF,
+      enableRBF
     }: {
       toAddressInfo: ToAddressInfo;
       ticker: string;
@@ -533,7 +534,7 @@ export function usePrepareSendArc20Callback() {
       const availableAmount = assetUtxos.reduce((pre, cur) => pre + cur.satoshis, 0);
       if (availableAmount < amount) {
         throw new Error(
-          `Insufficient balance. Available balance (${availableAmount} ${ticker}) is lower than sending amount(${amount} ${ticker})`,
+          `Insufficient balance. Available balance (${availableAmount} ${ticker}) is lower than sending amount(${amount} ${ticker})`
         );
       }
       const psbtHex = await wallet.sendAtomicalsFT({
@@ -543,7 +544,7 @@ export function usePrepareSendArc20Callback() {
         feeRate,
         enableRBF,
         btcUtxos,
-        assetUtxos,
+        assetUtxos
       });
       // const psbt = bitcoin.Psbt.fromHex(psbtHex);
       // const rawtx = psbt.extractTransaction().toHex();
@@ -554,17 +555,17 @@ export function usePrepareSendArc20Callback() {
           psbtHex,
           fromAddress,
           feeRate,
-          sendArc20Amount: amount,
-        }),
+          sendArc20Amount: amount
+        })
       );
       const rawTxInfo: RawTxInfo = {
         psbtHex,
         rawtx,
-        toAddressInfo,
+        toAddressInfo
       };
       return rawTxInfo;
     },
-    [dispatch, wallet, fromAddress, utxos, assetUtxosAtomicalsFT],
+    [dispatch, wallet, fromAddress, utxos, assetUtxosAtomicalsFT]
   );
 }
 

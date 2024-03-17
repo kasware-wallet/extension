@@ -25,6 +25,7 @@ import {
   Account,
   AddressType,
   BitcoinBalance,
+  IKaspaUTXOWithoutBigint,
   IResultPsbtHex,
   IScannedGroup,
   NetworkType,
@@ -33,7 +34,7 @@ import {
   UTXO,
   WalletKeyring
 } from '@/shared/types';
-import { checkAddressFlag } from '@/shared/utils';
+import { checkAddressFlag, getKaspaUTXOWithoutBigint, getKaspaUTXOs } from '@/shared/utils';
 // import i18n from '@pages/background/service/i18n';
 import { DisplayedKeyring, Keyring } from '@/background/service/keyring';
 import { Address, Generator } from 'kaspa-wasm';
@@ -93,7 +94,7 @@ export class WalletController extends BaseController {
     await this.openapi.disconnectRpc();
   };
   connectRpc = async () => {
-    await this.openapi.handleRpcConnect();
+    await this.openapi.handleRpcConnect('connectRPC');
   };
   subscribeUtxosChanged = async () => {
     const currentAccount = preferenceService.getCurrentAccount();
@@ -443,10 +444,6 @@ export class WalletController extends BaseController {
         this.setAccountAlianName(account, `Discovery ${account.index}`);
       }
     });
-    const currentKeyring = await this.getCurrentKeyring();
-    if (!currentKeyring) throw new Error('no current keyring');
-    keyring = currentKeyring;
-    this.changeKeyring(keyring, keyring.accounts[0].index);
     return group;
   };
 
@@ -864,26 +861,7 @@ export class WalletController extends BaseController {
     //   utxos = utxos.filter((v) => (v as any).height !== 4194303);
     // }
 
-    const btcUtxos: UTXO[] = utxos.map((v) => {
-      return {
-        // txid: v.txid,
-        // vout: v.vout,
-        // satoshis: v.satoshis,
-        // scriptPk: v.scriptPk,
-        // addressType: v.addressType,
-        // pubkey: account.pubkey,
-        // inscriptions: v.inscriptions,
-        // atomicals: v.atomicals
-        txid: v.outpoint.transactionId,
-        vout: Number(v.utxoEntry.blockDaaScore),
-        satoshis: Number(v.utxoEntry.amount),
-        scriptPk: v.utxoEntry.scriptPublicKey,
-        addressType: AddressType.KASPA_44_111111,
-        pubkey: account.pubkey,
-        inscriptions: [],
-        atomicals: []
-      } as UTXO;
-    });
+    const btcUtxos = getKaspaUTXOWithoutBigint(utxos);
     return btcUtxos;
   };
   getKASUtxos = async () => {
@@ -924,35 +902,31 @@ export class WalletController extends BaseController {
     // treat feeRate as priorityFee, kas unit.
     feeRate: number;
     enableRBF: boolean;
-    btcUtxos?: any[];
+    btcUtxos?: IKaspaUTXOWithoutBigint[];
   }) => {
     const account = preferenceService.getCurrentAccount();
     if (!account) throw new Error('no current account');
     if (!btcUtxos) {
       btcUtxos = await this.getBTCUtxos();
     }
-
     if (btcUtxos.length == 0) {
-      throw new Error('Insufficient balance.');
-    }
-    const kasUtxos = await openapiService.getKASUtxos(account.address);
-    if (kasUtxos.length == 0) {
       throw new Error('Insufficient balance.');
     }
     const sourceAddress = account.address;
     const destinationAddress = to;
-    const entries = await openapiService.getKASUtxos(sourceAddress);
-    if (!entries.length) {
-      throw new Error(`No UTXOs found for address ${sourceAddress}`);
-    }
-    entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
+    // const entries = await openapiService.getKASUtxos(sourceAddress);
+    // if (!entries.length) {
+    //   throw new Error(`No UTXOs found for address ${sourceAddress}`);
+    // }
+    const entries = getKaspaUTXOs(btcUtxos);
+    // entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
     const moneySompi = amount;
     // 1. create
     const generator = new Generator({
       // utxoEntries: entries,
       entries,
       outputs: [[destinationAddress, moneySompi]],
-      priorityFee: 10000n,
+      priorityFee: 0n,
       changeAddress: sourceAddress.toString()
       // sigOpCount,
       // minimumSignatures,
@@ -974,7 +948,7 @@ export class WalletController extends BaseController {
     to: string;
     feeRate: number;
     enableRBF: boolean;
-    btcUtxos?: any[];
+    btcUtxos?: IKaspaUTXOWithoutBigint[];
   }) => {
     const account = preferenceService.getCurrentAccount();
     if (!account) throw new Error('no current account');
@@ -988,21 +962,27 @@ export class WalletController extends BaseController {
     if (btcUtxos.length == 0) {
       throw new Error('Insufficient balance.');
     }
-
-    // const { psbt, toSignInputs } = await txHelpers.sendAllBTC({
-    //   btcUtxos: btcUtxos,
-    //   toAddress: to,
-    //   networkType,
-    //   feeRate,
-    //   enableRBF
-    // });
-    const psbt = 'psbt';
-    const toSignInputs = [];
-
-    this.setPsbtSignNonSegwitEnable(psbt, true);
-    await this.signPsbt(psbt, toSignInputs, true);
-    this.setPsbtSignNonSegwitEnable(psbt, false);
-    return psbt.toHex();
+    const sourceAddress = account.address;
+    const destinationAddress = to;
+    const entries = getKaspaUTXOs(btcUtxos);
+    const total = entries.reduce((agg, curr) => {
+      return curr.utxoEntry.amount + agg;
+    }, 0n);
+    const moneySompi = Number(total - BigInt(entries.length) * 5000n);
+    const generator = new Generator({
+      entries,
+      outputs: [[destinationAddress, moneySompi]],
+      priorityFee: 0n,
+      changeAddress: sourceAddress.toString()
+    });
+    try {
+      const estimate = await generator.estimate();
+      const sompiFee = Number(estimate.fees);
+      const resultJson = { to, amountSompi: moneySompi - sompiFee * feeRate, feeRate, fee: sompiFee };
+      return JSON.stringify(resultJson);
+    } catch (e) {
+      throw new Error(e);
+    }
   };
 
   sendOrdinalsInscription = async ({
@@ -1179,8 +1159,7 @@ export class WalletController extends BaseController {
     const result: IResultPsbtHex = JSON.parse(rawtx);
     const toAddress = result.to;
     const inputAmountSompi = result.amountSompi;
-    // unit of priorityFeeSompi is kas
-    const priorityFeeSompi = result.feeRate * inputAmountSompi;
+    const priorityFeeSompi = result.feeRate * result.fee;
     const account = await this.getCurrentAccount();
     if (!account) throw new Error('no current account');
     const keyring = await this.getCurrentKeyring();
@@ -1198,32 +1177,31 @@ export class WalletController extends BaseController {
       const minimumSignatures = 1;
       const payload = 'test';
       const money = Number(inputAmountSompi);
-      const priorityFee = priorityFeeSompi;
+      const priorityFee = BigInt(priorityFeeSompi);
       // 1. create
-      const generator = new Generator({
-        // utxoEntries: entries,
-        entries,
-        outputs: [[destinationAddress.toString(), money]],
-        priorityFee,
-        changeAddress: sourceAddress.toString()
-        // sigOpCount,
-        // minimumSignatures,
-        // payload,
-      });
-      const pending = await generator.next();
-      const estimate = await generator.estimate();
-      const finalId = estimate.finalTransactionId;
-      const fee = estimate.fees;
-      const finalAmount = estimate.finalAmount;
-      // while ((pending = await generator.next())) {
-      // sign
-      const publicKey = account.pubkey;
-      const index = account.index;
-      const toSignInputs: ToSignInput[] = [{ index, publicKey }];
-      const pending2 = await keyringService.signTransaction(_keyring, pending, toSignInputs);
-      // submit
       try {
-        const txid = await pending2.submit(rpc);
+        const generator = new Generator({
+          // utxoEntries: entries,
+          entries,
+          outputs: [[destinationAddress.toString(), money]],
+          priorityFee,
+          changeAddress: sourceAddress.toString()
+          // sigOpCount,
+          // minimumSignatures,
+          // payload,
+        });
+        const pending = await generator.next();
+        const estimate = await generator.estimate();
+        // const finalId = estimate.finalTransactionId;
+        // const fee = estimate.fees;
+        // const finalAmount = estimate.finalAmount;
+        // sign
+        const publicKey = account.pubkey;
+        const index = account.index as number;
+        const toSignInputs: ToSignInput[] = [{ index, publicKey }];
+        const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
+        // submit
+        const txid = await preSubmitPending.submit(rpc);
         return txid;
       } catch (e) {
         throw new Error(e);

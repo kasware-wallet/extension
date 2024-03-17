@@ -240,7 +240,7 @@ export default function TxCreateScreen() {
           <Input
             preset="amount"
             placeholder={'Amount'}
-            defaultValue={inputAmount}
+            // defaultValue={inputAmount}
             value={inputAmount}
             onAmountInputChange={(amount) => {
               if (autoAdjust == true) {
@@ -325,11 +325,11 @@ function RecentTab({ handleAddrInput }) {
               <Column full>
                 <Text text={`${e.mode} on ${new Date(e.block_time).toLocaleString()}`} />
                 {(e.relatedAddresses as string[]).length > 0 &&
-                  e.relatedAddresses.map((e) => {
+                  e.relatedAddresses.map((e, index) => {
                     return (
                       <Column
                         classname="recent-account-select"
-                        key={e}
+                        key={index}
                         onClick={async () => {
                           handleAddrInput(e);
                           copyToClipboard(e).then(() => {

@@ -159,7 +159,8 @@ export class OpenApiService {
   };
   // token is address
   setClientAddress = async (token: string, flag: number) => {
-    await this.handleRpcConnect();
+    if (this.rpc == null || this.rpc == undefined || this.rpc.open == false) return;
+    await this.handleRpcConnect('setClientAddress');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
       console.error('Please wait for the node to sync');
@@ -347,7 +348,8 @@ export class OpenApiService {
     await this.rpc.disconnect();
     this.rpc = null as unknown as RpcClient;
   }
-  async handleRpcConnect() {
+  async handleRpcConnect(source?: string) {
+    // console.log('source', source);
     if (this.rpc != null && this.rpc != undefined && this.rpc.open == true && this.rpc.url == this.store.rpchost) {
       return;
     }
@@ -369,7 +371,7 @@ export class OpenApiService {
     // const info = await this.rpc.getServerInfo();
   }
   async getAddressBalanceOfKas(address: string) {
-    await this.handleRpcConnect();
+    await this.handleRpcConnect('getAddressBalanceOfKas');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
       console.error('Please wait for the node to sync');
@@ -422,7 +424,7 @@ export class OpenApiService {
     // groups.forEach(async (group) => {
     const group = groups[0];
     const addresses = group.address_arr;
-    await this.handleRpcConnect();
+    await this.handleRpcConnect('findGroupAssets');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
       console.error('Please wait for the node to sync');
@@ -469,17 +471,17 @@ export class OpenApiService {
     // return this.httpGet('/address/btc-utxo', {
     //   address,
     // });
-    await this.handleRpcConnect();
+    await this.handleRpcConnect('getBTCUtxos');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
       console.error('Please wait for the node to sync');
       this.rpc.disconnect();
-      return;
+      return [];
     }
     const utxos = await this.rpc.getUtxosByAddresses([address]);
     if (utxos.length === 0) {
       console.info('Send some kaspa to', address, 'before proceeding with the demo');
-      return;
+      return [];
     }
     return utxos;
   }
@@ -488,7 +490,7 @@ export class OpenApiService {
     // return this.httpGet('/address/btc-utxo', {
     //   address,
     // });
-    await this.handleRpcConnect();
+    await this.handleRpcConnect('getKASUtxos');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
       console.error('Please wait for the node to sync');

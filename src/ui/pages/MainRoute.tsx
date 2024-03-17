@@ -57,6 +57,7 @@ import TxCreateScreen from './Wallet/TxCreateScreen';
 import TxDetailScreen from './Wallet/TxDetailScreen';
 import TxFailScreen from './Wallet/TxFailScreen';
 import TxSuccessScreen from './Wallet/TxSuccessScreen';
+import UtxoDetailScreen from './Wallet/UtxoDetailScreen';
 import './index.module.less';
 
 const routes = {
@@ -187,6 +188,10 @@ const routes = {
   TxDetailScreen: {
     path: '/wallet/txdetail',
     element: <TxDetailScreen />
+  },
+  UtxoDetailScreen: {
+    path: '/wallet/utxodetail',
+    element: <UtxoDetailScreen />
   },
   ApprovalScreen: {
     path: '/approval',

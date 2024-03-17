@@ -1,4 +1,4 @@
-import { Inscription } from '@/shared/types';
+import { IKaspaUTXOWithoutBigint, Inscription } from '@/shared/types';
 import { createSlice } from '@reduxjs/toolkit';
 
 import { updateVersion } from '../global/actions';
@@ -56,7 +56,7 @@ export interface TransactionsState {
   bitcoinTx: BitcoinTx;
   ordinalsTx: OrdinalsTx;
   atomicalsTx: AtomicalsTx;
-  utxos: any[];
+  utxos: IKaspaUTXOWithoutBigint[];
   kasUtxos:string;
   assetUtxos_atomicals_ft: any[];
   assetUtxos_atomicals_nft: any[];

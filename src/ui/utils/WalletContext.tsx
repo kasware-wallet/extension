@@ -15,6 +15,7 @@ import {
   BitcoinBalance,
   DecodedPsbt,
   FeeSummary,
+  IKaspaUTXOWithoutBigint,
   InscribeOrder,
   Inscription,
   InscriptionSummary,
@@ -180,7 +181,7 @@ export interface WalletController {
 
   getInscriptionSummary(): Promise<InscriptionSummary>;
   getAppSummary(): Promise<AppSummary>;
-  getBTCUtxos(): Promise<UTXO[]>;
+  getBTCUtxos(): Promise<IKaspaUTXOWithoutBigint[]>;
   getKASUtxos(): Promise<string>;
   getAssetUtxosAtomicalsFT(ticker: string): Promise<any[]>;
   getAssetUtxosAtomicalsNFT(atomicalId: string): Promise<any[]>;
