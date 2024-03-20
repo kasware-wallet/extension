@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import randomstring from 'randomstring';
 
 import { createPersistStore } from '@/background/utils';
@@ -15,7 +16,6 @@ import {
   AddressTokenSummary,
   AddressType,
   AppSummary,
-  Arc20Balance,
   BitcoinBalance,
   DecodedPsbt,
   FeeSummary,
@@ -26,14 +26,12 @@ import {
   Inscription,
   InscriptionSummary,
   NetworkType,
-  TokenBalance,
   TokenTransfer,
   UTXO,
-  UTXO_Detail,
   VersionDetail,
   WalletConfig
 } from '@/shared/types';
-import { Encoding, PrivateKey, RpcClient } from 'kaspa-wasm';
+import { Encoding, RpcClient } from 'kaspa-wasm';
 
 import eventBus from '@/shared/eventBus';
 import { satoshisToAmount } from '@/ui/utils';
@@ -46,10 +44,11 @@ interface OpenApiStore {
   config?: WalletConfig;
 }
 
-const maxRPS = 100;
-
+// eslint-disable-next-line no-unused-vars
 enum API_STATUS {
+  // eslint-disable-next-line no-unused-vars
   FAILED = -1,
+  // eslint-disable-next-line no-unused-vars
   SUCCESS = 0
 }
 
@@ -57,9 +56,9 @@ export class OpenApiService {
   store!: OpenApiStore;
   clientAddress = '';
   addressFlag = 0;
-  encoding: number;
-  networkId: number;
-  rpc: RpcClient;
+  encoding!: number;
+  networkId!: number;
+  rpc!: RpcClient;
 
   setHost = async (host: string) => {
     this.store.host = host;
@@ -141,9 +140,6 @@ export class OpenApiService {
     };
     getConfig();
 
-    // this.rpc = await this.rpc_connect();
-    // this.networkId = NetworkType.Devnet;
-    // this.store.rpchost = OPENAPI_RPC_DEVNET;
   };
 
   rpc_connect = async () => {
@@ -276,6 +272,7 @@ export class OpenApiService {
   }
 
   // it's used for oridnals. ---from shawn
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   async getAddressSummary(address: string): Promise<AddressSummary> {
     // return this.httpGet('/address/summary', {
     //   address
@@ -348,6 +345,7 @@ export class OpenApiService {
     await this.rpc.disconnect();
     this.rpc = null as unknown as RpcClient;
   }
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   async handleRpcConnect(source?: string) {
     // console.log('source', source);
     if (this.rpc != null && this.rpc != undefined && this.rpc.open == true && this.rpc.url == this.store.rpchost) {
@@ -495,7 +493,7 @@ export class OpenApiService {
     if (!isSynced) {
       console.error('Please wait for the node to sync');
       this.rpc.disconnect();
-      return;
+      return [];
     }
     const utxos = await this.rpc.getUtxosByAddresses([address]);
     return utxos;
@@ -503,12 +501,6 @@ export class OpenApiService {
 
   async getInscriptionUtxo(inscriptionId: string): Promise<UTXO> {
     return this.httpGet('/inscription/utxo', {
-      inscriptionId
-    });
-  }
-
-  async getInscriptionUtxoDetail(inscriptionId: string): Promise<UTXO_Detail> {
-    return this.httpGet('/inscription/utxo-detail', {
       inscriptionId
     });
   }
@@ -561,22 +553,22 @@ export class OpenApiService {
     return Promise.resolve(appSummary);
   }
   // 3. submit a transaction to node
-  async pushTx(rawTxInfo: RawTxInfo, inputAmount: number): Promise<string> {
-    // return this.httpPost('/tx/broadcast', {
-    //   rawtx,
-    // });
-    const privateKey_str = 'ee9463c1a7bced9fb055ed49eb484ab6543ddcc407ea11d487e3687604036f15';
-    const privateKey = new PrivateKey(privateKey_str);
-    const generator = psbtHex;
-    let pending;
-    const a = await generator.next();
-    while ((pending = await generator.next())) {
-      await pending.sign([privateKey]);
-      const txid = await pending.submit(rpc);
-    }
+  // async pushTx(rawTxInfo: RawTxInfo, inputAmount: number): Promise<string> {
+  //   // return this.httpPost('/tx/broadcast', {
+  //   //   rawtx,
+  //   // });
+  //   const privateKey_str = 'ee9463c1a7bced9fb055ed49eb484ab6543ddcc407ea11d487e3687604036f15';
+  //   const privateKey = new PrivateKey(privateKey_str);
+  //   const generator = psbtHex;
+  //   let pending;
+  //   const a = await generator.next();
+  //   while ((pending = await generator.next())) {
+  //     await pending.sign([privateKey]);
+  //     const txid = await pending.submit(rpc);
+  //   }
 
-    return txid;
-  }
+  //   return txid;
+  // }
 
   async getFeeSummary(): Promise<FeeSummary> {
     // return this.httpGet('/default/fee-summary', {});
@@ -611,10 +603,6 @@ export class OpenApiService {
 
   async getInscribeResult(orderId: string): Promise<TokenTransfer> {
     return this.httpGet('/brc20/order-result', { orderId });
-  }
-
-  async getBRC20List(address: string, cursor: number, size: number): Promise<{ list: TokenBalance[]; total: number }> {
-    return this.httpGet('/brc20/list', { address, cursor, size });
   }
 
   async getAddressTokenSummary(address: string, ticker: string): Promise<AddressTokenSummary> {
@@ -688,18 +676,6 @@ export class OpenApiService {
     });
   }
 
-  async getOrdinalsInscriptions(
-    address: string,
-    cursor: number,
-    size: number
-  ): Promise<{ list: Inscription[]; total: number }> {
-    return this.httpGet('/ordinals/inscriptions', {
-      address,
-      cursor,
-      size
-    });
-  }
-
   async getAtomicalsNFT(
     address: string,
     cursor: number,
@@ -710,20 +686,6 @@ export class OpenApiService {
       cursor,
       size
     });
-  }
-
-  async getAtomicalsUtxo(atomicalId: string): Promise<UTXO> {
-    return this.httpGet('/atomicals/utxo', {
-      atomicalId
-    });
-  }
-
-  async getArc20BalanceList(
-    address: string,
-    cursor: number,
-    size: number
-  ): Promise<{ list: Arc20Balance[]; total: number }> {
-    return this.httpGet('/arc20/balance-list', { address, cursor, size });
   }
 
   async getArc20Utxos(address: string, ticker: string): Promise<UTXO[]> {

@@ -91,7 +91,9 @@ class ContactBook {
   removeAlias = (address: string) => {
     const key = address.toLowerCase();
     if (!this.store[key]) return;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (this.store[key]!.isContact) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.store[key]! = Object.assign({}, this.store[key], {
         isAlias: false
       });
@@ -106,6 +108,7 @@ class ContactBook {
       .reduce(
         (res, item) => ({
           ...res,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           [item!.address.toLowerCase()]: item
         }),
         {}

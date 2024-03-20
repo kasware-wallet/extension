@@ -1,6 +1,6 @@
 {
   "name": "kasware-extension",
-  "version": "0.2.8",
+  "version": "0.2.8.4",
   "private": true,
   "homepage": "https://github.com/kasware-wallet/extension#readme",
   "bugs": {
@@ -133,7 +133,6 @@
     "style-loader": "^3.3.1",
     "style-resources-loader": "1.5.0",
     "tailwindcss": "^3.0.2",
-    "terser-webpack-plugin": "^5.2.5",
     "ts-import-plugin": "1.6.7",
     "ts-loader": "9.1.1",
     "ts-toolbelt": "^9.6.0",
@@ -239,6 +238,7 @@
     "@typescript-eslint/parser": "^5.26.0",
     "autoprefixer": "^10.4.7",
     "babel-plugin-import": "^1.13.5",
+    "esbuild-loader": "^4.1.0",
     "eslint": "^8.16.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.27.5",

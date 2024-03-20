@@ -144,6 +144,7 @@ export function useImportAccountCallback() {
         success = true;
       } catch (e) {
         console.log(e);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error = (e as any).message;
       }
       return { success, error };
@@ -232,6 +233,7 @@ export function useFetchBalancesCallback() {
     const addresses: string[] = accounts.map((item) => item.address);
     if (!addresses || addresses.length == 0) return;
     const _accountsBalanceArray = await wallet.getAddressesBalance(addresses);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const balanceArray: any[] = [];
     for (let i = 0; i < _accountsBalanceArray.length; i++) {
       balanceArray.push({

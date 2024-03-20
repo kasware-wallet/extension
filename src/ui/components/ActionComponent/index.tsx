@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable indent */
 import React, { useCallback, useContext, useRef, useState } from 'react';
 

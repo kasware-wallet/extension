@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useEffect, useState } from 'react';
 
 import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
 import { isValidAddress, useWallet } from '@/ui/utils';

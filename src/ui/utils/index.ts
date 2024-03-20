@@ -156,7 +156,7 @@ export function satoshisToAmount(val: number) {
   return num.dividedBy(100000000).toString();
 }
 
-export function amountToSatoshis(val: any) {
+export function amountToSatoshis(val: string) {
   const num = new BigNumber(val);
   return num.multipliedBy(100000000).toNumber();
 }

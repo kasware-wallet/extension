@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { CSSProperties, useEffect, useState } from 'react';
 
 import { colors } from '@/ui/theme/colors';

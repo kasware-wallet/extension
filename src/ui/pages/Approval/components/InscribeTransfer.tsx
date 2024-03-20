@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { Tooltip } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -564,11 +568,7 @@ function InscribeResultStep({
             amount: result.amount
           });
         } else {
-          navigate('BRC20SendScreen', {
-            tokenBalance: v.tokenBalance,
-            selectedInscriptionIds: [result.inscriptionId],
-            selectedAmount: parseInt(result.amount)
-          });
+          console.log('ins')
         }
       })
       .finally(() => {

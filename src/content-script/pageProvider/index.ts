@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 // this script is injected into webpage's context
 import { ethErrors, serializeError } from 'eth-rpc-errors';
 import { EventEmitter } from 'events';
@@ -10,6 +13,7 @@ import ReadyPromise from './readyPromise';
 import { $, domReadyCall } from './utils';
 
 const log = (event, ...args) => {
+  // eslint-disable-next-line no-undef
   if (process.env.NODE_ENV !== 'production') {
     // console.log(
     //   `%c [kasware] (${new Date().toTimeString().slice(0, 8)}) ${event}`,

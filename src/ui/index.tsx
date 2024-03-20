@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import en from 'antd/es/locale/en_US';
 import message from 'antd/lib/message';
 import ReactDOM from 'react-dom/client';

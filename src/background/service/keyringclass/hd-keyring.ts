@@ -326,6 +326,7 @@ class HdKeyring extends SimpleKeyring {
     }
     return accounts;
   }
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   __getPage(increment: number): Promise<
     {
       address: string;
@@ -357,7 +358,7 @@ class HdKeyring extends SimpleKeyring {
     //     });
     // });
     // return Promise.resolve(['dfds'])
-    const { XPublicKey } = this.kaspaWasm;
+    // const { XPublicKey } = this.kaspaWasm;
     const pubkeys = await Promise.all(
       this.wallets.map((w) => {
         // const xpub = w.publicKey().intoString('xpub');

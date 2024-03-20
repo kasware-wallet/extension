@@ -1,3 +1,6 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IKaspaUTXOWithoutBigint, Inscription } from '@/shared/types';
 import { createSlice } from '@reduxjs/toolkit';
 

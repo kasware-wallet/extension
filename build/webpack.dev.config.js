@@ -4,6 +4,7 @@ const webpack = require('webpack');
 const config = {
   mode: 'development',
   devtool: 'inline-cheap-module-source-map',
+  // devtool: 'inline-nosources-cheap-module-source-map',
   watch: true,
   watchOptions: {
     ignored: ['**/public', '**/node_modules'],

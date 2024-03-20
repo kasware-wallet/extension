@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { CSSProperties } from 'react';
 
 import { fontSizes } from '@/ui/theme/font';

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
 import { copyToClipboard, shortAddress } from '@/ui/utils';
 

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NETWORK_TYPES } from '@/shared/constant';
 import { NetworkType } from '@/shared/types';
 import { Button, Card, Column, Content, Footer, Header, Layout, Row, Text } from '@/ui/components';

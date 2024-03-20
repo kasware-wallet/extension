@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // "use strict";
 
 import { IOpts } from '@/shared/types';
@@ -65,6 +66,7 @@ class SimpleKeyring {
       return keyPair;
     });
   }
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   addAccounts(n = 1) {
     // return __awaiter(this, void 0, void 0, function* () {
     //     const newWallets = [];
@@ -96,6 +98,7 @@ class SimpleKeyring {
     const result = await Promise.all(Arr);
     return result;
   };
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   signTransaction = async (psbt, inputs, opts) => {
     // return __awaiter(this, void 0, void 0, function* () {
     //     inputs.forEach((input) => {

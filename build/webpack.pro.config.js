@@ -1,4 +1,5 @@
 const webpack = require('webpack');
+const { EsbuildPlugin } = require('esbuild-loader')
 
 const config = {
   mode: 'production',
@@ -12,7 +13,15 @@ const config = {
     new webpack.DefinePlugin({
       'process.env.BUILD_ENV': JSON.stringify('PRO')
     })
-  ]
+  ],
+  optimization: {
+    // minimize: false,
+    minimizer: [
+      new EsbuildPlugin({	
+        keepNames: true,	
+      }),	
+    ]
+  },
 };
 
 module.exports = config;

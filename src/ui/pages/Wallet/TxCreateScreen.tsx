@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import BigNumber from 'bignumber.js';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -260,15 +263,6 @@ export default function TxCreateScreen() {
             }}
           />
         </Column>
-
-        {/* <Column mt="lg">
-          <RBFBar
-            onChange={(val) => {
-              setEnableRBF(val);
-            }}
-          />
-        </Column> */}
-
         {error && <Text text={error} color="error" />}
 
         <Button

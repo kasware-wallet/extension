@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CSSProperties, memo, useMemo } from 'react';
 
 export type IframeProps = { preview: string; style?: CSSProperties; ref: any };

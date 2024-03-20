@@ -17,7 +17,7 @@
 // __exportStar(require("./hd-keyring"), exports);
 // __exportStar(require("./simple-keyring"), exports);
 
-import { HdKeyring } from "./hd-keyring";
-import { SimpleKeyring } from "./simple-keyring";
+import { HdKeyring } from './hd-keyring';
+import { SimpleKeyring } from './simple-keyring';
 
 export default { HdKeyring, SimpleKeyring };

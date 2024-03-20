@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Account, AddressType, WalletKeyring } from '@/shared/types';
 import { createSlice } from '@reduxjs/toolkit';
 

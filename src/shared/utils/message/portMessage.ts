@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { browserRuntimeConnect } from '@/background/webapi/browser';
 
 import Message from './index';

@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { useApproval, useWallet } from '@/ui/utils';
 
-import { IScannedGroup } from '@/shared/types';
+import { AddressType, IScannedGroup } from '@/shared/types';
 import { AppState } from '..';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { TabOption, globalActions } from './reducer';
@@ -58,16 +58,16 @@ export function useCreateAccountCallback() {
   const dispatch = useAppDispatch();
   const wallet = useWallet();
   return useCallback(
-    async (mnemonics: string, hdPath: string, passphrase: string, addressType: any, accountCount: number, startIndex = 0, scannedGroup?: IScannedGroup) => {
+    async (mnemonics: string, hdPath: string, passphrase: string, addressType: AddressType, accountCount: number, startIndex = 0, scannedGroup?: IScannedGroup) => {
       const activeIndexes: number[] = [];
       if (accountCount < 1) {
         // throw new Error(i18n.t('account count must be greater than 0'));
         throw new Error('account count must be greater than 0');
-      } else if (accountCount == 1) {
+      } else if (accountCount == 1 && scannedGroup == undefined) {
         const activeIndexes = [startIndex]
         // await wallet.createKeyringWithMnemonics(mnemonics, hdPath, passphrase, addressType, accountCount, startIndex);
         await wallet.createKeyringWithMnemonics(mnemonics, hdPath, passphrase, addressType, activeIndexes);
-      } else if (accountCount > 1 && scannedGroup !== undefined) {
+      } else if (accountCount >= 1 && scannedGroup !== undefined) {
         const activeIndexes: number[] = []
         const activeChangeIndexes: number[] = []
         scannedGroup.dtype_arr.forEach(async (dType, i) => {

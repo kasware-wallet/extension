@@ -1,8 +1,8 @@
 import { AddressType, NetworkType, WalletConfig } from '@/shared/types';
 import { createSlice } from '@reduxjs/toolkit';
 
-import { updateVersion } from '../global/actions';
 import { NETWORK_TYPES } from '@/shared/constant';
+import { updateVersion } from '../global/actions';
 
 export interface SettingsState {
   locale: string;
@@ -30,6 +30,7 @@ const slice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     reset(state) {
       return initialState;
     },

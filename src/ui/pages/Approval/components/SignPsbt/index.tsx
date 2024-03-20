@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
 import { Tooltip } from 'antd';
@@ -21,7 +22,6 @@ import { WarningPopover } from '@/ui/components/WarningPopover';
 import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useAccountAddress, useCurrentAccount } from '@/ui/state/accounts/hooks';
 import {
-  usePrepareSendAtomicalsNFTCallback,
   usePrepareSendBTCCallback,
   usePrepareSendOrdinalsInscriptionsCallback
 } from '@/ui/state/transactions/hooks';
@@ -432,7 +432,6 @@ export default function SignPsbt({
 
   const prepareSendBTC = usePrepareSendBTCCallback();
   const prepareSendOrdinalsInscriptions = usePrepareSendOrdinalsInscriptionsCallback();
-  const prepareSendAtomicalsInscription = usePrepareSendAtomicalsNFTCallback;
 
   const wallet = useWallet();
   const [loading, setLoading] = useState(true);
@@ -700,65 +699,6 @@ export default function SignPsbt({
                                 <Text text="BTC" color="textDim" />
                               </Row>
                             </Row>
-
-                            {inscriptions.length > 0 && (
-                              <Row>
-                                <Column justifyCenter>
-                                  <Text
-                                    text={`Inscriptions (${inscriptions.length})`}
-                                    color={isToSign ? 'white' : 'textDim'}
-                                  />
-                                  <Row overflowX gap="lg" style={{ width: 280 }} pb="lg">
-                                    {inscriptions.map((w) => (
-                                      <InscriptionPreview
-                                        key={w.inscriptionId}
-                                        data={txInfo.decodedPsbt.inscriptions[w.inscriptionId]}
-                                        preset="small"
-                                        onClick={() => {
-                                          window.open(w.preview);
-                                        }}
-                                      />
-                                    ))}
-                                  </Row>
-                                </Column>
-                              </Row>
-                            )}
-
-                            {atomicals_nft.length > 0 && (
-                              <Row>
-                                <Column justifyCenter>
-                                  <Text
-                                    text={`Atomicals NFT (${inscriptions.length})`}
-                                    color={isToSign ? 'white' : 'textDim'}
-                                  />
-                                  <Row overflowX gap="lg" style={{ width: 280 }} pb="lg">
-                                    {atomicals_nft.map((w) => (
-                                      <AtomicalsNFTPreview
-                                        key={w.atomicalId}
-                                        data={w as any}
-                                        preset="small"
-                                        onClick={() => {
-                                          window.open(w.preview);
-                                        }}
-                                      />
-                                    ))}
-                                  </Row>
-                                </Column>
-                              </Row>
-                            )}
-
-                            {atomicals_ft.length > 0 && (
-                              <Row>
-                                <Column justifyCenter>
-                                  <Text text={`ARC20`} color={isToSign ? 'white' : 'textDim'} />
-                                  <Row overflowX gap="lg" style={{ width: 280 }} pb="lg">
-                                    {atomicals_ft.map((w) => (
-                                      <Arc20PreviewCard key={w.ticker} ticker={w.ticker || ''} amt={v.value} />
-                                    ))}
-                                  </Row>
-                                </Column>
-                              </Row>
-                            )}
                           </Column>
                         </Row>
                       );
@@ -789,65 +729,6 @@ export default function SignPsbt({
                               </Row>
                             </Row>
                           </Column>
-
-                          {canChanged === false && inscriptions.length > 0 && (
-                            <Row>
-                              <Column justifyCenter>
-                                <Text
-                                  text={`Inscriptions (${inscriptions.length})`}
-                                  color={isMyAddress ? 'white' : 'textDim'}
-                                />
-                                <Row overflowX gap="lg" style={{ width: 280 }} pb="lg">
-                                  {inscriptions.map((w) => (
-                                    <InscriptionPreview
-                                      key={w.inscriptionId}
-                                      data={txInfo.decodedPsbt.inscriptions[w.inscriptionId]}
-                                      preset="small"
-                                      onClick={() => {
-                                        window.open(w.preview);
-                                      }}
-                                    />
-                                  ))}
-                                </Row>
-                              </Column>{' '}
-                            </Row>
-                          )}
-
-                          {atomicals_nft.length > 0 && (
-                            <Row>
-                              <Column justifyCenter>
-                                <Text
-                                  text={`Atomicals NFT (${inscriptions.length})`}
-                                  color={isMyAddress ? 'white' : 'textDim'}
-                                />
-                                <Row overflowX gap="lg" style={{ width: 280 }} pb="lg">
-                                  {atomicals_nft.map((v) => (
-                                    <AtomicalsNFTPreview
-                                      key={v.atomicalId}
-                                      data={v as any}
-                                      preset="small"
-                                      onClick={() => {
-                                        window.open(v.preview);
-                                      }}
-                                    />
-                                  ))}
-                                </Row>
-                              </Column>{' '}
-                            </Row>
-                          )}
-
-                          {atomicals_ft.length > 0 && (
-                            <Row>
-                              <Column justifyCenter>
-                                <Text text={`ARC20`} color={isMyAddress ? 'white' : 'textDim'} />
-                                <Row overflowX gap="lg" style={{ width: 280 }} pb="lg">
-                                  {atomicals_ft.map((w) => (
-                                    <Arc20PreviewCard key={w.ticker} ticker={w.ticker || ''} amt={v.value} />
-                                  ))}
-                                </Row>
-                              </Column>
-                            </Row>
-                          )}
                         </Column>
                       );
                     })}

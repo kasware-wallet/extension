@@ -21,6 +21,7 @@ import browser from '../webapi/browser';
 // import { i18n, sessionService } from './index';
 import { sessionService } from './index';
 
+// eslint-disable-next-line no-undef
 const version = process.env.release || '0';
 
 export interface PreferenceStore {

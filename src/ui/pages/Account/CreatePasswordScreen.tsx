@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { Button, Column, Content, Input, Layout, Text } from '@/ui/components';
@@ -7,7 +7,7 @@ import { useWallet, useWalletRequest } from '@/ui/utils';
 
 import { useNavigate } from '../MainRoute';
 
-type Status = '' | 'error' | 'warning' | undefined;
+// type Status = '' | 'error' | 'warning' | undefined;
 
 export default function CreatePasswordScreen() {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export default function CreatePasswordScreen() {
   const [disabled, setDisabled] = useState(true);
 
   const tools = useTools();
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   const [run, loading] = useWalletRequest(wallet.boot, {
     onSuccess() {
       if (isNewAccount) {

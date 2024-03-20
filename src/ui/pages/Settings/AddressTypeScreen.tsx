@@ -4,23 +4,18 @@ import { ADDRESS_TYPES, KEYRING_TYPE } from '@/shared/constant';
 import { Column, Content, Header, Layout } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressTypeCard } from '@/ui/components/AddressTypeCard';
-import { useExtensionIsInTab } from '@/ui/features/browser/tabs';
 import { useCurrentAccount, useReloadAccounts } from '@/ui/state/accounts/hooks';
-import { useAppDispatch } from '@/ui/state/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
 import { satoshisToAmount, useWallet } from '@/ui/utils';
 
 import { useNavigate } from '../MainRoute';
 
 export default function AddressTypeScreen() {
-  const isInTab = useExtensionIsInTab();
-
   const wallet = useWallet();
   const currentKeyring = useCurrentKeyring();
   const account = useCurrentAccount();
 
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const reloadAccounts = useReloadAccounts();
   const [addresses, setAddresses] = useState<string[]>([]);
   const [addressAssets, setAddressAssets] = useState<{

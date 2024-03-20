@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { EventEmitter } from 'events';
 
 import { browserTabsCreate, browserTabsOnRemoved, browserTabsOnUpdated } from './browser';

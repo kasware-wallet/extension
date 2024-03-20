@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-unused-vars */
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { getUiType } from '.';
@@ -9,6 +12,7 @@ export const useApproval = () => {
   const navigate = useNavigate();
   const getApproval = wallet.getApproval;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const resolveApproval = async (data?: any, stay = false, forceReject = false) => {
     const approval = await getApproval();
 

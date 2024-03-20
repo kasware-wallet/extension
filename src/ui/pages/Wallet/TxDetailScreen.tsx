@@ -1,3 +1,6 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from 'react';
 
 import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';

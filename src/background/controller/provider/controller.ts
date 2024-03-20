@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { permissionService, sessionService } from '@/background/service';
 import { NETWORK_TYPES, VERSION } from '@/shared/constant';
@@ -188,9 +190,9 @@ class ProviderController extends BaseController {
     multiSignPsbt = async ({ data: { params: { psbtHexs,options } } }) => {
       const account = await wallet.getCurrentAccount();
       if (!account) throw null;
-      const networkType = wallet.getNetworkType()
+      // const networkType = wallet.getNetworkType()
       // const psbtNetwork = toPsbtNetwork(networkType)
-      const psbtNetwork = 'bitcoin'
+      // const psbtNetwork = 'bitcoin'
       const result: string[] = [];
       for (let i = 0; i < psbtHexs.length; i++){
         // const psbt = bitcoin.Psbt.fromHex(psbtHexs[i],{network:psbtNetwork});

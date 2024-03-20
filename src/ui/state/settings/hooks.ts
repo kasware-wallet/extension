@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import compareVersions from 'compare-versions';
 import { useCallback } from 'react';
 

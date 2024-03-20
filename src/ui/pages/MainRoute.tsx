@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useRef } from 'react';
 import { HashRouter, Route, Routes, useNavigate as useNavigateOrigin } from 'react-router-dom';
 
@@ -23,21 +24,12 @@ import UnlockScreen from './Account/UnlockScreen';
 import ApprovalScreen from './Approval/ApprovalScreen';
 import ConnectedSitesScreen from './Approval/ConnectedSitesScreen';
 import { InscribeTransferScreen } from './Approval/components/InscribeTransfer';
-import AtomicalsNFTScreen from './Atomicals/AtomicalsNFTScreen';
-import SendArc20Screen from './Atomicals/SendArc20Screen';
-import SendAtomicalsInscriptionScreen from './Atomicals/SendAtomicalsNFTScreen';
-import BRC20SendScreen from './BRC20/BRC20SendScreen';
-import BRC20TokenScreen from './BRC20/BRC20TokenScreen';
 import AppTabScrren from './Main/AppTabScreen';
 import BoostScreen from './Main/BoostScreen';
 import DiscoverTabScreen from './Main/DiscoverTabScreen';
 import SettingsTabScreen from './Main/SettingsTabScreen';
 import WalletTabScreen from './Main/WalletTabScreen';
 import WelcomeScreen from './Main/WelcomeScreen';
-import OrdinalsInscriptionScreen from './Ordinals/OrdinalsInscriptionScreen';
-import SendOrdinalsInscriptionScreen from './Ordinals/SendOrdinalsInscriptionScreen';
-import SignOrdinalsTransactionScreen from './Ordinals/SignOrdinalsTransactionScreen';
-import SplitOrdinalsInscriptionScreen from './Ordinals/SplitOrdinalsInscriptionScreen';
 import AddressTypeScreen from './Settings/AddressTypeScreen';
 import ChangePasswordScreen from './Settings/ChangePasswordScreen';
 import EditAccountNameScreen from './Settings/EditAccountNameScreen';
@@ -49,8 +41,7 @@ import ExportPrivateKeyScreen from './Settings/ExportPrivateKeyScreen';
 import NetworkTypeScreen from './Settings/NetworkTypeScreen';
 import UpgradeNoticeScreen from './Settings/UpgradeNoticeScreen';
 import TestScreen from './Test/TestScreen';
-import HistoryScreen from './Wallet/HistoryScreen';
-import MoonPayScreen from './Wallet/MoonPayScreen';
+import FiatPayScreen from './Wallet/FiatPayScreen';
 import ReceiveScreen from './Wallet/ReceiveScreen';
 import TxConfirmScreen from './Wallet/TxConfirmScreen';
 import TxCreateScreen from './Wallet/TxCreateScreen';
@@ -135,36 +126,6 @@ const routes = {
     element: <TxFailScreen />
   },
 
-  OrdinalsInscriptionScreen: {
-    path: '/ordinals/inscription-detail',
-    element: <OrdinalsInscriptionScreen />
-  },
-
-  SendOrdinalsInscriptionScreen: {
-    path: '/wallet/ordinals-tx/create',
-    element: <SendOrdinalsInscriptionScreen />
-  },
-
-  SignOrdinalsTransactionScreen: {
-    path: '/wallet/ordinals-tx/confirm',
-    element: <SignOrdinalsTransactionScreen />
-  },
-
-  AtomicalsInscriptionScreen: {
-    path: '/atomicals/inscription-detail',
-    element: <AtomicalsNFTScreen />
-  },
-
-  SendAtomicalsInscriptionScreen: {
-    path: '/atomicals/send-inscription',
-    element: <SendAtomicalsInscriptionScreen />
-  },
-
-  SendArc20Screen: {
-    path: '/atomicals/send-arc20',
-    element: <SendArc20Screen />
-  },
-
   NetworkTypeScreen: {
     path: '/settings/network-type',
     element: <NetworkTypeScreen />
@@ -180,10 +141,6 @@ const routes = {
   ExportPrivateKeyScreen: {
     path: '/settings/export-privatekey',
     element: <ExportPrivateKeyScreen />
-  },
-  HistoryScreen: {
-    path: '/wallet/history',
-    element: <HistoryScreen />
   },
   TxDetailScreen: {
     path: '/wallet/txdetail',
@@ -241,26 +198,14 @@ const routes = {
     path: '/inscribe/transfer',
     element: <InscribeTransferScreen />
   },
-  BRC20SendScreen: {
-    path: '/brc20/send',
-    element: <BRC20SendScreen />
-  },
-  BRC20TokenScreen: {
-    path: '/brc20/token',
-    element: <BRC20TokenScreen />
-  },
   TestScreen: {
     path: '/test',
     element: <TestScreen />
   },
-  MoonPayScreen: {
+  FiatPayScreen: {
     path: '/moonpay',
-    element: <MoonPayScreen />
+    element: <FiatPayScreen />
   },
-  SplitOrdinalsInscriptionScreen: {
-    path: '/wallet/split-tx/create',
-    element: <SplitOrdinalsInscriptionScreen />
-  }
 };
 
 type RouteTypes = keyof typeof routes;

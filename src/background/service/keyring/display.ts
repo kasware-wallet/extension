@@ -8,6 +8,7 @@ class DisplayKeyring {
   constructor(keyring: Keyring) {
     this.accounts = keyring.accounts || [];
     this.type = keyring.type;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.hdPath = (keyring as any).hdPath;
   }
 

@@ -63,6 +63,7 @@ export default function AccountUpdater() {
       }
     };
     eventBus.addEventListener('accountsChanged', accountChangeHandler);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     eventBus.addEventListener('utxosChangedNotification', (a) => {
       // setTimeout(() => {
       dispatch(accountActions.expireBalance());

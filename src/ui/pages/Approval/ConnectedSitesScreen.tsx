@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
 
 import { ConnectedSite } from '@/background/service/permission';
-import { Icon, Layout, Header, Content, Column, Card, Row, Text, Image } from '@/ui/components';
+import { Card, Column, Content, Header, Icon, Image, Layout, Row, Text } from '@/ui/components';
 import { Empty } from '@/ui/components/Empty';
 import { fontSizes } from '@/ui/theme/font';
 import { useWallet } from '@/ui/utils';

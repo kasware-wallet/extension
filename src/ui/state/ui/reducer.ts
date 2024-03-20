@@ -35,7 +35,7 @@ const slice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    reset(state) {
+    reset(_state) {
       return initialState;
     },
     updateAssetTabScreen(

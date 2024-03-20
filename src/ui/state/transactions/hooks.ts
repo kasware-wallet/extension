@@ -263,62 +263,6 @@ export function usePrepareSendOrdinalsInscriptionsCallback() {
   );
 }
 
-export function useCreateSplitTxCallback() {
-  const dispatch = useAppDispatch();
-  const wallet = useWallet();
-  const fromAddress = useAccountAddress();
-  const utxos = useUtxos();
-  const fetchUtxos = useFetchUtxosCallback();
-  return useCallback(
-    async ({
-      inscriptionId,
-      feeRate,
-      outputValue,
-      enableRBF
-    }: {
-      inscriptionId: string;
-      feeRate: number;
-      outputValue: number;
-      enableRBF: boolean;
-    }) => {
-      let btcUtxos = utxos;
-      if (btcUtxos.length === 0) {
-        btcUtxos = await fetchUtxos();
-      }
-
-      const { psbtHex, splitedCount } = await wallet.splitOrdinalsInscription({
-        inscriptionId,
-        feeRate,
-        outputValue,
-        enableRBF,
-        btcUtxos
-      });
-      // const psbt = bitcoin.Psbt.fromHex(psbtHex);
-      // const rawtx = psbt.extractTransaction().toHex();
-      const rawtx = '0x1';
-      dispatch(
-        transactionsActions.updateOrdinalsTx({
-          rawtx,
-          psbtHex,
-          fromAddress,
-          // inscription,
-          feeRate,
-          outputValue
-        })
-      );
-      const rawTxInfo: RawTxInfo = {
-        psbtHex,
-        rawtx,
-        toAddressInfo: {
-          address: fromAddress
-        }
-      };
-      return { rawTxInfo, splitedCount };
-    },
-    [dispatch, wallet, fromAddress, utxos]
-  );
-}
-
 export function usePushOrdinalsTxCallback() {
   const dispatch = useAppDispatch();
   const wallet = useWallet();
@@ -382,20 +326,6 @@ export function useAssetUtxosAtomicalsFT() {
   return transactionsState.assetUtxos_atomicals_ft;
 }
 
-export function useFetchAssetUtxosAtomicalsFTCallback() {
-  const dispatch = useAppDispatch();
-  const wallet = useWallet();
-  const account = useCurrentAccount();
-  return useCallback(
-    async (ticker: string) => {
-      const data = await wallet.getAssetUtxosAtomicalsFT(ticker);
-      dispatch(transactionsActions.setAssetUtxosAtomicalsFT(data));
-      return data;
-    },
-    [wallet, account]
-  );
-}
-
 export function useSafeBalance() {
   const utxos: IKaspaUTXOWithoutBigint[] = useUtxos();
   return useMemo(() => {
@@ -404,59 +334,6 @@ export function useSafeBalance() {
     }, 0);
     return satoshisToAmount(sompi);
   }, [utxos]);
-}
-
-export function usePrepareSendAtomicalsNFTCallback() {
-  const dispatch = useAppDispatch();
-  const wallet = useWallet();
-  const fromAddress = useAccountAddress();
-  const utxos = useUtxos();
-  const fetchUtxos = useFetchUtxosCallback();
-  return useCallback(
-    async ({
-      toAddressInfo,
-      atomicalId,
-      feeRate,
-      enableRBF
-    }: {
-      toAddressInfo: ToAddressInfo;
-      atomicalId: string;
-      feeRate: number;
-      enableRBF: boolean;
-    }) => {
-      let btcUtxos = utxos;
-      if (btcUtxos.length === 0) {
-        btcUtxos = await fetchUtxos();
-      }
-
-      const psbtHex = await wallet.sendAtomicalsNFT({
-        to: toAddressInfo.address,
-        atomicalId,
-        feeRate,
-        enableRBF,
-        btcUtxos
-      });
-      // const psbt = bitcoin.Psbt.fromHex(psbtHex);
-      // const rawtx = psbt.extractTransaction().toHex();
-      const rawtx = '0x1';
-      dispatch(
-        transactionsActions.updateAtomicalsTx({
-          rawtx,
-          psbtHex,
-          fromAddress,
-          // inscription,
-          feeRate
-        })
-      );
-      const rawTxInfo: RawTxInfo = {
-        psbtHex,
-        rawtx,
-        toAddressInfo
-      };
-      return rawTxInfo;
-    },
-    [dispatch, wallet, fromAddress, utxos]
-  );
 }
 
 export function usePushAtomicalsTxCallback() {
@@ -496,76 +373,6 @@ export function usePushAtomicalsTxCallback() {
       return ret;
     },
     [dispatch, wallet]
-  );
-}
-
-export function usePrepareSendArc20Callback() {
-  const dispatch = useAppDispatch();
-  const wallet = useWallet();
-  const fromAddress = useAccountAddress();
-  const utxos = useUtxos();
-  const fetchUtxos = useFetchUtxosCallback();
-  const fetchAssetUtxosAtomicalsFT = useFetchAssetUtxosAtomicalsFTCallback();
-  const assetUtxosAtomicalsFT = useAssetUtxosAtomicalsFT();
-  return useCallback(
-    async ({
-      toAddressInfo,
-      ticker,
-      amount,
-      feeRate,
-      enableRBF
-    }: {
-      toAddressInfo: ToAddressInfo;
-      ticker: string;
-      amount: number;
-      feeRate: number;
-      enableRBF: boolean;
-    }) => {
-      let btcUtxos = utxos;
-      if (btcUtxos.length === 0) {
-        btcUtxos = await fetchUtxos();
-      }
-
-      let assetUtxos = assetUtxosAtomicalsFT;
-      if (assetUtxosAtomicalsFT.length === 0) {
-        assetUtxos = await fetchAssetUtxosAtomicalsFT(ticker);
-      }
-
-      const availableAmount = assetUtxos.reduce((pre, cur) => pre + cur.satoshis, 0);
-      if (availableAmount < amount) {
-        throw new Error(
-          `Insufficient balance. Available balance (${availableAmount} ${ticker}) is lower than sending amount(${amount} ${ticker})`
-        );
-      }
-      const psbtHex = await wallet.sendAtomicalsFT({
-        to: toAddressInfo.address,
-        ticker,
-        amount,
-        feeRate,
-        enableRBF,
-        btcUtxos,
-        assetUtxos
-      });
-      // const psbt = bitcoin.Psbt.fromHex(psbtHex);
-      // const rawtx = psbt.extractTransaction().toHex();
-      const rawtx = '0x1';
-      dispatch(
-        transactionsActions.updateAtomicalsTx({
-          rawtx,
-          psbtHex,
-          fromAddress,
-          feeRate,
-          sendArc20Amount: amount
-        })
-      );
-      const rawTxInfo: RawTxInfo = {
-        psbtHex,
-        rawtx,
-        toAddressInfo
-      };
-      return rawTxInfo;
-    },
-    [dispatch, wallet, fromAddress, utxos, assetUtxosAtomicalsFT]
   );
 }
 

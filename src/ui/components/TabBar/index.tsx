@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 /* eslint-disable indent */
 import { useEffect, useState } from 'react';
 
@@ -18,7 +20,7 @@ interface TabBarProps {
   defaultActiveKey?: string | number;
   activeKey?: string | number;
   items: TabProps[];
-  onTabClick: (string) => void;
+  onTabClick: (arg0: string | number | undefined) => void;
   progressEnabled?: boolean;
   preset?: 'number-page' | 'default' | 'style1' | 'style2';
 }

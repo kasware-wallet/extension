@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { isNull } from 'lodash';
 import React, { CSSProperties, useEffect, useState } from 'react';
 

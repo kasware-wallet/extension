@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
@@ -112,25 +115,6 @@ export default function ExportPrivateKeyScreen() {
               size="sm"
               textCenter
             />
-            {/*
-            <Text text="WIF Private Key:" preset="sub" size="sm" textCenter mt="lg" />
-
-            <Card
-              onClick={(e) => {
-                copy(privateKey.wif);
-              }}>
-              <Row>
-                <Icon icon="copy" color="textDim" />
-                <Text
-                  text={privateKey.wif}
-                  color="textDim"
-                  style={{
-                    overflowWrap: 'anywhere'
-                  }}
-                />
-              </Row>
-            </Card> */}
-
             <Text text="Hex Private Key:" preset="sub" size="sm" textCenter mt="lg" />
 
             <Card

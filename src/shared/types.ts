@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 import { NetworkType } from 'kaspa-wasm';
 
@@ -7,12 +8,6 @@ import { CHAINS_ENUM } from './constant';
 export enum AddressType {
   KASPA_44_111111,
   KASPA_44_972
-  // P2PKH,
-  // P2WPKH,
-  // P2TR,
-  // P2SH_P2WPKH,
-  // M44_P2WPKH,
-  // M44_P2TR,
 }
 
 export { NetworkType };
@@ -28,7 +23,6 @@ export { NetworkType };
 // the sequence of RestoreWalletType should be aligned with RESTORE_WALLETS.
 export enum RestoreWalletType {
   KASWARE,
-  // OW,
   // OTHERS,
   KASPIUM,
   KASPANET_WEB,
@@ -174,22 +168,6 @@ export interface IKaspaUTXO {
     isCoinbase: boolean;
     scriptPublicKey: string;
   };
-  // txid: string;
-  // vout: number;
-  // satoshis: number;
-  // scriptPk: string;
-  // addressType: AddressType;
-  // inscriptions: {
-  //   inscriptionId: string;
-  //   inscriptionNumber?: number;
-  //   offset: number;
-  // }[];
-  // atomicals: {
-  //   atomicalId: string;
-  //   atomicalNumber: number;
-  //   type: 'NFT' | 'FT';
-  //   ticker?: string;
-  // }[];
 }
 
 export interface IKaspaUTXOWithoutBigint {

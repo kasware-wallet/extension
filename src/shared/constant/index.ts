@@ -1,10 +1,14 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable no-undef */
 /* eslint-disable quotes */
 
 /* constants pool */
 import { AddressType, Chain, NetworkType, RestoreWalletType } from '../types';
 
 export enum CHAINS_ENUM {
-  BTC = 'BTC'
+  BTC = 'BTC',
+  KAS = 'KAS'
 }
 
 export const CHAINS: Record<string, Chain> = {
@@ -128,54 +132,6 @@ export const ADDRESS_TYPES: {
     displayIndex: 1,
     isKaswareLegacy: false
   },
-  // {
-  //   value: AddressType.P2PKH,
-  //   label: 'P2PKH',
-  //   name: 'Legacy (P2PKH)',
-  //   hdPath: "m/44'/0'/0'/0",
-  //   displayIndex: 3,
-  //   isKaswareLegacy: false
-  // },
-  // {
-  //   value: AddressType.P2WPKH,
-  //   label: 'P2WPKH',
-  //   name: 'Native Segwit (P2WPKH)',
-  //   hdPath: "m/84'/0'/0'/0",
-  //   displayIndex: 6,
-  //   isKaswareLegacy: false
-  // },
-  // {
-  //   value: AddressType.P2TR,
-  //   label: 'P2TR',
-  //   name: 'Taproot (P2TR)',
-  //   hdPath: "m/86'/0'/0'/0",
-  //   displayIndex: 2,
-  //   isKaswareLegacy: false
-  // },
-  // {
-  //   value: AddressType.P2SH_P2WPKH,
-  //   label: 'P2SH-P2WPKH',
-  //   name: 'Nested Segwit (P2SH-P2WPKH)',
-  //   hdPath: "m/49'/0'/0'/0",
-  //   displayIndex: 1,
-  //   isKaswareLegacy: false
-  // },
-  // {
-  //   value: AddressType.M44_P2WPKH,
-  //   label: 'P2WPKH',
-  //   name: 'Native SegWit (P2WPKH)',
-  //   hdPath: "m/44'/0'/0'/0",
-  //   displayIndex: 4,
-  //   isKaswareLegacy: true
-  // }
-  // {
-  //   value: AddressType.M44_P2TR,
-  //   label: 'P2TR',
-  //   name: 'Taproot (P2TR)',
-  //   hdPath: "m/44'/0'/0'/0",
-  //   displayIndex: 5,
-  //   isKaswareLegacy: true
-  // },
 ];
 
 export const OW_HD_PATH = "m/86'/0'/0'";
@@ -191,51 +147,6 @@ export const RESTORE_WALLETS: { value: RestoreWalletType; name: string; addressT
     name: 'KasWare Wallet',
     addressTypes: [AddressType.KASPA_44_111111]
   },
-  // {
-  //   value: RestoreWalletType.KASWARE,
-  //   name: 'KasWare Wallet',
-  //   addressTypes: [
-  //     AddressType.P2WPKH,
-  //     // AddressType.P2SH_P2WPKH,
-  //     // AddressType.P2TR,
-  //     // AddressType.P2PKH,
-  //     AddressType.M44_P2WPKH
-  //     // AddressType.M44_P2TR
-  //   ]
-  // },
-  // {
-  //   value: RestoreWalletType.SPARROW,
-  //   name: 'Sparrow Wallet',
-  //   addressTypes: [
-  //     // AddressType.P2PKH,
-  //     AddressType.P2WPKH
-  //     // AddressType.P2SH_P2WPKH,
-  //     // AddressType.P2TR
-  //   ]
-  // },
-  // {
-  //   value: RestoreWalletType.XVERSE,
-  //   name: 'Xverse Wallet',
-  //   addressTypes: [AddressType.P2SH_P2WPKH, AddressType.P2TR]
-  // },
-  // {
-  //   value: RestoreWalletType.OW,
-  //   name: 'Ordinals Wallet',
-  //   addressTypes: [AddressType.P2TR]
-  // },
-  // {
-  //   value: RestoreWalletType.OTHERS,
-  //   name: 'Other Wallet',
-  //   addressTypes: [
-  //     AddressType.KASPA_44_111111,
-  //     // AddressType.P2PKH,
-  //     AddressType.P2WPKH,
-  //     // AddressType.P2SH_P2WPKH,
-  //     // AddressType.P2TR,
-  //     AddressType.M44_P2WPKH
-  //     // AddressType.M44_P2TR
-  //   ]
-  // },
   {
     value: RestoreWalletType.KASPIUM,
     name: 'Kaspium Wallet',
@@ -286,7 +197,7 @@ export const OPENAPI_URL_MAINNET = 'https://api.kaspa.org';
 export const OPENAPI_URL_TESTNET = 'https://api.kaspa.org/test';
 export const OPENAPI_URL_DEVNET = 'https://api.kaspa.org/dev';
 export const OPENAPI_RPC_MAINNET = 'wss://us-1.kaspa-ng.org/mainnet';
-export const OPENAPI_RPC_TESTNET = 'wss://eu-1.kaspa-ng.org/testnet-10';
+export const OPENAPI_RPC_TESTNET = 'wss://eu-1.kaspa-ng.org/testnet-11';
 export const OPENAPI_RPC_DEVNET = 'ws://127.0.0.1:17610';
 
 export const NETWORK_TYPES = [
@@ -339,9 +250,10 @@ export const TELEGRAM_URL = 'https://t.me/+eBTwLzz_BcwwMmE1';
 
 export const CHANNEL = process.env.channel!;
 // export const VERSION = process.env.release!;
-export const VERSION = '0.2.8';
+export const VERSION = '0.2.8.4';
 export const MANIFEST_VERSION = process.env.manifest!;
 
 export enum AddressFlagType {
+  // eslint-disable-next-line no-unused-vars
   Is_Enable_Atomicals = 0b1
 }

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { keyringService } from '@/background/service';
 
 import wallet from '../wallet';

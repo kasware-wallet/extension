@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 import { createContext, ReactNode, useContext } from 'react';
 
@@ -10,8 +11,8 @@ import {
   Account,
   AddressSummary,
   AddressTokenSummary,
+  AddressType,
   AppSummary,
-  Arc20Balance,
   BitcoinBalance,
   DecodedPsbt,
   FeeSummary,
@@ -22,11 +23,8 @@ import {
   IScannedGroup,
   NetworkType,
   SignPsbtOptions,
-  TokenBalance,
   TokenTransfer,
   TxHistoryItem,
-  UTXO,
-  UTXO_Detail,
   VersionDetail,
   WalletConfig,
   WalletKeyring
@@ -101,20 +99,20 @@ export interface WalletController {
     mnemonic: string,
     hdPath: string,
     passphrase: string,
-    addressType: any,
+    addressType: AddressType,
     // accountCount: number,
     // startIndex?: number,
     activeIndexes: number[],
     activeChangeIndexes?: number[]
   ): Promise<{ address: string; type: string }[]>;
 
-  createTmpKeyringWithPrivateKey(privateKey: string, addressType: any): Promise<WalletKeyring>;
+  createTmpKeyringWithPrivateKey(privateKey: string, addressType: AddressType): Promise<WalletKeyring>;
 
   createTmpKeyringWithMnemonics(
     mnemonic: string,
     hdPath: string,
     passphrase: string,
-    addressType: any,
+    addressType: AddressType,
     accountCount?: number,
     startIndex?: number
   ): Promise<WalletKeyring>;
@@ -122,7 +120,7 @@ export interface WalletController {
     mnemonic: string,
     hdPath: string,
     passphrase: string,
-    addressType: any,
+    addressType: AddressType,
     accountCount?: number,
     startIndex?: number
   ): Promise<IScannedGroup | null>;
@@ -167,14 +165,6 @@ export interface WalletController {
     btcUtxos: any[];
   }): Promise<string>;
 
-  splitOrdinalsInscription(data: {
-    inscriptionId: string;
-    feeRate: number;
-    outputValue: number;
-    enableRBF: boolean;
-    btcUtxos: any[];
-  }): Promise<{ psbtHex: string; splitedCount: number }>;
-
   pushTx(rawtx: string): Promise<string>;
 
   queryDomainInfo(domain: string): Promise<Inscription>;
@@ -183,7 +173,6 @@ export interface WalletController {
   getAppSummary(): Promise<AppSummary>;
   getBTCUtxos(): Promise<IKaspaUTXOWithoutBigint[]>;
   getKASUtxos(): Promise<string>;
-  getAssetUtxosAtomicalsFT(ticker: string): Promise<any[]>;
   getAssetUtxosAtomicalsNFT(atomicalId: string): Promise<any[]>;
   getAssetUtxosInscriptions(inscriptionId: string): Promise<any[]>;
 
@@ -218,37 +207,6 @@ export interface WalletController {
 
   decodePsbt(psbtHex: string): Promise<DecodedPsbt>;
 
-  getAllInscriptionList(
-    address: string,
-    currentPage: number,
-    pageSize: number
-  ): Promise<{ currentPage: number; pageSize: number; total: number; list: Inscription[] }>;
-
-  getBRC20List(
-    address: string,
-    currentPage: number,
-    pageSize: number
-  ): Promise<{ currentPage: number; pageSize: number; total: number; list: TokenBalance[] }>;
-
-  getBRC20TransferableList(
-    address: string,
-    ticker: string,
-    currentPage: number,
-    pageSize: number
-  ): Promise<{ currentPage: number; pageSize: number; total: number; list: TokenTransfer[] }>;
-
-  getOrdinalsInscriptions(
-    address: string,
-    currentPage: number,
-    pageSize: number
-  ): Promise<{ currentPage: number; pageSize: number; total: number; list: Inscription[] }>;
-
-  getAtomicalsNFTs(
-    address: string,
-    currentPage: number,
-    pageSize: number
-  ): Promise<{ currentPage: number; pageSize: number; total: number; list: Inscription[] }>;
-
   getBRC20Summary(address: string, ticker: string): Promise<AddressTokenSummary>;
 
   expireUICachedData(address: string): Promise<void>;
@@ -260,39 +218,12 @@ export interface WalletController {
   getSkippedVersion(): Promise<string>;
   setSkippedVersion(version: string): Promise<void>;
 
-  getInscriptionUtxoDetail(inscriptionId: string): Promise<UTXO_Detail>;
-  getUtxoByInscriptionId(inscriptionId: string): Promise<UTXO>;
-
   checkWebsite(website: string): Promise<{ isScammer: boolean; warning: string }>;
 
   readTab(tabName: string): Promise<void>;
   readApp(appid: number): Promise<void>;
 
   formatOptionsToSignInputs(psbtHex: string, options: SignPsbtOptions): Promise<ToSignInput[]>;
-
-  getArc20BalanceList(
-    address: string,
-    currentPage: number,
-    pageSize: number
-  ): Promise<{ currentPage: number; pageSize: number; total: number; list: Arc20Balance[] }>;
-
-  sendAtomicalsNFT(data: {
-    to: string;
-    atomicalId: string;
-    feeRate: number;
-    enableRBF: boolean;
-    btcUtxos: any[];
-  }): Promise<string>;
-
-  sendAtomicalsFT(data: {
-    to: string;
-    ticker: string;
-    amount: number;
-    feeRate: number;
-    enableRBF: boolean;
-    btcUtxos: any[];
-    assetUtxos: any[];
-  }): Promise<string>;
 
   getAddressSummary(address: string): Promise<AddressSummary>;
 

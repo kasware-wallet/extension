@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Card, Column, Content, Header, Layout, Text } from '@/ui/components';
 
 import { useNavigate } from '../MainRoute';

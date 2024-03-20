@@ -1,3 +1,6 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ethErrors } from 'eth-rpc-errors';
 import { EthereumProviderError } from 'eth-rpc-errors/dist/classes';
 import Events from 'events';
@@ -113,6 +116,7 @@ class NotificationService extends Events {
       this.notifiWindowId = 0;
     }
     winMgr.openNotification(winProps).then((winId) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.notifiWindowId = winId!;
     });
   };

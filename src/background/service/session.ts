@@ -47,6 +47,7 @@ const deleteSession = (id) => {
 };
 
 const broadcastEvent = (ev, data?, origin?) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let sessions: any[] = [];
   sessionMap.forEach((session, key) => {
     if (permissionService.hasPermission(session.origin)) {

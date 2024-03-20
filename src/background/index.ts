@@ -43,6 +43,7 @@ restoreAppState();
 // for page provider
 browserRuntimeOnConnect((port) => {
   if (port.name === 'popup' || port.name === 'notification' || port.name === 'tab') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pm = new PortMessage(port as any);
     pm.listen((data) => {
       if (data?.type) {
@@ -64,6 +65,7 @@ browserRuntimeOnConnect((port) => {
       }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const boardcastCallback = (data: any) => {
       pm.request({
         type: 'broadcast',
@@ -129,14 +131,18 @@ browserRuntimeOnInstalled((details) => {
 if (MANIFEST_VERSION === 'mv3') {
   // Keep alive for MV3
   const INTERNAL_STAYALIVE_PORT = 'CT_Internal_port_alive';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let alivePort: any = null;
 
   setInterval(() => {
     // console.log('Highlander', Date.now());
     if (alivePort == null) {
+      // eslint-disable-next-line no-undef
       alivePort = chrome.runtime.connect({ name: INTERNAL_STAYALIVE_PORT });
 
+      // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
       alivePort.onDisconnect.addListener((p) => {
+        // eslint-disable-next-line no-undef
         if (chrome.runtime.lastError) {
           // console.log('(DEBUG Highlander) Expected disconnect (on error). SW should be still running.');
         } else {
@@ -150,6 +156,7 @@ if (MANIFEST_VERSION === 'mv3') {
     if (alivePort) {
       alivePort.postMessage({ content: 'keep alive~' });
 
+      // eslint-disable-next-line no-undef
       if (chrome.runtime.lastError) {
         // console.log(`(DEBUG Highlander): postMessage error: ${chrome.runtime.lastError.message}`);
       } else {

@@ -1,3 +1,6 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DecodedPsbt, Inscription, SignPsbtOptions, ToSignInput } from '@/shared/types';
@@ -31,18 +34,7 @@ interface Props {
   handleCancel?: () => void;
   handleConfirm?: () => void;
 }
-interface InputInfo {
-  txid: string;
-  vout: number;
-  address: string;
-  value: number;
-  inscrip;
-}
 
-interface OutputInfo {
-  address: string;
-  value: number;
-}
 
 enum TabState {
   DETAILS,
@@ -50,10 +42,6 @@ enum TabState {
   HEX
 }
 
-interface InscriptioinInfo {
-  id: string;
-  isSent: boolean;
-}
 
 function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
   const inscriptions = useMemo(() => {

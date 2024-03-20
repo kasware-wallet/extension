@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-unused-vars */
 /// fork from https://github.com/MetaMask/KeyringController/blob/master/index.js
 import * as bip39 from 'bip39';
 import encryptor from 'browser-passworder';
@@ -128,7 +131,7 @@ class KeyringService extends EventEmitter {
   //
   // PUBLIC METHODS
   //
-  kaspaWasm: TKaspaWasm;
+  kaspaWasm!: TKaspaWasm;
   keyringTypes: any[];
   store!: ObservableStore<any>;
   memStore: ObservableStore<MemStoreState>;
@@ -607,6 +610,7 @@ class KeyringService extends EventEmitter {
       })
     )
       .then((serializedKeyrings) => {
+        // eslint-disable-next-line no-undef
         return this.encryptor.encrypt(this.password as string, serializedKeyrings as unknown as Buffer);
       })
       .then((encryptedString) => {
