@@ -22,7 +22,6 @@ import {
   IKaspaUTXO,
   IResultPsbtHex,
   IScannedGroup,
-  InscribeOrder,
   Inscription,
   InscriptionSummary,
   NetworkType,
@@ -464,12 +463,12 @@ export class OpenApiService {
     return groupsResult;
   }
 
-  // async getBTCUtxos(address: string): Promise<UTXO[]> {
-  async getBTCUtxos(address: string): Promise<IKaspaUTXO[]> {
+  // async getKASUtxos(address: string): Promise<UTXO[]> {
+  async getKASUtxos(address: string): Promise<IKaspaUTXO[]> {
     // return this.httpGet('/address/btc-utxo', {
     //   address,
     // });
-    await this.handleRpcConnect('getBTCUtxos');
+    await this.handleRpcConnect('getKASUtxos');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
       console.error('Please wait for the node to sync');
@@ -484,19 +483,16 @@ export class OpenApiService {
     return utxos;
   }
 
-  async getKASUtxos(address: string): Promise<IKaspaUTXO[]> {
-    // return this.httpGet('/address/btc-utxo', {
-    //   address,
-    // });
-    await this.handleRpcConnect('getKASUtxos');
+  async submitTransaction(preSubmitPending:any){
+    await this.handleRpcConnect('submitTransaction');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
-      console.error('Please wait for the node to sync');
       this.rpc.disconnect();
-      return [];
+      throw new Error('Please wait for the node to sync');
     }
-    const utxos = await this.rpc.getUtxosByAddresses([address]);
-    return utxos;
+    const txid = await preSubmitPending.submit(this.rpc);
+    return txid;
+
   }
 
   async getInscriptionUtxo(inscriptionId: string): Promise<UTXO> {
@@ -595,14 +591,6 @@ export class OpenApiService {
 
   async getDomainInfo(domain: string): Promise<Inscription> {
     return this.httpGet('/address/search', { domain });
-  }
-
-  async inscribeBRC20Transfer(address: string, tick: string, amount: string, feeRate: number): Promise<InscribeOrder> {
-    return this.httpPost('/brc20/inscribe-transfer', { address, tick, amount, feeRate });
-  }
-
-  async getInscribeResult(orderId: string): Promise<TokenTransfer> {
-    return this.httpGet('/brc20/order-result', { orderId });
   }
 
   async getAddressTokenSummary(address: string, ticker: string): Promise<AddressTokenSummary> {

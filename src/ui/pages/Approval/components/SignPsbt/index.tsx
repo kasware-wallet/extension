@@ -17,12 +17,11 @@ import {
 import { Button, Card, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressText } from '@/ui/components/AddressText';
-import InscriptionPreview from '@/ui/components/InscriptionPreview';
 import { WarningPopover } from '@/ui/components/WarningPopover';
 import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useAccountAddress, useCurrentAccount } from '@/ui/state/accounts/hooks';
 import {
-  usePrepareSendBTCCallback,
+  usePrepareSendKASCallback,
   usePrepareSendOrdinalsInscriptionsCallback
 } from '@/ui/state/transactions/hooks';
 import { colors } from '@/ui/theme/colors';
@@ -294,7 +293,7 @@ function SignTxDetails({ txInfo, type, rawTxInfo }: { txInfo: TxInfo; rawTxInfo?
                         textCenter
                         size="xxl"
                       />
-                      <Text text="BTC" color="textDim" />
+                      <Text text="KAS" color="textDim" />
                     </Row>
                   </Column>
                 </Column>
@@ -336,11 +335,11 @@ function SignTxDetails({ txInfo, type, rawTxInfo }: { txInfo: TxInfo; rawTxInfo?
                     textCenter
                     color="textDim"
                   />
-                  <Row overflowX gap="lg" justifyCenter style={{ width: 280 }} pb="lg">
+                  {/* <Row overflowX gap="lg" justifyCenter style={{ width: 280 }} pb="lg">
                     {sendingInscriptions.map((v) => (
                       <InscriptionPreview key={v.inscriptionId} data={v} preset="small" />
                     ))}
-                  </Row>
+                  </Row> */}
                 </Column>
               )}
               {sendingInscriptions.length > 0 && (
@@ -430,7 +429,7 @@ export default function SignPsbt({
 
   const [tabState, setTabState] = useState(TabState.DATA);
 
-  const prepareSendBTC = usePrepareSendBTCCallback();
+  const prepareSendKAS = usePrepareSendKASCallback();
   const prepareSendOrdinalsInscriptions = usePrepareSendOrdinalsInscriptionsCallback();
 
   const wallet = useWallet();
@@ -449,7 +448,7 @@ export default function SignPsbt({
       // request from kasware provider
       if (!psbtHex && toAddress && satoshis) {
         try {
-          const rawTxInfo = await prepareSendBTC({
+          const rawTxInfo = await prepareSendKAS({
             toAddressInfo: { address: toAddress, domain: '' },
             toAmount: satoshis,
             feeRate,
@@ -696,7 +695,7 @@ export default function SignPsbt({
                               </Column>
                               <Row>
                                 <Text text={`${satoshisToAmount(v.value)}`} color={isToSign ? 'white' : 'textDim'} />
-                                <Text text="BTC" color="textDim" />
+                                <Text text="KAS" color="textDim" />
                               </Row>
                             </Row>
                           </Column>
@@ -725,7 +724,7 @@ export default function SignPsbt({
                               <AddressText address={v.address} color={isMyAddress ? 'white' : 'textDim'} />
                               <Row>
                                 <Text text={`${satoshisToAmount(v.value)}`} color={isMyAddress ? 'white' : 'textDim'} />
-                                <Text text="BTC" color="textDim" />
+                                <Text text="KAS" color="textDim" />
                               </Row>
                             </Row>
                           </Column>

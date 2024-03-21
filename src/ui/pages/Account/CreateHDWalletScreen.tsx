@@ -94,7 +94,7 @@ function Step1_Create({
   const words = contextData.mnemonics.split(' ');
   return (
     <Column gap="xl">
-      <Text text="Secret Recovery Phrase" preset="title-bold" textCenter />
+      <Text text="Seed Phrase" preset="title-bold" textCenter />
       <Text
         text="This phrase is the ONLY way to recover your wallet. Do NOT share it with anyone!"
         color="warning"
@@ -127,7 +127,7 @@ function Step1_Create({
 
       <Row justifyCenter>
         <Checkbox onChange={onChange} checked={checked} style={{ fontSize: fontSizes.sm }}>
-          <Text text="I saved My Secret Recovery Phrase" />
+          <Text text="I saved My Seed Phrase" />
         </Checkbox>
       </Row>
 
@@ -245,8 +245,8 @@ function Step1_Import({
 
   return (
     <Column gap="lg">
-      <Text text="Secret Recovery Phrase" preset="title-bold" textCenter />
-      <Text text="Import an existing wallet with your secret recovery phrase" preset="sub" textCenter />
+      <Text text="Seed Phrase" preset="title-bold" textCenter />
+      <Text text="Import an existing wallet with your seed phrase" preset="sub" textCenter />
 
       {wordsItems.length > 1 ? (
         <Row justifyCenter>
@@ -629,7 +629,7 @@ function Step2({
         <Row justifyBetween>
           <Text text="Address Type" preset="bold" />
           <Text
-            text="Scan in more addresses..."
+            text="Discover more addresses..."
             preset="link"
             onClick={() => {
               scanVaultAddress();
@@ -686,7 +686,7 @@ function Step2({
             return null;
           }
 
-          const hdPath = (contextData.customHdPath || item.hdPath) + '/0';
+          const hdPath = (contextData.customHdPath || item.hdPath) + '/0\'';
           return (
             <AddressTypeCard2
               key={index}

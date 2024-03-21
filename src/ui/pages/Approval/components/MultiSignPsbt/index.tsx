@@ -8,7 +8,6 @@ import { Button, Card, Column, Content, Footer, Header, Icon, Layout, Row, Text,
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressText } from '@/ui/components/AddressText';
 import { Empty } from '@/ui/components/Empty';
-import InscriptionPreview from '@/ui/components/InscriptionPreview';
 import { TabBar } from '@/ui/components/TabBar';
 import { WarningPopover } from '@/ui/components/WarningPopover';
 import WebsiteBar from '@/ui/components/WebsiteBar';
@@ -84,11 +83,11 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
                     textCenter
                     color="textDim"
                   />
-                  <Row overflowX gap="lg" justifyCenter style={{ width: 280 }} pb="lg">
+                  {/* <Row overflowX gap="lg" justifyCenter style={{ width: 280 }} pb="lg">
                     {inscriptions.map((v) => (
                       <InscriptionPreview key={v.inscriptionId} data={v} preset="small" />
                     ))}
-                  </Row>
+                  </Row> */}
                 </Column>
               )}
               {inscriptions.length > 0 && <Row style={{ borderTopWidth: 1, borderColor: colors.border }} my="md" />}
@@ -370,7 +369,7 @@ export default function MultiSignPsbt({
                           </Column>
                           <Row>
                             <Text text={`${satoshisToAmount(v.value)}`} color={isToSign ? 'white' : 'textDim'} />
-                            <Text text="BTC" color="textDim" />
+                            <Text text="KAS" color="textDim" />
                           </Row>
                         </Row>
                       );
@@ -394,7 +393,7 @@ export default function MultiSignPsbt({
                               <AddressText address={v.address} color={isMyAddress ? 'white' : 'textDim'} />
                               <Row>
                                 <Text text={`${satoshisToAmount(v.value)}`} color={isMyAddress ? 'white' : 'textDim'} />
-                                <Text text="BTC" color="textDim" />
+                                <Text text="KAS" color="textDim" />
                               </Row>
                             </Row>
                           </Column>
@@ -407,7 +406,7 @@ export default function MultiSignPsbt({
 
               <Section title="NETWORK FEE:">
                 <Text text={networkFee} />
-                <Text text="BTC" color="textDim" />
+                <Text text="KAS" color="textDim" />
               </Section>
 
               <Section title="NETWORK FEE RATE:">

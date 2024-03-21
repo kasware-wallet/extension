@@ -271,17 +271,6 @@ export interface tempAccount {
   deriveType: number;
   index: number;
 }
-
-export interface InscribeOrder {
-  orderId: string;
-  payAddress: string;
-  totalFee: number;
-  minerFee: number;
-  originServiceFee: number;
-  serviceFee: number;
-  outputValue: number;
-}
-
 export interface TokenBalance {
   availableBalance: string;
   overallBalance: string;
@@ -301,11 +290,6 @@ export interface Arc20Balance {
 export interface TokenInfo {
   totalSupply: string;
   totalMinted: string;
-}
-
-export enum TokenInscriptionType {
-  INSCRIBE_TRANSFER,
-  INSCRIBE_MINT
 }
 export interface TokenTransfer {
   ticker: string;

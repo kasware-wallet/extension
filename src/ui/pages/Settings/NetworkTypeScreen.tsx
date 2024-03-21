@@ -28,7 +28,7 @@ export default function NetworkTypeScreen() {
       />
       <Content>
         <Column>
-          {currentRpcLinks.map((item, index) => {
+          {currentRpcLinks && currentRpcLinks.length > 0 && currentRpcLinks.map((item, index) => {
             return (
               item.value !== NetworkType.Simnet && (
                 <Card

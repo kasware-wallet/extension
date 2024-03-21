@@ -54,7 +54,7 @@ export const KEYRING_TYPES: {
   'HD Key Tree': {
     name: 'HD Key Tree',
     tag: 'HD',
-    alianName: 'HD Wallet'
+    alianName: 'Wallet'
   },
   'Simple Key Pair': {
     name: 'Simple Key Pair',
@@ -250,7 +250,7 @@ export const TELEGRAM_URL = 'https://t.me/+eBTwLzz_BcwwMmE1';
 
 export const CHANNEL = process.env.channel!;
 // export const VERSION = process.env.release!;
-export const VERSION = '0.2.8.4';
+export const VERSION = '0.2.8.5';
 export const MANIFEST_VERSION = process.env.manifest!;
 
 export enum AddressFlagType {

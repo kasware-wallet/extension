@@ -140,7 +140,7 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
                     navigate('ExportMnemonicsScreen', { keyring });
                   }}>
                   <KeyOutlined />
-                  <Text text="Show Secret Recovery Phrase" size="sm" />
+                  <Text text="Show Seed Phrase" size="sm" />
                 </Row>
               ) : (
                 <Row

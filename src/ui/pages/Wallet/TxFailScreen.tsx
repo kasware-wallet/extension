@@ -7,7 +7,7 @@ export default function TxFailScreen() {
   const { error } = useLocationState<{ error: string }>();
   const [isMassResaon, setIsMassResaon] = useState(false);
   useEffect(() => {
-    if (error.includes('is larger than max allowed size of 100000')) {
+    if (error && error.includes('is larger than max allowed size of 100000')) {
       setIsMassResaon(true);
     }
   }, [error]);
@@ -26,7 +26,7 @@ export default function TxFailScreen() {
 
           <Text preset="title" text="Payment Failed" textCenter />
           {isMassResaon && <Text text="You may increase transfer amount to avoid the error below." textCenter />}
-          <Text preset="sub" style={{ color: colors.red,wordWrap: 'break-word' }} text={error} textCenter />
+          <Text preset="sub" style={{ color: colors.red, wordWrap: 'break-word' }} text={error} textCenter />
         </Column>
       </Content>
     </Layout>

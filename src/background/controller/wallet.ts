@@ -853,36 +853,22 @@ export class WalletController extends BaseController {
     return NETWORK_TYPES[networkType].name;
   };
 
-  getBTCUtxos = async () => {
-    // getBTCAccount
-    const account = preferenceService.getCurrentAccount();
-    if (!account) throw new Error('no current account');
-
-    const utxos = await openapiService.getBTCUtxos(account.address);
-
-    // if (openapiService.addressFlag == 1) {
-    //   utxos = utxos.filter((v) => (v as any).height !== 4194303);
-    // }
-
-    const btcUtxos = getKaspaUTXOWithoutBigint(utxos);
-    return btcUtxos;
-  };
   getKASUtxos = async () => {
     // getBTCAccount
     const account = preferenceService.getCurrentAccount();
     if (!account) throw new Error('no current account');
 
-    const utxos = await openapiService.getBTCUtxos(account.address);
+    const utxos = await openapiService.getKASUtxos(account.address);
 
-    const replacer = (key, value) => (typeof value === 'bigint' ? value.toString() : value);
-    const str = JSON.stringify(utxos, replacer);
-    // const reviver = (key, value) => (key === "amount" || key === "blockDaaScore" ? BigInt(value) : value);
-    // const obj = JSON.parse(str, reviver)
-    return str;
+    // if (openapiService.addressFlag == 1) {
+    //   utxos = utxos.filter((v) => (v as any).height !== 4194303);
+    // }
+
+    const kasUtxos = getKaspaUTXOWithoutBigint(utxos);
+    return kasUtxos;
   };
-
   // 1. create and sign a transaction
-  sendBTC = async ({
+  sendKAS = async ({
     to,
     amount,
     feeRate,
@@ -900,17 +886,13 @@ export class WalletController extends BaseController {
     const account = preferenceService.getCurrentAccount();
     if (!account) throw new Error('no current account');
     if (!btcUtxos) {
-      btcUtxos = await this.getBTCUtxos();
+      btcUtxos = await this.getKASUtxos();
     }
     if (btcUtxos.length == 0) {
       throw new Error('Insufficient balance.');
     }
     const sourceAddress = account.address;
     const destinationAddress = to;
-    // const entries = await openapiService.getKASUtxos(sourceAddress);
-    // if (!entries.length) {
-    //   throw new Error(`No UTXOs found for address ${sourceAddress}`);
-    // }
     const entries = getKaspaUTXOs(btcUtxos);
     // entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
     const moneySompi = amount;
@@ -932,7 +914,7 @@ export class WalletController extends BaseController {
     return JSON.stringify(resultJson);
   };
 
-  sendAllBTC = async ({
+  sendAllKAS = async ({
     to,
     feeRate,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
@@ -950,7 +932,7 @@ export class WalletController extends BaseController {
     // const networkType = this.getNetworkType();
 
     if (!btcUtxos) {
-      btcUtxos = await this.getBTCUtxos();
+      btcUtxos = await this.getKASUtxos();
     }
 
     if (btcUtxos.length == 0) {
@@ -1011,7 +993,7 @@ export class WalletController extends BaseController {
     const assetUtxo = Object.assign(utxo, { pubkey: account.pubkey });
 
     if (!btcUtxos) {
-      btcUtxos = await this.getBTCUtxos();
+      btcUtxos = await this.getKASUtxos();
     }
 
     if (btcUtxos.length == 0) {
@@ -1071,7 +1053,7 @@ export class WalletController extends BaseController {
     });
 
     if (!btcUtxos) {
-      btcUtxos = await this.getBTCUtxos();
+      btcUtxos = await this.getKASUtxos();
     }
 
     if (btcUtxos.length == 0) {
@@ -1109,7 +1091,6 @@ export class WalletController extends BaseController {
     const _keyring = keyringService.keyrings[keyring.index];
     const sourceAddress = account.address;
     const destinationAddress = toAddress;
-    const rpc = openapiService.rpc;
     const entries = await openapiService.getKASUtxos(sourceAddress);
     if (!entries.length) {
       throw new Error(`No UTXOs found for address ${sourceAddress}`);
@@ -1140,7 +1121,7 @@ export class WalletController extends BaseController {
         const toSignInputs: ToSignInput[] = [{ index, publicKey }];
         const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
         // submit
-        const txid = await preSubmitPending.submit(rpc);
+        const txid = await openapiService.submitTransaction(preSubmitPending)
         return txid;
       } catch (e) {
         throw new Error(e);
@@ -1182,7 +1163,7 @@ export class WalletController extends BaseController {
     const hdPath = type === KEYRING_TYPE.HdKeyring ? displayedKeyring.keyring.hdPath : '';
     const alianName = preferenceService.getKeyringAlianName(
       key,
-      initName ? `${KEYRING_TYPES[type].alianName} #${index + 1}` : ''
+      initName ? `${KEYRING_TYPES[type].alianName} ${index + 1}` : ''
     );
     const keyring: WalletKeyring = {
       index,
@@ -1335,7 +1316,7 @@ export class WalletController extends BaseController {
   };
 
   getAddressUtxo = async (address: string) => {
-    const data = await openapiService.getBTCUtxos(address);
+    const data = await openapiService.getKASUtxos(address);
     return data;
   };
 
@@ -1431,14 +1412,6 @@ export class WalletController extends BaseController {
 
   getFeeSummary = async () => {
     return openapiService.getFeeSummary();
-  };
-
-  inscribeBRC20Transfer = (address: string, tick: string, amount: string, feeRate: number) => {
-    return openapiService.inscribeBRC20Transfer(address, tick, amount, feeRate);
-  };
-
-  getInscribeResult = (orderId: string) => {
-    return openapiService.getInscribeResult(orderId);
   };
 
   decodePsbt = (psbtHex: string) => {

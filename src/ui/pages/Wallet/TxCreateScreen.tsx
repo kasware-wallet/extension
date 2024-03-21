@@ -16,7 +16,7 @@ import { useKeyrings } from '@/ui/state/keyrings/hooks';
 import {
   useBitcoinTx,
   useFetchUtxosCallback,
-  usePrepareSendBTCCallback,
+  usePrepareSendKASCallback,
   useSafeBalance
 } from '@/ui/state/transactions/hooks';
 import { colors } from '@/ui/theme/colors';
@@ -64,7 +64,7 @@ export default function TxCreateScreen() {
     });
   }, []);
 
-  const prepareSendBTC = usePrepareSendBTCCallback();
+  const prepareSendKAS = usePrepareSendKASCallback();
 
   const safeSatoshis = useMemo(() => {
     return amountToSatoshis(safeBalance);
@@ -114,7 +114,7 @@ export default function TxCreateScreen() {
       return;
     }
 
-    prepareSendBTC({ toAddressInfo: toInfo, toAmount: toSatoshis, feeRate, enableRBF })
+    prepareSendKAS({ toAddressInfo: toInfo, toAmount: toSatoshis, feeRate, enableRBF })
       .then((data) => {
         // if (data.fee < data.estimateFee) {
         //   setError(`Network fee must be at leat ${data.estimateFee}`);

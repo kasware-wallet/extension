@@ -216,11 +216,8 @@ export default function WalletTabScreen() {
                 <Row justifyBetween>
                   <span style={$noBreakStyle}>{'Unconfirmed KAS'}</span>
                   <span style={$noBreakStyle}>{` ${accountBalance.pending_btc_amount} KAS`}</span>
-                </Row>
-                <Row justifyBetween>
-                  <span style={$noBreakStyle}>{'BTC in Inscriptions'}</span>
-                  <span style={$noBreakStyle}>{` ${accountBalance.inscription_amount} BTC`}</span>
-                </Row> */}
+                </Row> */
+                }
               </>
             }
             overlayStyle={{

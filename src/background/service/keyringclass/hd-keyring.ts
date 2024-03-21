@@ -153,7 +153,7 @@ class HdKeyring extends SimpleKeyring {
   deserialize(_opts: DeserializeOption = {}) {
     // return __awaiter(this, void 0, void 0, function* () {
     if (this.root) {
-      throw new Error('Btc-Hd-Keyring: Secret recovery phrase already provided');
+      throw new Error('KAS-HD-Keyring: Seed phrase already provided');
     }
     const opts = _opts;
     this.wallets = [];
@@ -180,7 +180,7 @@ class HdKeyring extends SimpleKeyring {
   }
   initFromXpriv(xpriv: string): void {
     if (this.root) {
-      throw new Error('Btc-Hd-Keyring: Secret recovery phrase already provided');
+      throw new Error('KAS-HD-Keyring: Seed phrase already provided');
     }
     this.xpriv = xpriv;
     this._index2wallet = {};
@@ -190,7 +190,7 @@ class HdKeyring extends SimpleKeyring {
   }
   initFromMnemonic(mnemonic: string): void {
     if (this.root) {
-      throw new Error('Kas-Hd-Keyring: Secret recovery phrase already provided');
+      throw new Error('Kas-Hd-Keyring: Seed phrase already provided');
     }
     this.mnemonic = mnemonic;
     this._index2wallet = {};
@@ -208,7 +208,7 @@ class HdKeyring extends SimpleKeyring {
   }
   changeHdPath(hdPath: string): void {
     if (!this.mnemonic) {
-      throw new Error('Btc-Hd-Keyring: Not support');
+      throw new Error('KAS-HD-Keyring: Not support');
     }
     this.hdPath = hdPath;
     // this.root = this.hdWallet.derive(this.hdPath);
@@ -221,7 +221,7 @@ class HdKeyring extends SimpleKeyring {
   }
   getAccountByHdPath(hdPath: string, index: number): string {
     if (!this.mnemonic) {
-      throw new Error('Btc-Hd-Keyring: Not support');
+      throw new Error('KAS-HD-Keyring: Not support');
     }
     // const root = this.hdWallet.derive(hdPath);
     // const child = root.deriveChild(index);

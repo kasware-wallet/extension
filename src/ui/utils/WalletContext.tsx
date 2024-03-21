@@ -17,13 +17,11 @@ import {
   DecodedPsbt,
   FeeSummary,
   IKaspaUTXOWithoutBigint,
-  InscribeOrder,
   Inscription,
   InscriptionSummary,
   IScannedGroup,
   NetworkType,
   SignPsbtOptions,
-  TokenTransfer,
   TxHistoryItem,
   VersionDetail,
   WalletConfig,
@@ -144,9 +142,9 @@ export interface WalletController {
 
   signTransaction(psbt: any, inputs: ToSignInput[]): Promise<any>;
 
-  sendBTC(data: { to: string; amount: number; btcUtxos: any[]; feeRate: number; enableRBF: boolean }): Promise<string>;
+  sendKAS(data: { to: string; amount: number; btcUtxos: any[]; feeRate: number; enableRBF: boolean }): Promise<string>;
 
-  sendAllBTC(data: { to: string; btcUtxos: any[]; feeRate: number; enableRBF: boolean }): Promise<string>;
+  sendAllKAS(data: { to: string; btcUtxos: any[]; feeRate: number; enableRBF: boolean }): Promise<string>;
 
   sendOrdinalsInscription(data: {
     to: string;
@@ -171,8 +169,7 @@ export interface WalletController {
 
   getInscriptionSummary(): Promise<InscriptionSummary>;
   getAppSummary(): Promise<AppSummary>;
-  getBTCUtxos(): Promise<IKaspaUTXOWithoutBigint[]>;
-  getKASUtxos(): Promise<string>;
+  getKASUtxos(): Promise<IKaspaUTXOWithoutBigint[]>;
   getAssetUtxosAtomicalsNFT(atomicalId: string): Promise<any[]>;
   getAssetUtxosInscriptions(inscriptionId: string): Promise<any[]>;
 
@@ -202,8 +199,6 @@ export interface WalletController {
   setEditingAccount(account: Account): Promise<void>;
   getEditingAccount(): Promise<Account>;
 
-  inscribeBRC20Transfer(address: string, tick: string, amount: string, feeRate: number): Promise<InscribeOrder>;
-  getInscribeResult(orderId: string): Promise<TokenTransfer>;
 
   decodePsbt(psbtHex: string): Promise<DecodedPsbt>;
 

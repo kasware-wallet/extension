@@ -23,7 +23,6 @@ import SwitchKeyringScreen from './Account/SwitchKeyringScreen';
 import UnlockScreen from './Account/UnlockScreen';
 import ApprovalScreen from './Approval/ApprovalScreen';
 import ConnectedSitesScreen from './Approval/ConnectedSitesScreen';
-import { InscribeTransferScreen } from './Approval/components/InscribeTransfer';
 import AppTabScrren from './Main/AppTabScreen';
 import BoostScreen from './Main/BoostScreen';
 import DiscoverTabScreen from './Main/DiscoverTabScreen';
@@ -193,10 +192,6 @@ const routes = {
   EditContactNameScreen: {
     path: '/settings/edit-contact-name',
     element: <EditContactNameScreen />
-  },
-  InscribeTransferScreen: {
-    path: '/inscribe/transfer',
-    element: <InscribeTransferScreen />
   },
   TestScreen: {
     path: '/test',

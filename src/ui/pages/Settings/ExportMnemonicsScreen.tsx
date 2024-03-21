@@ -67,7 +67,7 @@ export default function ExportMnemonicsScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Secret Recovery Phrase"
+        title="Seed Phrase"
       />
 
       <Content>
@@ -76,19 +76,19 @@ export default function ExportMnemonicsScreen() {
             <Card>
               <Column gap="lg">
                 <Text
-                  text="If you lose your Secret Recovery Phrase, your assets will be gone!"
+                  text="If you lose your Seed Phrase, your assets will be gone!"
                   preset="title-bold"
                   color="red"
                 />
 
                 <Text
-                  text="If you share the Secret Recovery Phrase to others, your assets will be stolen!"
+                  text="If you share the Seed Phrase to others, your assets will be stolen!"
                   preset="title-bold"
                   color="red"
                 />
 
                 <Text
-                  text="Secret Recovery Phrase is only stored in your browser, it is your responsibilities to keep the Private Key safe!"
+                  text="Seed Phrase is only stored in your browser, it is your responsibilities to keep the Private Key safe!"
                   preset="title-bold"
                   color="red"
                 />
@@ -112,7 +112,7 @@ export default function ExportMnemonicsScreen() {
             />
             {error && <Text text={error} preset="regular" color="error" />}
 
-            <Button disabled={disabled} text="Show Secret Recovery Phrase" preset="primary" onClick={btnClick} />
+            <Button disabled={disabled} text="Show Seed Phrase" preset="primary" onClick={btnClick} />
           </Column>
         ) : (
           <Column>

@@ -303,15 +303,15 @@ export class KaswareProvider extends EventEmitter {
     });
   };
 
-  inscribeTransfer = async (ticker: string, amount: string) => {
-    return this._request({
-      method: 'inscribeTransfer',
-      params: {
-        ticker,
-        amount
-      }
-    });
-  };
+  // inscribeTransfer = async (ticker: string, amount: string) => {
+  //   return this._request({
+  //     method: 'inscribeTransfer',
+  //     params: {
+  //       ticker,
+  //       amount
+  //     }
+  //   });
+  // };
 
   getVersion = async () => {
     return this._request({

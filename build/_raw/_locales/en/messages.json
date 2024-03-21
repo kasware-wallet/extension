@@ -21,7 +21,7 @@
   "This__phrase__is__the__ONLY__way__to": { "message": "This phrase is the ONLY way to" },
   "click__to__copy": { "message": "click to copy" },
   "You__will__not__be__able__to__recover__this__account__with__your__Secret__Recovery__Phrase": {
-    "message": "You will not be able to recover this account with your Secret Recovery Phrase"
+    "message": "You will not be able to recover this account with your Seed Phrase"
   },
   "Fee": { "message": "Fee" },
   "Your__transaction__has__been__successfully__sent": { "message": "Your transaction has been successfully sent" },
@@ -44,7 +44,7 @@
   "Change__Password": { "message": "Change Password" },
   "Private__Key": { "message": "Private Key" },
   "Recipients__BTC__address": { "message": "Recipient’s BTC address" },
-  "Secret__Recovery__Phrase": { "message": "Secret Recovery Phrase" },
+  "Secret__Recovery__Phrase": { "message": "Seed Phrase" },
   "Confirm__Password": { "message": "Confirm Password" },
   "Successfully__created": { "message": "Successfully created" },
   "mnemonic__phrase__is__invalid": { "message": "mnemonic phrase is invalid" },
@@ -57,7 +57,7 @@
   },
   "recover__your__wallet": { "message": "recover your wallet" },
   "Import__an__existing__wallet__with__your__12__word__secret__recovery__phrase": {
-    "message": "Import an existing wallet with your 12-word secret recovery phrase"
+    "message": "Import an existing wallet with your 12-word seed phrase"
   },
   "US__Dollar": { "message": "US Dollar" },
   "Change__your__lockscreen__password": { "message": "Change your lockscreen password" },
@@ -66,7 +66,7 @@
   "View__on__Block__Explorer": { "message": "View on Block Explorer" },
   "Do__NOT__share__it__with__anyone": { "message": "Do NOT share it with anyone" },
   "Deposit": { "message": "Deposit" },
-  "Show__Secret__Recovery__Phrase": { "message": "Show Secret Recovery Phrase" },
+  "Show__Secret__Recovery__Phrase": { "message": "Show Seed Phrase" },
   "Language": { "message": "Language" },
   "Import__Private__Key": { "message": "Import Private Key" },
   "Password": { "message": "Password" },
@@ -93,14 +93,14 @@
   "If__you__ever__change__browsers__or__move__computers": {
     "message": "If you ever change browsers or move computers"
   },
-  "I__saved__My__Secret__Recovery__Phrase": { "message": "I saved My Secret Recovery Phrase" },
+  "I__saved__My__Secret__Recovery__Phrase": { "message": "I saved My Seed Phrase" },
   "Confirm__payment": { "message": "Confirm payment" },
   "Recipient": { "message": "Recipient" },
   "Spanish": { "message": "Español" },
   "Show__Private__Key": { "message": "Show Private Key" },
   "You__will__use__this__to__unlock__your__wallet": { "message": "You will use this to unlock your wallet" },
   "Imported__accounts__will__not__be__associated__with__your__originally__created__Kasware__account__Secret__Recovery__Phrase": {
-    "message": "Imported accounts will not be associated with your originally created KasWare Wallet account Secret Recovery Phrase"
+    "message": "Imported accounts will not be associated with your originally created KasWare Wallet account Seed Phrase"
   },
   "Login": { "message": "Login" },
   "English": { "message": "English" },

@@ -19,7 +19,7 @@ export function useBitcoinTx() {
   return transactionsState.bitcoinTx;
 }
 
-export function usePrepareSendBTCCallback() {
+export function usePrepareSendKASCallback() {
   const dispatch = useAppDispatch();
   const wallet = useWallet();
   const fromAddress = useAccountAddress();
@@ -59,14 +59,14 @@ export function usePrepareSendBTCCallback() {
       let psbtHex;
 
       if (safeBalance === toAmount) {
-        psbtHex = await wallet.sendAllBTC({
+        psbtHex = await wallet.sendAllKAS({
           to: toAddressInfo.address,
           btcUtxos: _utxos,
           enableRBF,
           feeRate
         });
       } else {
-        psbtHex = await wallet.sendBTC({
+        psbtHex = await wallet.sendKAS({
           to: toAddressInfo.address,
           amount: toAmount,
           btcUtxos: _utxos,
@@ -313,8 +313,7 @@ export function useFetchUtxosCallback() {
   const wallet = useWallet();
   const account = useCurrentAccount();
   return useCallback(async () => {
-    const data = await wallet.getBTCUtxos();
-    // const kasUtxosStr = await wallet.getKASUtxos();
+    const data = await wallet.getKASUtxos();
     dispatch(transactionsActions.setUtxos(data));
     // dispatch(transactionsActions.setKasUtxos(kasUtxosStr));
     return data;
