@@ -5,6 +5,9 @@
 /.pnp
 .pnp.js
 
+# kaspa wasm
+/src/kaspaweb
+
 # testing
 /coverage
 
