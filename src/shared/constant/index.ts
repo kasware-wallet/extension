@@ -107,7 +107,7 @@ export const LANGS = [
     label: 'Spanish'
   }
 ];
-
+// should be aligned with the order of AddressType
 export const ADDRESS_TYPES: {
   value: AddressType;
   label: string;
@@ -130,6 +130,14 @@ export const ADDRESS_TYPES: {
     name: 'Legacy',
     hdPath: "m/44'/972/0'",
     displayIndex: 1,
+    isKaswareLegacy: false
+  },
+  {
+    value: AddressType.KASPA_ONEKEY_44_111111,
+    label: 'OneKey',
+    name: 'Onekey',
+    hdPath: "m/44'/111111'/0'",
+    displayIndex: 0,
     isKaswareLegacy: false
   },
 ];
@@ -166,6 +174,11 @@ export const RESTORE_WALLETS: { value: RestoreWalletType; name: string; addressT
     value: RestoreWalletType.CORE_GOLANG_CLI,
     name: 'Core Golang Cli Wallet',
     addressTypes: [AddressType.KASPA_44_111111]
+  },
+  {
+    value: RestoreWalletType.ONEKEY,
+    name: 'OneKey Wallet',
+    addressTypes: [AddressType.KASPA_ONEKEY_44_111111]
   }
 ];
 
@@ -244,13 +257,13 @@ export const SUPPORTED_DOMAINS = ['sats', 'kasware', 'x', 'btc'];
 export const SAFE_DOMAIN_CONFIRMATION = 3;
 
 export const GITHUB_URL = 'https://github.com/kasware-wallet/extension';
-export const DISCORD_URL = 'https://discord.gg/Hx8fVpsW';
+export const DISCORD_URL = 'https://discord.gg/Fg7xMD8k';
 export const TWITTER_URL = 'https://twitter.com/kasware_wallet';
 export const TELEGRAM_URL = 'https://t.me/+eBTwLzz_BcwwMmE1';
 
 export const CHANNEL = process.env.channel!;
 // export const VERSION = process.env.release!;
-export const VERSION = '0.2.8.5';
+export const VERSION = '0.3.0';
 export const MANIFEST_VERSION = process.env.manifest!;
 
 export enum AddressFlagType {

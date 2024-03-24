@@ -32,6 +32,7 @@ export default function NetworkTypeScreen() {
             return (
               item.value !== NetworkType.Simnet && (
                 <Card
+                  classname="card-select"
                   key={index}
                   mt="lg">
                   <Row full

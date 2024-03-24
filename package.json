@@ -1,6 +1,6 @@
 {
   "name": "kasware-extension",
-  "version": "0.2.8.5",
+  "version": "0.3.0",
   "private": true,
   "homepage": "https://github.com/kasware-wallet/extension#readme",
   "bugs": {
@@ -18,14 +18,13 @@
     "build:brave": "gulp build --env=pro --browser=brave --manifest=mv2 --channel=github",
     "build:edge": "gulp build --env=pro --browser=edge --manifest=mv2 --channel=github",
     "build:chrome:mv3:dev": "webpack --progress --env browser=chrome manifest=mv3 config=dev channel=github version=0.0.0",
-    "build:chrome:mv3": "gulp build --env=pro --browser=chrome --manifest=mv3 --channel=store",
+    "build:chrome:mv3": "rm -rf dist/* && pnpm install && gulp build --env=pro --browser=chrome --manifest=mv3 --channel=store",
     "translate": "node build/pull_translation",
     "lint": "eslint src --fix --ext .js,.ts,.tsx,.json  && npm run format",
     "lint:fix": "eslint --fix src/**/*.{js,jsx,ts,tsx,json}",
     "_prettier": "prettier --write .",
     "fix:modules": "node scripts/fix-modules.js",
-    "format": "prettier --write \"src/**/*.{js,jsx,json,md,ts,tsx}\" --plugin-search-dir=./node_modules/ --plugin=./node_modules/@trivago/prettier-plugin-sort-imports/ ",
-    "prepare": "npm run fix:modules"
+    "format": "prettier --write \"src/**/*.{js,jsx,json,md,ts,tsx}\" --plugin-search-dir=./node_modules/ --plugin=./node_modules/@trivago/prettier-plugin-sort-imports/ "
   },
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
@@ -37,6 +36,8 @@
     "@fortawesome/react-fontawesome": "^0.1.18",
     "@kaspa/wallet": "^1.4.26",
     "@metamask/obs-store": "^7.0.0",
+    "@noble/hashes": "^1.4.0",
+    "@noble/secp256k1": "1.7.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@reduxjs/toolkit": "^1.9.2",
     "@sentry/browser": "^6.19.7",
@@ -63,6 +64,7 @@
     "bfj": "^7.0.2",
     "bignumber.js": "^9.1.1",
     "bip39": "^3.1.0",
+    "bitcoinjs-lib": "^6.1.5",
     "bitcore-lib": "^10.0.23",
     "browser-passworder": "^2.0.3",
     "browserify": "^17.0.0",

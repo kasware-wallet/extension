@@ -24,7 +24,7 @@ export default function AddKeyringScreen() {
               navigate('CreateHDWalletScreen', { isImport: false });
             }}>
             <Column full justifyCenter>
-              <Text text="Create with mnemonics (12-words)" size="sm" />
+              <Text text="With seed phrase (12 words)" size="sm" />
             </Column>
           </Card>
 
@@ -36,7 +36,7 @@ export default function AddKeyringScreen() {
               navigate('CreateHDWalletScreen', { isImport: true });
             }}>
             <Column full justifyCenter>
-              <Text text="Restore from mnemonics (12-words、24-words)" size="sm" />
+              <Text text="From seed phrase (12 words, 24 words)" size="sm" />
             </Column>
           </Card>
 
@@ -46,7 +46,7 @@ export default function AddKeyringScreen() {
               navigate('CreateSimpleWalletScreen');
             }}>
             <Column full justifyCenter>
-              <Text text="Restore from single private key" size="sm" />
+              <Text text="From single private key" size="sm" />
             </Column>
           </Card>
         </Column>

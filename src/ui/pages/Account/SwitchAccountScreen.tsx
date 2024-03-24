@@ -11,7 +11,7 @@ import { accountActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
 import { colors } from '@/ui/theme/colors';
-import { copyToClipboard, shortAddress, useWallet } from '@/ui/utils';
+import { copyToClipboard, generateHdPath, shortAddress, useWallet } from '@/ui/utils';
 import {
   CheckCircleFilled,
   CopyOutlined,
@@ -49,12 +49,13 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
   const [optionsVisible, setOptionsVisible] = useState(false);
   // const path = keyring.hdPath + '/' + account.index;
   // eslint-disable-next-line quotes
-  const path = keyring.hdPath + '/' + account.deriveType + `'/` + account.index?.toString().slice(2) + `'`;
-
+  // const path = keyring.hdPath + '/' + account.deriveType + `'/` + account.index?.toString().slice(2) + `'`;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const path = generateHdPath(keyring.hdPath, account.deriveType!.toString(), account.index!.toString().slice(2));
   const tools = useTools();
 
   return (
-    <Card justifyBetween mt="md">
+    <Card classname="card-select" justifyBetween mt="md">
       <Row>
         <Column style={{ width: 20 }} selfItemsCenter>
           {selected && (

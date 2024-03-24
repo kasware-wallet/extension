@@ -133,6 +133,7 @@ export default function WalletTabScreen() {
     };
   }, []);
   useEffect(() => {
+    if (networkType !== NetworkType.Mainnet) return;
     fetch('https://api.kaspa.org/info/price')
       .then((response) => response.json())
       .then((data) => {
@@ -145,7 +146,7 @@ export default function WalletTabScreen() {
           setUSDValue(value.toLocaleString());
         }
       });
-  }, [accountBalance.amount]);
+  }, [accountBalance.amount, networkType]);
 
   useEffect(() => {
     fetchActivity();
@@ -185,6 +186,7 @@ export default function WalletTabScreen() {
         }
         RightComponent={
           <Card
+            classname="card-select"
             preset="style2"
             onClick={() => {
               navigate('SwitchKeyringScreen');

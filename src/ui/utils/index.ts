@@ -211,7 +211,7 @@ export function handleTransactions(data, address): ITransactionInfo[] {
       usdValue,
       block_time,
       transaction_id,
-      txDetail:data[i]
+      txDetail: data[i]
     });
   }
 
@@ -270,3 +270,15 @@ export function handleTransactionsAddresses(data, address): IRecentTransactoinAd
 
   return transactionInfos;
 }
+
+export const generateHdPath = (hdPath: string, dType: string, index: string) => {
+  // eslint-disable-next-line quotes
+  if (hdPath == "m/44'/972/0'") {
+    // m/44'/972/0'/0'/0'
+    // eslint-disable-next-line quotes
+    return hdPath + '/' + dType + `'/` + index + `'`;
+  } else {
+    // m/44'/111111'/0'/0/0
+    return hdPath + '/' + dType + '/' + index;
+  }
+};

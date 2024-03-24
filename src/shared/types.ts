@@ -7,7 +7,8 @@ import { CHAINS_ENUM } from './constant';
 // default means KASPA_44_111111
 export enum AddressType {
   KASPA_44_111111,
-  KASPA_44_972
+  KASPA_44_972,
+  KASPA_ONEKEY_44_111111,
 }
 
 export { NetworkType };
@@ -27,7 +28,8 @@ export enum RestoreWalletType {
   KASPIUM,
   KASPANET_WEB,
   KDX,
-  CORE_GOLANG_CLI
+  CORE_GOLANG_CLI,
+  ONEKEY
 }
 
 export interface IResultPsbtHex {
@@ -379,6 +381,7 @@ export interface IOpts {
   hdPath: string;
   mnemonic: string;
   passphrase: string;
+  addressType:AddressType
 }
 
 export interface IActiveIndexes {

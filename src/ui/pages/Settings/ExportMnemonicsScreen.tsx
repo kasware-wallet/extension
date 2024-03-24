@@ -73,32 +73,34 @@ export default function ExportMnemonicsScreen() {
       <Content>
         {mnemonic == '' ? (
           <Column>
-            <Card>
-              <Column gap="lg">
-                <Text
-                  text="If you lose your Seed Phrase, your assets will be gone!"
-                  preset="title-bold"
-                  color="red"
-                />
+            <Column gap="lg">
+              <Text
+                text="1. Seed phrase alone gives you full access to your wallets and funds."
+                preset="title"
+                color="red"
+              />
 
-                <Text
-                  text="If you share the Seed Phrase to others, your assets will be stolen!"
-                  preset="title-bold"
-                  color="red"
-                />
+              <Text
+                text="2. Never sharer it with anyone."
+                preset="title"
+                color="red"
+              />
 
-                <Text
-                  text="Seed Phrase is only stored in your browser, it is your responsibilities to keep the Private Key safe!"
-                  preset="title-bold"
-                  color="red"
-                />
-              </Column>
-            </Card>
+              <Text
+                text="3. Seed phrase is only stored in your browser."
+                preset="title"
+                color="red"
+              />
+              <Text
+                text="4. KasWare will never ask for your seed phrase."
+                preset="title"
+                color="red"
+              />
+            </Column>
 
             <Text
-              text=" Please make sure you have read the security tips above before typing your password"
+              text=" Please read the tips above carefully"
               preset="title"
-              color="warning"
               textCenter
               my="xl"
             />
@@ -112,7 +114,7 @@ export default function ExportMnemonicsScreen() {
             />
             {error && <Text text={error} preset="regular" color="error" />}
 
-            <Button disabled={disabled} text="Show Seed Phrase" preset="primary" onClick={btnClick} />
+            <Button disabled={disabled} text="Show Seed Phrase" preset="primary" onClick={btnClick} style={{marginTop:5}}/>
           </Column>
         ) : (
           <Column>
@@ -147,11 +149,11 @@ export default function ExportMnemonicsScreen() {
                 })}
               </Grid>
             </Row>
-            <Card>
+            <Card mt='lg'>
               <Column>
                 <Text text="Advance Options" />
                 <Text
-                  text={`Derivation Path: ${keyring.hdPath}/0 (${pathName})`}
+                  text={`Derivation Path: ${keyring.hdPath} (${pathName})`}
                   preset="sub"
                   onClick={() => {
                     copy(keyring.hdPath);

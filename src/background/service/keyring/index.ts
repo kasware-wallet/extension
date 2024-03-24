@@ -297,7 +297,8 @@ class KeyringService extends EventEmitter {
         activeIndexes,
         activeChangeIndexes,
         hdPath,
-        passphrase
+        passphrase,
+        addressType
       },
       addressType
     );

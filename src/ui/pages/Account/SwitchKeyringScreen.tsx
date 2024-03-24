@@ -59,7 +59,7 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
   const [removeVisible, setRemoveVisible] = useState(false);
 
   return (
-    <Card justifyBetween mt="md">
+    <Card classname="card-select" justifyBetween mt="md">
       <Row
         full
         onClick={async (e) => {

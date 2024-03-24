@@ -18,7 +18,7 @@ import { Icon } from '@/ui/components/Icon';
 import { TabBar } from '@/ui/components/TabBar';
 import { useCreateAccountCallback } from '@/ui/state/global/hooks';
 import { fontSizes } from '@/ui/theme/font';
-import { copyToClipboard, satoshisToAmount, useWallet } from '@/ui/utils';
+import { copyToClipboard, generateHdPath, satoshisToAmount, useWallet } from '@/ui/utils';
 import { LoadingOutlined } from '@ant-design/icons';
 
 import { useNavigate } from '../MainRoute';
@@ -589,8 +589,8 @@ function Step2({
             options.addressType,
             20
           );
-          if(sgroup !== null){
-            groups.push(sgroup)
+          if (sgroup !== null) {
+            groups.push(sgroup);
           }
         } catch (e) {
           console.log(e);
@@ -610,7 +610,7 @@ function Step2({
         // groups = await wallet.findGroupAssets(groups);
       } catch (e) {
         tools.showTip((e as any).message);
-        groups = []
+        groups = [];
       }
       setScannedGroups(groups);
       if (groups.length == 0) {
@@ -655,13 +655,18 @@ function Step2({
               items={item.address_arr.map((v, index) => ({
                 address: v,
                 satoshis: item.satoshis_arr[index],
-                path:
-                  (contextData.customHdPath || options.hdPath) +
-                  '/' +
-                  item.dtype_arr[index] +
-                  '\'/' +
-                  item.index_arr[index].toString().substring(2) +
-                  '\''
+                // path:
+                //   (contextData.customHdPath || options.hdPath) +
+                //   '/' +
+                //   item.dtype_arr[index] +
+                //   '\'/' +
+                //   item.index_arr[index].toString().substring(2) +
+                //   '\''
+                path: generateHdPath(
+                  contextData.customHdPath || options.hdPath,
+                  item.dtype_arr[index].toString(),
+                  item.index_arr[index].toString().substring(2)
+                )
               }))}
               checked={index == contextData.addressTypeIndex}
               onClick={() => {
@@ -685,8 +690,10 @@ function Step2({
           if (item.isKaswareLegacy && !hasVault) {
             return null;
           }
-
-          const hdPath = (contextData.customHdPath || item.hdPath) + '/0\'';
+          // eslint-disable-next-line quotes
+          const i = item.hdPath == "m/44'/972/0'" ? '1' : '0';
+          // const hdPath = (contextData.customHdPath || item.hdPath) + '/0\'';
+          const hdPath = generateHdPath(contextData.customHdPath || item.hdPath, '0', i);
           return (
             <AddressTypeCard2
               key={index}
@@ -940,7 +947,7 @@ export default function CreateHDWalletScreen() {
 function checkWords(seed = '', language = 'english') {
   const words = seed.split(' ');
   const wordlist = bip39.wordlists[language];
-  let word:string | undefined;
+  let word: string | undefined;
   while ((word = words.pop()) != null) {
     // eslint-disable-next-line no-loop-func
     const idx = wordlist.findIndex((w) => w === word);

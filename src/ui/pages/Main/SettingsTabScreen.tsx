@@ -99,7 +99,7 @@ const SettingList: Setting[] = [
   {
     label: '',
     value: '',
-    desc: 'Lock Immediately',
+    desc: 'Lock Now',
     action: 'lock-wallet',
     route: '',
     right: false

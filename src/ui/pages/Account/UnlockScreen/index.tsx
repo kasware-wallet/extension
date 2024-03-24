@@ -59,9 +59,9 @@ export default function UnlockScreen() {
           <Row justifyCenter>
             <Logo preset="large" />
           </Row>
-
+          <Text preset="default" text="Accelerating Kaspa adoption" textCenter color="textDim" />
           <Column gap="xl" mt="xxl">
-            <Text preset="title-bold" text="Enter your password" textCenter />
+            {/* <Text preset="title-bold" text="Enter your password" textCenter /> */}
             <Input
               preset="password"
               placeholder="Password"

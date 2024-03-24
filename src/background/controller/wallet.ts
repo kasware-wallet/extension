@@ -321,7 +321,8 @@ export class WalletController extends BaseController {
       activeIndexes,
       activeChangeIndexes: accountCount > 1 ? activeIndexes : [],
       hdPath,
-      passphrase
+      passphrase,
+      addressType
     });
     const displayedKeyring = await keyringService.displayForKeyring(originKeyring, addressType, -1);
     return this.displayedKeyringToWalletKeyring(displayedKeyring, -1, false);
@@ -343,7 +344,8 @@ export class WalletController extends BaseController {
       activeIndexes,
       activeChangeIndexes: accountCount > 1 ? activeIndexes : [],
       hdPath,
-      passphrase
+      passphrase,
+      addressType
     });
     const address_arr_final: string[] = [];
     const satoshis_arr_final: number[] = [];

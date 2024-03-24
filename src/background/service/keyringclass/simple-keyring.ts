@@ -8,14 +8,6 @@ import { PrivateKey } from 'kaspa-wasm';
 type TKaspaWasm = typeof kaspa_wasm;
 type TKeyPair = kaspa_wasm.Keypair;
 
-// Object.defineProperty(exports, "__esModule", { value: true });
-// exports.SimpleKeyring = void 0;
-// const bip371_1 = require("bitcoinjs-lib/src/psbt/bip371");
-// const bs58check_1 = require("bs58check");
-// const events_1 = require("events");
-// const bitcoin_core_1 = require("../bitcoin-core");
-// const message_1 = require("../message");
-// const utils_1 = require("../utils");
 const type = 'Simple Key Pair';
 // class SimpleKeyring extends events_1.EventEmitter {
 class SimpleKeyring {
@@ -36,28 +28,10 @@ class SimpleKeyring {
     }
   }
   serialize() {
-    // return __awaiter(this, void 0, void 0, function* () {
-    //     return this.wallets.map((wallet) => wallet.privateKey.toString("hex"));
-    // });
     const seralizedWallets = this.wallets.map((wallet) => wallet.privateKey.toString());
     return Promise.resolve(seralizedWallets)
   }
   deserialize(opts) {
-    // return __awaiter(this, void 0, void 0, function* () {
-    // const privateKeys = opts;
-    // this.wallets = privateKeys.map((key) => {
-    //     let buf;
-    //     if (key.length === 64) {
-    //         // privateKey
-    //         buf = Buffer.from(key, "hex");
-    //     }
-    //     else {
-    //         // base58
-    //         buf = (0, bs58check_1.decode)(key).slice(1, 33);
-    //     }
-    //     return bitcoin_core_1.ECPair.fromPrivateKey(buf);
-    // });
-    // });
     const privateKeys:string[] = opts;
     this.wallets = privateKeys.map((key) => {
       // From Hex string
@@ -79,9 +53,6 @@ class SimpleKeyring {
     // });
   }
   getAccounts() {
-    // return __awaiter(this, void 0, void 0, function* () {
-    //     return this.wallets.map(({ publicKey }) => publicKey.toString("hex"));
-    // });
     return this.wallets.map(({ publicKey }) => publicKey);
   }
   getAccountsAndIndexAndDType = async () => {
@@ -100,21 +71,6 @@ class SimpleKeyring {
   };
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   signTransaction = async (psbt, inputs, opts) => {
-    // return __awaiter(this, void 0, void 0, function* () {
-    //     inputs.forEach((input) => {
-    //         const keyPair = this._getPrivateKeyFor(input.publicKey);
-    //         if ((0, bip371_1.isTaprootInput)(psbt.data.inputs[input.index]) &&
-    //             !input.disableTweakSigner) {
-    //             const signer = (0, utils_1.tweakSigner)(keyPair, opts);
-    //             psbt.signInput(input.index, signer, input.sighashTypes);
-    //         }
-    //         else {
-    //             const signer = keyPair;
-    //             psbt.signInput(input.index, signer, input.sighashTypes);
-    //         }
-    //     });
-    //     return psbt;
-    // });
     // psbt means pending in generator
     const keyPair = this._getPrivateKeyFor(inputs[0].publicKey);
     const privateKey = keyPair.privateKey;
@@ -122,19 +78,12 @@ class SimpleKeyring {
     return psbt;
   };
   signMessage(publicKey: string, text: string) {
-    // return __awaiter(this, void 0, void 0, function* () {
-    //     const keyPair = this._getPrivateKeyFor(publicKey);
-    //     return (0, message_1.signMessageOfECDSA)(keyPair, text);
-    // });
     const keyPair = this._getPrivateKeyFor(publicKey);
     const { signMessage } = this.kaspaWasm;
     const signature = signMessage({ message: text, privateKey: keyPair.privateKey.toString() });
     return Promise.resolve(signature);
   }
   verifyMessage(publicKey: string, message: string, signature: string) {
-    // return __awaiter(this, void 0, void 0, function* () {
-    //     return (0, message_1.verifyMessageOfECDSA)(publicKey, text, sig);
-    // });
     const { verifyMessage } = this.kaspaWasm;
     const isVerified = verifyMessage({ message, signature, publicKey });
     return Promise.resolve(isVerified);
@@ -147,10 +96,6 @@ class SimpleKeyring {
     return wallet;
   }
   exportAccount(publicKey) {
-    // return __awaiter(this, void 0, void 0, function* () {
-    //     const wallet = this._getWalletForAccount(publicKey);
-    //     return wallet.privateKey.toString("hex");
-    // });
     const wallet = this._getWalletForAccount(publicKey);
     return wallet.privateKey.toString();
   }

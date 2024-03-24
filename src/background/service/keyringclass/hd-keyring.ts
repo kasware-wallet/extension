@@ -1,46 +1,11 @@
 'use strict';
+import { privateKeyFromOriginPrivateKey } from '@/background/utils/onekey/privatekey';
+import { AddressType, tempAccount } from '@/shared/types';
 import { HDPrivateKey } from '@brucelei/kaspacore';
-import { XPrivateKey } from 'kaspa-wasm';
-// var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-//     if (k2 === undefined) k2 = k;
-//     var desc = Object.getOwnPropertyDescriptor(m, k);
-//     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-//       desc = { enumerable: true, get: function() { return m[k]; } };
-//     }
-//     Object.defineProperty(o, k2, desc);
-// }) : (function(o, m, k, k2) {
-//     if (k2 === undefined) k2 = k;
-//     o[k2] = m[k];
-// }));
-// var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-//     Object.defineProperty(o, "default", { enumerable: true, value: v });
-// }) : function(o, v) {
-//     o["default"] = v;
-// });
-// var __importStar = (this && this.__importStar) || function (mod) {
-//     if (mod && mod.__esModule) return mod;
-//     var result = {};
-//     if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-//     __setModuleDefault(result, mod);
-//     return result;
-// };
-// var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-//     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-//     return new (P || (P = Promise))(function (resolve, reject) {
-//         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-//         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-//         function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-//         step((generator = generator.apply(thisArg, _arguments || [])).next());
-//     });
-// };
-// Object.defineProperty(exports, "__esModule", { value: true });
-// exports.HdKeyring = void 0;
-// const bip39 = __importStar(require("bip39"));
-// const hdkey = __importStar(require("hdkey"));
-// const bitcoin_core_1 = require("../bitcoin-core");
-// const simple_keyring_1 = require("./simple-keyring");
-import { tempAccount } from '@/shared/types';
+import { hexToBytes } from '@noble/hashes/utils';
+import { Buffer } from 'buffer';
 import * as kaspa_wasm from 'kaspa-wasm';
+import { PrivateKey, XPrivateKey } from 'kaspa-wasm';
 import { SimpleKeyring } from './simple-keyring';
 
 type TKaspaWasm = typeof kaspa_wasm;
@@ -53,6 +18,7 @@ interface DeserializeOption {
   activeIndexes?: number[];
   activeChangeIndexes?: number[];
   passphrase?: string;
+  addressType?: AddressType;
 }
 
 type TIndex2Wallet = Array<string | TKeypair | number>;
@@ -67,13 +33,14 @@ class HdKeyring extends SimpleKeyring {
   xpriv: string;
   passphrase: string;
   // network: bitcoin.Network;
-  //   network: string;
   hdPath: string;
   // root: bitcore.HDPrivateKey;
   root: TXPrv;
   hdWallet?: TXPrv;
   // wallets: ECPairInterface[];
   //   wallets: any[];
+  // in order to check if it's onekey address
+  addressType?: AddressType;
 
   private _index2wallet: { [key: string]: TIndex2Wallet };
   // key:dType.toString() + index.toString()
@@ -83,33 +50,6 @@ class HdKeyring extends SimpleKeyring {
   activeChangeIndexes: number[];
   page: number;
   perPage: number;
-  // changeHdPath(hdPath: string): void;
-  // getAccountByHdPath(hdPath: string, index: number): string;
-  // addAccounts(numberOfAccounts?: number): Promise<string[]>;
-  // activeAccounts(indexes: number[]): string[];
-  // getFirstPage(): Promise<{
-  //     address: string;
-  //     index: number;
-  // }[]>;
-  // getNextPage(): Promise<{
-  //     address: string;
-  //     index: number;
-  // }[]>;
-  // getPreviousPage(): Promise<{
-  //     address: string;
-  //     index: number;
-  // }[]>;
-  // getAddresses(start: number, end: number): {
-  //     address: string;
-  //     index: number;
-  // }[];
-  // __getPage(increment: number): Promise<{
-  //     address: string;
-  //     index: number;
-  // }[]>;
-  // getAccounts(): Promise<string[]>;
-  // getIndexByAddress(address: string): number;
-  // private _addressFromIndex;
   /* PUBLIC METHODS */
   constructor(password: string, kaspaWasm: TKaspaWasm, opts?: DeserializeOption) {
     super(null, kaspaWasm, null);
@@ -130,28 +70,20 @@ class HdKeyring extends SimpleKeyring {
     if (opts) {
       this.deserialize(opts);
     }
-    // const privKey =
-    //   'xprv9s21ZrQH143K2XuocheafBADbWsozEMHbbgbqxWrQ1z812RPVrJZkFqhkufYdH3i3MLuq2MeS5eLxDAZMmAGz1ydcNoDCX6KYwbuZtQbh1b';
-    // const HDWallet = new HDPrivateKey(privKey);
-    // const dType = 0;
-    // const index = 1;
-    // const { privateKey } = HDWallet.deriveChild(`m/44'/972/0'/${dType}'/${index}'`);
   }
   serialize(): Promise<DeserializeOption> {
-    // return __awaiter(this, void 0, void 0, function* () {
     return Promise.resolve({
       mnemonic: this.mnemonic,
       xpriv: this.xpriv,
       activeIndexes: this.activeIndexes,
       activeChangeIndexes: this.activeChangeIndexes,
       hdPath: this.hdPath,
-      passphrase: this.passphrase
+      passphrase: this.passphrase,
+      addressType: this.addressType
     });
-    // });
   }
   // deserialize(_opts: DeserializeOption = {}): Promise<void>{
   deserialize(_opts: DeserializeOption = {}) {
-    // return __awaiter(this, void 0, void 0, function* () {
     if (this.root) {
       throw new Error('KAS-HD-Keyring: Seed phrase already provided');
     }
@@ -161,6 +93,9 @@ class HdKeyring extends SimpleKeyring {
     this.xpriv = null;
     this.root = null;
     this.hdPath = opts.hdPath || hdPathString;
+    if (opts.addressType) {
+      this.addressType = opts.addressType;
+    }
     if (opts.passphrase) {
       this.passphrase = opts.passphrase;
     }
@@ -175,8 +110,6 @@ class HdKeyring extends SimpleKeyring {
     if (opts.activeChangeIndexes && opts.activeChangeIndexes.length > 0) {
       this.activeAccounts(opts.activeChangeIndexes, 1);
     }
-
-    // });
   }
   initFromXpriv(xpriv: string): void {
     if (this.root) {
@@ -352,13 +285,6 @@ class HdKeyring extends SimpleKeyring {
     // });
   }
   getAccounts = async () => {
-    // return __awaiter(this, void 0, void 0, function* () {
-    //     return this.wallets.map((w) => {
-    //         return w.publicKey.toString("hex");
-    //     });
-    // });
-    // return Promise.resolve(['dfds'])
-    // const { XPublicKey } = this.kaspaWasm;
     const pubkeys = await Promise.all(
       this.wallets.map((w) => {
         // const xpub = w.publicKey().intoString('xpub');
@@ -395,9 +321,6 @@ class HdKeyring extends SimpleKeyring {
     const key = dType.toString() + i.toString();
     if (!this._index2wallet[key]) {
       // 0
-      // const child = this.root.deriveChild(i);
-      // const ecpair = bitcoin_core_1.ECPair.fromPrivateKey(child.privateKey);
-      // const address = ecpair.publicKey.toString("hex");
       const root_xprv_str = this.root.intoString('xprv');
       // eslint-disable-next-line quotes
       if (this.hdPath == "m/44'/972/0'") {
@@ -409,6 +332,47 @@ class HdKeyring extends SimpleKeyring {
         const keyPair = privateKeyWasm.toKeypair();
         const address: string = keyPair.publicKey;
         this._index2wallet[key] = [address, keyPair, dType, i];
+        // handle onekey tweaked private key
+      } else if (this.addressType && this.addressType == AddressType.KASPA_ONEKEY_44_111111) {
+        // this.hdPath == "m/44'/111111'/0'"
+        const child = new XPrivateKey(root_xprv_str, false, 0n);
+        if (dType == 0) {
+          const kaspaReceivePrivateKey = child.receiveKey(i);
+
+          const kaspaKeyPair = kaspaReceivePrivateKey.toKeypair();
+          const kaspaPubkey: string = kaspaKeyPair.publicKey;
+          const kaspaPrivateKeyBuf = Buffer.from(
+            Buffer.from(
+              hexToBytes(
+                kaspaReceivePrivateKey.toString()
+              )
+            )
+          );
+          const kaspaPublicKeyBuf = Buffer.from(Buffer.from(hexToBytes(kaspaPubkey)));
+          const onekeyPrivateKey = privateKeyFromOriginPrivateKey(kaspaPrivateKeyBuf, kaspaPublicKeyBuf);
+          const receivePrivateKey = new PrivateKey(onekeyPrivateKey.toString());
+
+          const keyPair = receivePrivateKey.toKeypair();
+          const address = keyPair.publicKey;
+          this._index2wallet[key] = [address, keyPair, dType, i];
+        } else {
+          const kaspaChangePrivateKey = child.changeKey(i);
+          const kaspaKeyPair = kaspaChangePrivateKey.toKeypair();
+          const kaspaPubkey: string = kaspaKeyPair.publicKey;
+          const kaspaPrivateKeyBuf = Buffer.from(
+            Buffer.from(
+              hexToBytes(
+                kaspaChangePrivateKey.toString()
+              )
+            )
+          );
+          const kaspaPublicKeyBuf = Buffer.from(Buffer.from(hexToBytes(kaspaPubkey)));
+          const onekeyPrivateKey = privateKeyFromOriginPrivateKey(kaspaPrivateKeyBuf, kaspaPublicKeyBuf);
+          const changePrivateKey = new PrivateKey(onekeyPrivateKey.toString());
+          const keyPair = changePrivateKey.toKeypair();
+          const address = keyPair.publicKey;
+          this._index2wallet[key] = [address, keyPair, dType, i];
+        }
       } else {
         // this.hdPath == "m/44'/111111'/0'"
         const child = new XPrivateKey(root_xprv_str, false, 0n);
