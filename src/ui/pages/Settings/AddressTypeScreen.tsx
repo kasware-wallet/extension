@@ -6,24 +6,26 @@ import { useTools } from '@/ui/components/ActionComponent';
 import { AddressTypeCard } from '@/ui/components/AddressTypeCard';
 import { useCurrentAccount, useReloadAccounts } from '@/ui/state/accounts/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
-import { satoshisToAmount, useWallet } from '@/ui/utils';
+import { sompiToAmount, useWallet } from '@/ui/utils';
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 export default function AddressTypeScreen() {
   const wallet = useWallet();
   const currentKeyring = useCurrentKeyring();
   const account = useCurrentAccount();
+  const { t } = useTranslation();
 
   const navigate = useNavigate();
   const reloadAccounts = useReloadAccounts();
   const [addresses, setAddresses] = useState<string[]>([]);
   const [addressAssets, setAddressAssets] = useState<{
-    [key: string]: { total_btc: string; satoshis: number; total_inscription: number };
+    [key: string]: { total_kas: string; sompi: number};
   }>({});
 
   const selfRef = useRef<{
-    addressAssets: { [key: string]: { total_btc: string; satoshis: number; total_inscription: number } };
+    addressAssets: { [key: string]: { total_kas: string; sompi: number } };
   }>({
     addressAssets: {}
   });
@@ -39,11 +41,10 @@ export default function AddressTypeScreen() {
     for (let i = 0; i < _res.length; i++) {
       const address = _res[i];
       const balance = balances[i];
-      const satoshis = balance.totalSatoshis;
+      const sompi = balance.totalSompi;
       self.addressAssets[address] = {
-        total_btc: satoshisToAmount(balance.totalSatoshis),
-        satoshis,
-        total_inscription: balance.inscriptionCount
+        total_kas: sompiToAmount(balance.totalSompi),
+        sompi,
       };
     }
     setAddressAssets(self.addressAssets);
@@ -64,7 +65,7 @@ export default function AddressTypeScreen() {
         const address = addresses[v.value];
         const balance = addressAssets[address];
         if (v.isKaswareLegacy) {
-          if (!balance || balance.satoshis == 0) {
+          if (!balance || balance.sompi == 0) {
             return false;
           }
         }
@@ -82,16 +83,15 @@ export default function AddressTypeScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Address Type"
+        title={t('Address Type')}
       />
       <Content>
         <Column>
           {addressTypes.map((item, index) => {
             const address = addresses[item.value];
             const assets = addressAssets[address] || {
-              total_btc: '--',
-              satoshis: 0,
-              total_inscription: 0
+              total_kas: '--',
+              sompi: 0,
             };
             let name = `${item.name} (${item.hdPath}/${account.index})`;
             if (currentKeyring.type === KEYRING_TYPE.SimpleKeyring) {
@@ -111,7 +111,7 @@ export default function AddressTypeScreen() {
                   await wallet.changeAddressType(item.value);
                   reloadAccounts();
                   navigate('MainScreen');
-                  tools.toastSuccess('Address type changed');
+                  tools.toastSuccess(t('Address type changed'));
                 }}
               />
             );

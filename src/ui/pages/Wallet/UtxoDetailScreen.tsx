@@ -3,10 +3,12 @@ import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/component
 import { IKaspaUTXOWithoutBigint } from '@/shared/types';
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
-import { satoshisToAmount, shortAddress } from '@/ui/utils';
+import { shortAddress, sompiToAmount } from '@/ui/utils';
+import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
 export default function UtxoDetailScreen() {
+  const { t } = useTranslation();
   const { state } = useLocation();
   const { utxoDetail } = state as {
     utxoDetail: IKaspaUTXOWithoutBigint;
@@ -18,7 +20,7 @@ export default function UtxoDetailScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="History"
+        title={t('History')}
       />
       <Content>
         <Column>
@@ -77,7 +79,7 @@ function UtxoEntry({ utxoEntry }: { utxoEntry: IKaspaUTXOWithoutBigint['utxoEntr
         <Row justifyBetween>
           <Text text="Amount" preset="sub" />
           <Row>
-            <Text text={`${satoshisToAmount(Number(utxoEntry.amount))} kas`} />
+            <Text text={`${sompiToAmount(Number(utxoEntry.amount))} kas`} />
           </Row>
         </Row>
       </Column>

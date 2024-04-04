@@ -3,10 +3,12 @@ import { Button, Column, Content, Layout, Logo, Row, Text } from '@/ui/component
 import { useWallet } from '@/ui/utils';
 
 import { useNavigate } from '../MainRoute';
+import { useTranslation } from 'react-i18next';
 
 export default function WelcomeScreen() {
   const navigate = useNavigate();
   const wallet = useWallet();
+  const { t } = useTranslation();
 
   return (
     <Layout>
@@ -17,13 +19,13 @@ export default function WelcomeScreen() {
           </Row>
           <Column gap="xl" mt="xxl">
             <Text
-              text={"First Open Source Chrome wallet for Kaspa in the world! Simple and reliable."}
+              text={t("First Open Source Chrome wallet for Kaspa in the world! Simple and reliable.")}
               preset="sub"
               textCenter
             />
 
             <Button
-              text="Create new wallet"
+              text={t("Create a new wallet")}
               preset="primary"
               onClick={async () => {
                 const isBooted = await wallet.isBooted();
@@ -35,7 +37,7 @@ export default function WelcomeScreen() {
               }}
             />
             <Button
-              text="I already have a wallet"
+              text={t("I already have a wallet")}
               preset="default"
               onClick={async () => {
                 const isBooted = await wallet.isBooted();

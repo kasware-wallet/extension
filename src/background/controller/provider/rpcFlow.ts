@@ -70,7 +70,7 @@ const flowContext = flow
           },
           { height: windowHeight }
         );
-        permissionService.addConnectedSite(origin, name, icon, CHAINS_ENUM.BTC);
+        permissionService.addConnectedSite(origin, name, icon, CHAINS_ENUM.KAS);
       }
     }
 

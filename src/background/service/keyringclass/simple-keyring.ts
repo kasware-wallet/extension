@@ -9,19 +9,16 @@ type TKaspaWasm = typeof kaspa_wasm;
 type TKeyPair = kaspa_wasm.Keypair;
 
 const type = 'Simple Key Pair';
-// class SimpleKeyring extends events_1.EventEmitter {
 class SimpleKeyring {
   static type: string;
   type: string;
   network: any;
-  // wallets: ECPairInterface[];
   wallets: TKeyPair[];
   kaspaWasm: TKaspaWasm;
   constructor(password: string, kaspaWasm: TKaspaWasm, opts?: IOpts|string[]) {
     // super();
     this.type = type;
     this.kaspaWasm = kaspaWasm;
-    // this.network = bitcoin_core_1.bitcoin.networks.bitcoin;
     this.wallets = [];
     if (opts) {
       this.deserialize(opts);
@@ -45,7 +42,7 @@ class SimpleKeyring {
     // return __awaiter(this, void 0, void 0, function* () {
     //     const newWallets = [];
     //     for (let i = 0; i < n; i++) {
-    //         newWallets.push(bitcoin_core_1.ECPair.makeRandom());
+    //         newWallets.push(kaspa_core.ECPair.makeRandom());
     //     }
     //     this.wallets = this.wallets.concat(newWallets);
     //     const hexWallets = newWallets.map(({ publicKey }) => publicKey.toString("hex"));
@@ -106,7 +103,6 @@ class SimpleKeyring {
     this.wallets = this.wallets.filter((wallet) => wallet.publicKey.toString('hex') !== publicKey);
   }
   private _getWalletForAccount(publicKey: string) {
-    // const wallet = this.wallets.find(wallet => wallet.publicKey.toString('hex') == publicKey);
     const wallet = this.wallets.find((wallet) => wallet.publicKey == publicKey);
     if (!wallet) {
       throw new Error('Simple Keyring - Unable to find matching publicKey.');
@@ -114,7 +110,6 @@ class SimpleKeyring {
     return wallet;
   }
 }
-// exports.SimpleKeyring = SimpleKeyring;
 SimpleKeyring.type = type;
 
 export { SimpleKeyring };

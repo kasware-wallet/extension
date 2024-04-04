@@ -7,8 +7,10 @@ import { NETWORK_TYPES } from '@/shared/constant';
 import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
 import { useChangeRpcLinksCallback, useNetworkType, useRpcLinks } from '@/ui/state/settings/hooks';
 import { useWallet } from '@/ui/utils';
+import { useTranslation } from 'react-i18next';
 
 export default function EditNetworkUrlScreen() {
+  const { t } = useTranslation();
   const { state } = useLocation();
   const { item } = state as {
     item: typeof NETWORK_TYPES[0];
@@ -86,7 +88,7 @@ export default function EditNetworkUrlScreen() {
           />
           <Button
             disabled={!isValidName}
-            text="Change Network URL"
+            text={t('Change Network URL')}
             preset="primary"
             onClick={(e) => {
               handleOnClick(alianName);
@@ -94,7 +96,7 @@ export default function EditNetworkUrlScreen() {
           />
           <Button
             disabled={item.url == defaultUrl}
-            text="Reset"
+            text={t('Reset')}
             preset="primary"
             onClick={(e) => {
               handleOnClick(defaultUrl as string);

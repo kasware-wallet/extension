@@ -5,6 +5,7 @@ import React, { useMemo } from 'react';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { useTranslation } from 'react-i18next';
 import { Column } from '../Column';
 import { Icon } from '../Icon';
 import { Logo } from '../Logo';
@@ -21,6 +22,7 @@ interface HeaderProps {
 }
 
 export function Header(props: HeaderProps) {
+  const { t } = useTranslation();
   const { onBack, title, LeftComponent, RightComponent, children } = props;
 
   const CenterComponent = useMemo(() => {
@@ -53,7 +55,7 @@ export function Header(props: HeaderProps) {
                   <FontAwesomeIcon icon={faArrowLeft} />
                 </Icon>
 
-                <Text text="Back" preset="regular-bold" />
+                <Text text={t('Back')} preset="regular-bold" />
               </Row>
             )}
           </Column>

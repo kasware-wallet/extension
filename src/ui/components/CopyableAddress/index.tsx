@@ -5,8 +5,10 @@ import { useTools } from '../ActionComponent';
 import { Icon } from '../Icon';
 import { Row } from '../Row';
 import { Text } from '../Text';
+import { useTranslation } from 'react-i18next';
 
 export function CopyableAddress({ address }: { address: string }) {
+  const { t } = useTranslation();
   const tools = useTools();
   return (
     <Row
@@ -14,7 +16,7 @@ export function CopyableAddress({ address }: { address: string }) {
       gap="sm"
       onClick={(e) => {
         copyToClipboard(address).then(() => {
-          tools.toastSuccess('Copied');
+          tools.toastSuccess(t('Copied'));
         });
       }}>
       <Icon icon="copy" color="textDim" />

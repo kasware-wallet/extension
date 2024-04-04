@@ -13,27 +13,22 @@ import {
 } from '@/shared/constant';
 import {
   AddressSummary,
-  AddressTokenSummary,
   AddressType,
   AppSummary,
-  BitcoinBalance,
   DecodedPsbt,
   FeeSummary,
   IKaspaUTXO,
   IResultPsbtHex,
   IScannedGroup,
-  Inscription,
-  InscriptionSummary,
+  KaspaBalance,
   NetworkType,
-  TokenTransfer,
-  UTXO,
   VersionDetail,
   WalletConfig
 } from '@/shared/types';
 import { Encoding, RpcClient } from 'kaspa-wasm';
 
 import eventBus from '@/shared/eventBus';
-import { satoshisToAmount } from '@/ui/utils';
+import { sompiToAmount } from '@/ui/utils';
 import { preferenceService } from '.';
 
 interface OpenApiStore {
@@ -205,7 +200,6 @@ export class OpenApiService {
   };
 
   httpGet = async (route: string, params: any) => {
-    // console.log('httpGet', route, params);
     let url = this.getHost() + route;
     let c = 0;
     for (const id in params) {
@@ -235,7 +229,6 @@ export class OpenApiService {
   };
 
   httpPost = async (route: string, params: any) => {
-    // console.log('httpPost', route, params);
     const url = this.getHost() + route;
     const headers = new Headers();
     headers.append('X-Client', 'KasWare Wallet');
@@ -277,65 +270,50 @@ export class OpenApiService {
     //   address
     // });
     const addressSummary = {
-      totalSatoshis: 0,
-      btcSatoshis: 0,
-      assetSatoshis: 0,
-      inscriptionCount: 0,
-      atomicalsCount: 0,
-      brc20Count: 0,
-      arc20Count: 0,
+      totalSompi: 0,
+      kasSompi: 0,
+      assetSompi: 0,
       loading: false
     };
 
     return Promise.resolve(addressSummary);
   }
 
-  async getAddressBalance(address: string): Promise<BitcoinBalance> {
-    // return this.httpGet('/address/balance', {
-    //   address,
-    // });
-    // console.log('openapi get address balance');
+  async getAddressBalance(address: string): Promise<KaspaBalance> {
     const totalBalance = await this.getAddressBalanceOfKas(address);
-    const bitcoinBalance: BitcoinBalance = {
+    const kaspaBalance: KaspaBalance = {
       confirm_amount: '0',
       pending_amount: '0',
       amount: '0',
-      confirm_btc_amount: '0',
-      pending_btc_amount: '0',
-      btc_amount: '0',
-      confirm_inscription_amount: '0',
-      pending_inscription_amount: '0',
-      inscription_amount: '0',
+      confirm_kas_amount: '0',
+      pending_kas_amount: '0',
+      kas_amount: '0',
       usd_value: '0'
     };
     let t = 0;
     if (totalBalance != undefined) t = totalBalance / 100000000;
-    bitcoinBalance.amount = t.toString();
-    // return Promise.all(return bitcoinBalance)
-    return bitcoinBalance;
+    kaspaBalance.amount = t.toString();
+    return kaspaBalance;
   }
-  async getAddressesBalance(addresses: string[]): Promise<BitcoinBalance[]> {
+  async getAddressesBalance(addresses: string[]): Promise<KaspaBalance[]> {
     const balance: { entries: { address: string; balance: bigint }[] } = await this.rpc.getBalancesByAddresses({
       addresses
     });
-    const bitcoinBalanceArray: BitcoinBalance[] = [] as BitcoinBalance[];
+    const kaspaBalanceArray: KaspaBalance[] = [] as KaspaBalance[];
     balance.entries.forEach((entry) => {
-      const amount = satoshisToAmount(Number(entry.balance));
-      bitcoinBalanceArray.push({
+      const amount = sompiToAmount(Number(entry.balance));
+      kaspaBalanceArray.push({
         confirm_amount: '0',
         pending_amount: '0',
         amount,
-        confirm_btc_amount: '0',
-        pending_btc_amount: '0',
-        btc_amount: '0',
-        confirm_inscription_amount: '0',
-        pending_inscription_amount: '0',
-        inscription_amount: '0',
+        confirm_kas_amount: '0',
+        pending_kas_amount: '0',
+        kas_amount: '0',
         usd_value: '0'
       });
     });
 
-    return bitcoinBalanceArray;
+    return kaspaBalanceArray;
   }
   async disconnectRpc() {
     if (this.rpc == null || this.rpc == undefined) {
@@ -385,20 +363,13 @@ export class OpenApiService {
   }
 
   async getMultiAddressAssets(addresses: string): Promise<AddressSummary[]> {
-    // return this.httpGet('/address/multi-assets', {
-    //   addresses
-    // });
     const length = addresses.length;
     const addressSummary = [] as AddressSummary[];
     for (let i = 0; i < length; i++) {
       addressSummary.push({
-        totalSatoshis: 0,
-        btcSatoshis: 0,
-        assetSatoshis: 0,
-        inscriptionCount: 0,
-        atomicalsCount: 0,
-        brc20Count: 0,
-        arc20Count: 0,
+        totalSompi: 0,
+        kasSompi: 0,
+        assetSompi: 0,
         loading: false
       });
     }
@@ -413,7 +384,7 @@ export class OpenApiService {
     const groupsResult: {
       type: AddressType;
       address_arr: string[];
-      satoshis_arr: number[];
+      sompi_arr: number[];
       dtype_arr: number[];
       index_arr: number[];
     }[] = [];
@@ -438,24 +409,24 @@ export class OpenApiService {
     const balanceSompiArr = sompiArr as number[];
 
     const address_arr = group.address_arr;
-    const satoshis_arr = balanceSompiArr;
+    const sompi_arr = balanceSompiArr;
     const dtype_arr = group.dtype_arr;
     const index_arr = group.index_arr;
     for (let i = 0; i < address_arr.length; ) {
-      if (satoshis_arr[i] == 0) {
+      if (sompi_arr[i] == 0) {
         address_arr.splice(i, 1);
-        satoshis_arr.splice(i, 1);
+        sompi_arr.splice(i, 1);
         dtype_arr.splice(i, 1);
         index_arr.splice(i, 1);
       } else {
         i++;
       }
     }
-    if (satoshis_arr.length > 0) {
+    if (sompi_arr.length > 0) {
       groupsResult.push({
         type: group.type,
         address_arr,
-        satoshis_arr,
+        sompi_arr,
         dtype_arr,
         index_arr
       });
@@ -465,9 +436,6 @@ export class OpenApiService {
 
   // async getKASUtxos(address: string): Promise<UTXO[]> {
   async getKASUtxos(address: string): Promise<IKaspaUTXO[]> {
-    // return this.httpGet('/address/btc-utxo', {
-    //   address,
-    // });
     await this.handleRpcConnect('getKASUtxos');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
@@ -493,37 +461,6 @@ export class OpenApiService {
     const txid = await preSubmitPending.submit(this.rpc);
     return txid;
 
-  }
-
-  async getInscriptionUtxo(inscriptionId: string): Promise<UTXO> {
-    return this.httpGet('/inscription/utxo', {
-      inscriptionId
-    });
-  }
-
-  async getInscriptionUtxos(inscriptionIds: string[]): Promise<UTXO[]> {
-    return this.httpPost('/inscription/utxos', {
-      inscriptionIds
-    });
-  }
-
-  async getAddressInscriptions(
-    address: string,
-    cursor: number,
-    size: number
-  ): Promise<{ list: Inscription[]; total: number }> {
-    return this.httpGet('/address/inscriptions', {
-      address,
-      cursor,
-      size
-    });
-  }
-
-  async getInscriptionSummary(): Promise<InscriptionSummary> {
-    // return this.httpGet('/default/inscription-summary', {});
-    return Promise.resolve({
-      mintedList: []
-    });
   }
 
   async getAppSummary(): Promise<AppSummary> {
@@ -589,28 +526,6 @@ export class OpenApiService {
     return Promise.resolve({ list: fee });
   }
 
-  async getDomainInfo(domain: string): Promise<Inscription> {
-    return this.httpGet('/address/search', { domain });
-  }
-
-  async getAddressTokenSummary(address: string, ticker: string): Promise<AddressTokenSummary> {
-    return this.httpGet('/brc20/token-summary', { address, ticker: encodeURIComponent(ticker) });
-  }
-
-  async getTokenTransferableList(
-    address: string,
-    ticker: string,
-    cursor: number,
-    size: number
-  ): Promise<{ list: TokenTransfer[]; total: number }> {
-    return this.httpGet('/brc20/transferable-list', {
-      address,
-      ticker: encodeURIComponent(ticker),
-      cursor,
-      size
-    });
-  }
-
   async decodePsbt(psbtHex: string): Promise<DecodedPsbt> {
     // return this.httpPost('/tx/decode', { psbtHex });
     // const estimate = await psbtHex.estimate()
@@ -624,22 +539,16 @@ export class OpenApiService {
           vout: 0,
           address: 'kaspadev:55555555555t550x8st82m73nujqe52j8plx2p',
           value: 0,
-          inscriptions: [],
-          atomicals: [],
           sighashType: 1
         }
       ],
       outputInfos: [
         {
           address: 'string',
-          // value:satoshi unit
+          // value:sompi unit
           value: result.amountSompi,
-          inscriptions: [],
-          atomicals: []
         }
       ],
-      // inscriptions: { [key: string]: Inscription };
-      inscriptions: {},
       feeRate: result.feeRate,
       fee: Number(result.fee),
       features: {
@@ -661,25 +570,6 @@ export class OpenApiService {
     return Promise.resolve({
       isScammer: false,
       warning: null
-    });
-  }
-
-  async getAtomicalsNFT(
-    address: string,
-    cursor: number,
-    size: number
-  ): Promise<{ list: Inscription[]; total: number }> {
-    return this.httpGet('/atomicals/nft', {
-      address,
-      cursor,
-      size
-    });
-  }
-
-  async getArc20Utxos(address: string, ticker: string): Promise<UTXO[]> {
-    return this.httpGet('/arc20/utxos', {
-      address,
-      ticker
     });
   }
 

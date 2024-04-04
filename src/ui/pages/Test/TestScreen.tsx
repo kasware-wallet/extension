@@ -7,7 +7,7 @@ export default function TestScreen() {
 }
 function TestAddressTypeCard() {
   const items = [
-    { address: 'kaspa:1234567890', path: 'm/84\'/0\'/0\'/0/0', satoshis: 100 }
+    { address: 'kaspa:1234567890', path: 'm/84\'/0\'/0\'/0/0', sompi: 100 }
   ];
   return (
     <Layout>

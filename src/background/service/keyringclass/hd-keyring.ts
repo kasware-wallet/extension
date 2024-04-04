@@ -1,8 +1,9 @@
 'use strict';
-import { privateKeyFromOriginPrivateKey } from '@/background/utils/onekey/privatekey';
+import { tapTweakHash } from '@/background/utils/onekey/bip340';
+import ecc from '@/background/utils/onekey/nobleSecp256k1Wrapper';
 import { AddressType, tempAccount } from '@/shared/types';
 import { HDPrivateKey } from '@brucelei/kaspacore';
-import { hexToBytes } from '@noble/hashes/utils';
+import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { Buffer } from 'buffer';
 import * as kaspa_wasm from 'kaspa-wasm';
 import { PrivateKey, XPrivateKey } from 'kaspa-wasm';
@@ -32,13 +33,9 @@ class HdKeyring extends SimpleKeyring {
   // kaspaWasm: TKaspaWasm;
   xpriv: string;
   passphrase: string;
-  // network: bitcoin.Network;
   hdPath: string;
-  // root: bitcore.HDPrivateKey;
   root: TXPrv;
   hdWallet?: TXPrv;
-  // wallets: ECPairInterface[];
-  //   wallets: any[];
   // in order to check if it's onekey address
   addressType?: AddressType;
 
@@ -57,7 +54,6 @@ class HdKeyring extends SimpleKeyring {
     this.type = type;
     this.mnemonic = null as unknown as string;
     this.xpriv = null as unknown as string;
-    // this.network = bitcoin_core_1.bitcoin.networks.bitcoin;
     this.network = 'network';
     this.hdPath = hdPathString || opts?.hdPath;
     this.root = null as unknown as TXPrv;
@@ -127,15 +123,10 @@ class HdKeyring extends SimpleKeyring {
     }
     this.mnemonic = mnemonic;
     this._index2wallet = {};
-    // const seed = bip39.mnemonicToSeedSync(mnemonic, this.passphrase);
     const { Mnemonic, XPrv } = this.kaspaWasm;
     const mnemonicObject = new Mnemonic(this.mnemonic);
     const seed = mnemonicObject.toSeed(this.passphrase);
-    // this.hdWallet = hdkey.fromMasterSeed(seed);
     this.hdWallet = new XPrv(seed);
-    // this.root = this.hdWallet.derive(this.hdPath);
-    // const path = this.hdPath + '/' + this.deriveType;
-    // this.root = this.hdWallet.derivePath(this.hdPath);
     // new XPrivateKey has include derivePath method
     this.root = this.hdWallet;
   }
@@ -144,7 +135,6 @@ class HdKeyring extends SimpleKeyring {
       throw new Error('KAS-HD-Keyring: Not support');
     }
     this.hdPath = hdPath;
-    // this.root = this.hdWallet.derive(this.hdPath);
     this.root = this.hdWallet.derivePath(this.hdPath);
     const indexes = this.activeIndexes;
     this._index2wallet = {};
@@ -156,11 +146,6 @@ class HdKeyring extends SimpleKeyring {
     if (!this.mnemonic) {
       throw new Error('KAS-HD-Keyring: Not support');
     }
-    // const root = this.hdWallet.derive(hdPath);
-    // const child = root.deriveChild(index);
-    // const ecpair = bitcoin_core_1.ECPair.fromPrivateKey(child.privateKey);
-    // const address = ecpair.publicKey.toString("hex");
-    // return address;
     this.root = this.hdWallet.derivePath(hdPath);
     const root_xprv_str = this.root.intoString('xprv');
     const child = new XPrivateKey(root_xprv_str, false, 0n);
@@ -284,13 +269,10 @@ class HdKeyring extends SimpleKeyring {
     //     return accounts;
     // });
   }
+  //  get public keys
   getAccounts = async () => {
     const pubkeys = await Promise.all(
       this.wallets.map((w) => {
-        // const xpub = w.publicKey().intoString('xpub');
-        // const xpubObj = await XPublicKey.fromXPub(xpub);
-        // const compressedPublicKey = await xpubObj.receivePubkeys(0, 1);
-        // return compressedPublicKey[0];
         return w.publicKey;
       })
     );
@@ -316,6 +298,28 @@ class HdKeyring extends SimpleKeyring {
       }
     }
     return null;
+  }
+  private _onekeyPrivateKeyFromOriginPrivateKey(
+    pri: Buffer,
+    pub: Buffer,
+  ): PrivateKey {
+    let privateKey: Uint8Array | null = new Uint8Array(pri);
+    const publicKey = pub;
+
+    if (publicKey[0] === 3) {
+      privateKey = ecc.privateNegate(privateKey);
+    }
+
+    if (!privateKey) {
+      throw new Error('Private key is required for tweaking signer!');
+    }
+
+    const tweakedPrivateKey = ecc.privateAdd(
+      privateKey,
+      tapTweakHash(publicKey.slice(1), undefined),
+    );
+
+    return new PrivateKey(bytesToHex(tweakedPrivateKey));
   }
   private _addressFromIndex(i: number, dType = 0) {
     const key = dType.toString() + i.toString();
@@ -349,7 +353,7 @@ class HdKeyring extends SimpleKeyring {
             )
           );
           const kaspaPublicKeyBuf = Buffer.from(Buffer.from(hexToBytes(kaspaPubkey)));
-          const onekeyPrivateKey = privateKeyFromOriginPrivateKey(kaspaPrivateKeyBuf, kaspaPublicKeyBuf);
+          const onekeyPrivateKey = this._onekeyPrivateKeyFromOriginPrivateKey(kaspaPrivateKeyBuf, kaspaPublicKeyBuf);
           const receivePrivateKey = new PrivateKey(onekeyPrivateKey.toString());
 
           const keyPair = receivePrivateKey.toKeypair();
@@ -367,7 +371,7 @@ class HdKeyring extends SimpleKeyring {
             )
           );
           const kaspaPublicKeyBuf = Buffer.from(Buffer.from(hexToBytes(kaspaPubkey)));
-          const onekeyPrivateKey = privateKeyFromOriginPrivateKey(kaspaPrivateKeyBuf, kaspaPublicKeyBuf);
+          const onekeyPrivateKey = this._onekeyPrivateKeyFromOriginPrivateKey(kaspaPrivateKeyBuf, kaspaPublicKeyBuf);
           const changePrivateKey = new PrivateKey(onekeyPrivateKey.toString());
           const keyPair = changePrivateKey.toKeypair();
           const address = keyPair.publicKey;
@@ -393,7 +397,6 @@ class HdKeyring extends SimpleKeyring {
     return this._index2wallet[key];
   }
 }
-// exports.HdKeyring = HdKeyring;
 HdKeyring.type = type;
 
 export { HdKeyring };

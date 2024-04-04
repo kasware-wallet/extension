@@ -208,16 +208,6 @@ export class KaswareProvider extends EventEmitter {
     });
   };
 
-  getInscriptions = async (cursor = 0, size = 20) => {
-    return this._request({
-      method: 'getInscriptions',
-      params: {
-        cursor,
-        size
-      }
-    });
-  };
-
   signMessage = async (text: string, type: string) => {
     return this._request({
       method: 'signMessage',
@@ -228,26 +218,14 @@ export class KaswareProvider extends EventEmitter {
     });
   };
 
-  sendKaspa = async (toAddress: string, satoshis: number, options?: { feeRate: number }) => {
+  sendKaspa = async (toAddress: string, sompi: number, options?: { feeRate: number }) => {
     return this._request({
       method: 'sendKaspa',
       params: {
         toAddress,
-        satoshis,
+        sompi,
         feeRate: options?.feeRate,
-        type: TxType.SEND_BITCOIN
-      }
-    });
-  };
-
-  sendInscription = async (toAddress: string, inscriptionId: string, options?: { feeRate: number }) => {
-    return this._request({
-      method: 'sendInscription',
-      params: {
-        toAddress,
-        inscriptionId,
-        feeRate: options?.feeRate,
-        type: TxType.SEND_ORDINALS_INSCRIPTION
+        type: TxType.SEND_KASPA
       }
     });
   };
@@ -303,25 +281,9 @@ export class KaswareProvider extends EventEmitter {
     });
   };
 
-  // inscribeTransfer = async (ticker: string, amount: string) => {
-  //   return this._request({
-  //     method: 'inscribeTransfer',
-  //     params: {
-  //       ticker,
-  //       amount
-  //     }
-  //   });
-  // };
-
   getVersion = async () => {
     return this._request({
       method: 'getVersion'
-    });
-  };
-
-  isAtomicalsEnabled = async () => {
-    return this._request({
-      method: 'isAtomicalsEnabled'
     });
   };
 }

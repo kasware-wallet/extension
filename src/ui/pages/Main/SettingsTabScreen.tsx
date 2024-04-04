@@ -25,6 +25,7 @@ import { fontSizes } from '@/ui/theme/font';
 import { spacing } from '@/ui/theme/spacing';
 import { useWallet } from '@/ui/utils';
 import { RightOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface Setting {
   label?: string;
@@ -36,78 +37,9 @@ interface Setting {
   right: boolean;
 }
 
-const SettingList: Setting[] = [
-  // {
-  //   label: 'Manage Wallet',
-  //   value: '',
-  //   desc: '',
-  //   action: 'manage-wallet',
-  //   route: '/settings/manage-wallet',
-  //   right: true
-  // },
-
-  // {
-  //   label: 'Address Type',
-  //   value: 'Taproot',
-  //   desc: '',
-  //   action: 'addressType',
-  //   route: '/settings/address-type',
-  //   right: true
-  // },
-  {
-    label: 'My Contacts',
-    value: '',
-    desc: '',
-    action: 'contact-book',
-    route: '/contact-book',
-    right: true
-  },
-
-  {
-    label: 'Connected Sites',
-    value: '',
-    desc: '',
-    action: 'connected-sites',
-    route: '/connected-sites',
-    right: true
-  },
-  {
-    label: 'Network',
-    value: 'MAINNET',
-    desc: '',
-    action: 'networkType',
-    route: '/settings/network-type',
-    right: true
-  },
-
-  {
-    label: 'Change Password',
-    value: 'Change your lockscreen password',
-    desc: '',
-    action: 'password',
-    route: '/settings/password',
-    right: true
-  },
-  {
-    label: '',
-    value: '',
-    desc: 'Expand View ',
-    action: 'expand-view',
-    route: '/settings/export-privatekey',
-    right: false
-  },
-  {
-    label: '',
-    value: '',
-    desc: 'Lock Now',
-    action: 'lock-wallet',
-    route: '',
-    right: false
-  }
-];
-
 export default function SettingsTabScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const networkType = useNetworkType();
 
@@ -140,12 +72,77 @@ export default function SettingsTabScreen() {
     const item = ADDRESS_TYPES[currentKeyring.addressType];
     return currentKeyring.hdPath !== '' && item.hdPath !== currentKeyring.hdPath;
   }, [currentKeyring]);
-
+  const SettingList: Setting[] = [
+    // {
+    //   label: 'Manage Wallet',
+    //   value: '',
+    //   desc: '',
+    //   action: 'manage-wallet',
+    //   route: '/settings/manage-wallet',
+    //   right: true
+    // },
+    // {
+    //   label: 'Address Type',
+    //   value: 'Taproot',
+    //   desc: '',
+    //   action: 'addressType',
+    //   route: '/settings/address-type',
+    //   right: true
+    // },
+    {
+      label: t('My Contacts'),
+      value: '',
+      desc: '',
+      action: 'contact-book',
+      route: '/contact-book',
+      right: true
+    },
+    {
+      label: t('Connected Sites'),
+      value: '',
+      desc: '',
+      action: 'connected-sites',
+      route: '/connected-sites',
+      right: true
+    },
+    {
+      label: t('Network'),
+      value: 'MAINNET',
+      desc: '',
+      action: 'networkType',
+      route: '/settings/network-type',
+      right: true
+    },
+    {
+      label: t('Change Password'),
+      value: t('Change your lockscreen password'),
+      desc: '',
+      action: 'password',
+      route: '/settings/password',
+      right: true
+    },
+    {
+      label: '',
+      value: '',
+      desc: t('Expand View'),
+      action: 'expand-view',
+      route: '/settings/export-privatekey',
+      right: false
+    },
+    {
+      label: '',
+      value: '',
+      desc: t('Lock Now'),
+      action: 'lock-wallet',
+      route: '',
+      right: false
+    }
+  ];
   const toRenderSettings = SettingList.filter((v) => {
     if (v.action == 'contact-book') {
       v.value =
         contactCount == 0
-          ? 'no contacts yet'
+          ? t('no contacts yet')
           : contactCount == 1
             ? `${contactCount} contact`
             : `${contactCount} contacts`;
@@ -155,7 +152,7 @@ export default function SettingsTabScreen() {
     }
 
     if (v.action == 'connected-sites') {
-      v.value = connected ? 'Connected' : 'Not connected';
+      v.value = connected ? t('Connected') : t('Not connected');
     }
 
     if (v.action == 'networkType') {

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';
 
 interface EmptyProps {
@@ -5,7 +6,8 @@ interface EmptyProps {
 }
 export function Empty(props: EmptyProps) {
   const { text } = props;
-  const content = text || 'NO DATA';
+  const { t } = useTranslation();
+  const content = text || t('NO DATA');
   return (
     <div
       style={{

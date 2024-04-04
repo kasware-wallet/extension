@@ -1,8 +1,8 @@
 import { RawTxInfo, TxType } from '@/shared/types';
 import { Header } from '@/ui/components';
-import { usePushBitcoinTxCallback } from '@/ui/state/transactions/hooks';
 import { useLocationState } from '@/ui/utils';
 
+import { usePushKaspaTxCallback } from '@/ui/state/transactions/hooks';
 import { SignPsbt } from '../Approval/components';
 import { useNavigate } from '../MainRoute';
 
@@ -13,7 +13,7 @@ interface LocationState {
 export default function TxConfirmScreen() {
   const { rawTxInfo } = useLocationState<LocationState>();
   const navigate = useNavigate();
-  const pushBitcoinTx = usePushBitcoinTxCallback();
+  const pushKaspaTx = usePushKaspaTxCallback();
   return (
     <SignPsbt
       header={
@@ -23,12 +23,12 @@ export default function TxConfirmScreen() {
           }}
         />
       }
-      params={{ data: { psbtHex: rawTxInfo.psbtHex, type: TxType.SEND_BITCOIN, rawTxInfo } }}
+      params={{ data: { psbtHex: rawTxInfo.psbtHex, type: TxType.SEND_KASPA, rawTxInfo } }}
       handleCancel={() => {
         window.history.go(-1);
       }}
       handleConfirm={() => {
-        pushBitcoinTx(rawTxInfo.rawtx).then(({ success, txid, error }) => {
+        pushKaspaTx(rawTxInfo.rawtx).then(({ success, txid, error }) => {
           if (success) {
             navigate('TxSuccessScreen', { txid });
           } else {

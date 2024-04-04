@@ -5,8 +5,6 @@ import React, { useEffect, useState } from 'react';
 import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
 import { isValidAddress, useWallet } from '@/ui/utils';
 
-import { Inscription } from '@/shared/types';
-
 export default function CreateContactScreen() {
   const wallet = useWallet();
   const [disabled, setDisabled] = useState(true);
@@ -15,11 +13,9 @@ export default function CreateContactScreen() {
   const [toInfo, setToInfo] = useState<{
     address: string;
     domain: string;
-    inscription?: Inscription;
   }>({
     address: '',
     domain: '',
-    inscription: undefined
   });
   const handleOnClick = async () => {
     const newContact = {

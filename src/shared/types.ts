@@ -43,7 +43,7 @@ export interface IResultPsbtHex {
 export interface IScannedGroup {
   type: AddressType;
   address_arr: string[];
-  satoshis_arr: number[];
+  sompi_arr: number[];
   dtype_arr: number[];
   index_arr: number[]
   // Number('1' + deriveType.toString() + keyringindex.toString());
@@ -56,23 +56,19 @@ export interface Chain {
   network: string;
 }
 
-export interface BitcoinBalance {
+export interface KaspaBalance {
   confirm_amount: string;
   pending_amount: string;
   amount: string;
-  confirm_btc_amount: string;
-  pending_btc_amount: string;
-  btc_amount: string;
-  confirm_inscription_amount: string;
-  pending_inscription_amount: string;
-  inscription_amount: string;
+  confirm_kas_amount: string;
+  pending_kas_amount: string;
+  kas_amount: string;
   usd_value: string;
 }
 
 export interface AddressAssets {
-  total_btc: string;
-  satoshis?: number;
-  total_inscription: number;
+  total_kas: string;
+  sompi?: number;
 }
 
 export interface TxHistoryItem {
@@ -83,59 +79,6 @@ export interface TxHistoryItem {
   symbol: string;
   address: string;
 }
-
-export interface Inscription {
-  inscriptionId: string;
-  inscriptionNumber: number;
-  address: string;
-  outputValue: number;
-  preview: string;
-  content: string;
-  contentType: string;
-  contentLength: number;
-  timestamp: number;
-  genesisTransaction: string;
-  location: string;
-  output: string;
-  offset: number;
-  contentBody: string;
-  utxoHeight: number;
-  utxoConfirmation: number;
-}
-
-export interface Atomical {
-  atomicalId: string;
-  atomicalNumber: number;
-  type: 'FT' | 'NFT';
-  ticker?: string;
-
-  // mint info
-  address: string;
-  outputValue: number;
-  preview: string;
-  content: string;
-  contentType: string;
-  contentLength: number;
-  timestamp: number;
-  genesisTransaction: string;
-  location: string;
-  output: string;
-  offset: number;
-  contentBody: string;
-  utxoHeight: number;
-  utxoConfirmation: number;
-}
-
-export interface InscriptionMintedItem {
-  title: string;
-  desc: string;
-  inscriptions: Inscription[];
-}
-
-export interface InscriptionSummary {
-  mintedList: InscriptionMintedItem[];
-}
-
 export interface AppInfo {
   logo: string;
   title: string;
@@ -186,36 +129,22 @@ export interface IKaspaUTXOWithoutBigint {
 export interface UTXO {
   txid: string;
   vout: number;
-  satoshis: number;
+  sompi: number;
   scriptPk: string;
   addressType: AddressType;
-  inscriptions: {
-    inscriptionId: string;
-    inscriptionNumber?: number;
-    offset: number;
-  }[];
-  atomicals: {
-    atomicalId: string;
-    atomicalNumber: number;
-    type: 'NFT' | 'FT';
-    ticker?: string;
-  }[];
 }
 
 export interface UTXO_Detail {
   txId: string;
   outputIndex: number;
-  satoshis: number;
+  sompi: number;
   scriptPk: string;
   addressType: AddressType;
-  inscriptions: Inscription[];
 }
 
 export enum TxType {
   SIGN_TX,
-  SEND_BITCOIN,
-  SEND_ORDINALS_INSCRIPTION,
-  SEND_ATOMICALS_INSCRIPTION
+  SEND_KASPA,
 }
 
 interface BaseUserToSignInput {
@@ -282,13 +211,6 @@ export interface TokenBalance {
   availableBalanceUnSafe: string;
 }
 
-export interface Arc20Balance {
-  ticker: string;
-  balance: number;
-  confirmedBalance: number;
-  unconfirmedBalance: number;
-}
-
 export interface TokenInfo {
   totalSupply: string;
   totalMinted: string;
@@ -296,8 +218,6 @@ export interface TokenInfo {
 export interface TokenTransfer {
   ticker: string;
   amount: string;
-  inscriptionId: string;
-  inscriptionNumber: number;
   timestamp: number;
 }
 
@@ -314,17 +234,12 @@ export interface DecodedPsbt {
     vout: number;
     address: string;
     value: number;
-    inscriptions: Inscription[];
-    atomicals: Atomical[];
     sighashType: number;
   }[];
   outputInfos: {
     address: string;
     value: number;
-    inscriptions: Inscription[];
-    atomicals: Atomical[];
   }[];
-  inscriptions: { [key: string]: Inscription };
   feeRate: number;
   fee: number;
   features: {
@@ -336,7 +251,6 @@ export interface DecodedPsbt {
 export interface ToAddressInfo {
   address: string;
   domain?: string;
-  inscription?: Inscription;
 }
 
 export interface RawTxInfo {
@@ -359,13 +273,9 @@ export enum WebsiteState {
 }
 
 export interface AddressSummary {
-  totalSatoshis: number;
-  btcSatoshis: number;
-  assetSatoshis: number;
-  inscriptionCount: number;
-  atomicalsCount: number;
-  brc20Count: number;
-  arc20Count: number;
+  totalSompi: number;
+  kasSompi: number;
+  assetSompi: number;
   loading?: boolean;
 }
 

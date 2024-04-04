@@ -6,49 +6,49 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ContactBookItem } from '@/background/service/contactBook';
 import { COIN_DUST } from '@/shared/constant';
-import { IRecentTransactoinAddresses, Inscription, RawTxInfo } from '@/shared/types';
+import { IRecentTransactoinAddresses, RawTxInfo } from '@/shared/types';
 import { Button, Card, Column, Content, Header, Icon, Input, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
+import { Empty } from '@/ui/components/Empty';
 import { FeeRateBar } from '@/ui/components/FeeRateBar';
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useAccountBalance, useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { useKeyrings } from '@/ui/state/keyrings/hooks';
 import {
-  useBitcoinTx,
   useFetchUtxosCallback,
+  useKaspaTx,
   usePrepareSendKASCallback,
   useSafeBalance
 } from '@/ui/state/transactions/hooks';
 import { colors } from '@/ui/theme/colors';
 import {
-  amountToSatoshis,
+  amountToSompi,
   copyToClipboard,
   handleTransactionsAddresses,
   isValidAddress,
-  satoshisToAmount,
   shortAddress,
+  sompiToAmount,
   useWallet
 } from '@/ui/utils';
 import { Drawer, Tabs } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 export default function TxCreateScreen() {
+  const { t } = useTranslation();
   const accountBalance = useAccountBalance();
   const safeBalance = useSafeBalance();
   const navigate = useNavigate();
-  const bitcoinTx = useBitcoinTx();
+  const kaspaTx = useKaspaTx();
   const [inputAmount, setInputAmount] = useState(
-    bitcoinTx.toSatoshis > 0 ? satoshisToAmount(bitcoinTx.toSatoshis) : ''
+    kaspaTx.toSompi > 0 ? sompiToAmount(kaspaTx.toSompi) : ''
   );
   const [disabled, setDisabled] = useState(true);
   const [toInfo, setToInfo] = useState<{
     address: string;
     domain: string;
-    inscription?: Inscription;
   }>({
-    address: bitcoinTx.toAddress,
-    // address: 'kaspadev:qpxxpgqac0dwqplyxfpkgaekgrmyflkv0at550x8st82m73nujqe52j8plx2p',
-    domain: bitcoinTx.toDomain,
-    inscription: undefined
+    address: kaspaTx.toAddress,
+    domain: kaspaTx.toDomain,
   });
 
   const [error, setError] = useState('');
@@ -66,16 +66,16 @@ export default function TxCreateScreen() {
 
   const prepareSendKAS = usePrepareSendKASCallback();
 
-  const safeSatoshis = useMemo(() => {
-    return amountToSatoshis(safeBalance);
+  const safeSompi = useMemo(() => {
+    return amountToSompi(safeBalance);
   }, [safeBalance]);
 
-  const toSatoshis = useMemo(() => {
+  const toSompi = useMemo(() => {
     if (!inputAmount) return 0;
-    return amountToSatoshis(inputAmount);
+    return amountToSompi(inputAmount);
   }, [inputAmount]);
 
-  const dustAmount = useMemo(() => satoshisToAmount(COIN_DUST), [COIN_DUST]);
+  const dustAmount = useMemo(() => sompiToAmount(COIN_DUST), [COIN_DUST]);
 
   const [feeRate, setFeeRate] = useState(5);
 
@@ -90,15 +90,15 @@ export default function TxCreateScreen() {
     if (!isValidAddress(toInfo.address)) {
       return;
     }
-    if (!toSatoshis) {
+    if (!toSompi) {
       return;
     }
-    if (toSatoshis < COIN_DUST) {
+    if (toSompi < COIN_DUST) {
       setError(`Amount must be at least ${dustAmount} KAS`);
       return;
     }
 
-    if (toSatoshis > safeSatoshis) {
+    if (toSompi > safeSompi) {
       setError('Amount exceeds your available balance');
       return;
     }
@@ -108,13 +108,13 @@ export default function TxCreateScreen() {
       return;
     }
 
-    if (toInfo.address == bitcoinTx.toAddress && toSatoshis == bitcoinTx.toSatoshis && feeRate == bitcoinTx.feeRate) {
+    if (toInfo.address == kaspaTx.toAddress && toSompi == kaspaTx.toSompi && feeRate == kaspaTx.feeRate) {
       //Prevent repeated triggering caused by setAmount
       setDisabled(false);
       return;
     }
 
-    prepareSendKAS({ toAddressInfo: toInfo, toAmount: toSatoshis, feeRate, enableRBF })
+    prepareSendKAS({ toAddressInfo: toInfo, toAmount: toSompi, feeRate, enableRBF })
       .then((data) => {
         // if (data.fee < data.estimateFee) {
         //   setError(`Network fee must be at leat ${data.estimateFee}`);
@@ -135,7 +135,7 @@ export default function TxCreateScreen() {
   );
 
   const handleAddrInput = (address: string) => {
-    setToInfo({ address, domain: '', inscription: undefined });
+    setToInfo({ address, domain: '' });
     setDrawerVisible(false);
     const input = document.getElementById('address-input');
     if (input) {
@@ -150,18 +150,18 @@ export default function TxCreateScreen() {
   const tabItems = [
     {
       key: 'recent',
-      label: 'Recent',
+      label: t('Recent'),
       children: <RecentTab handleAddrInput={handleAddrInput} />
     },
     {
       key: 'contacts',
-      label: 'Contacts',
+      label: t('Contacts'),
       children: <ContactsTab handleAddrInput={handleAddrInput} />
       // disabled: true,
     },
     {
       key: 'my_account',
-      label: 'My account',
+      label: t('My account'),
       children: <MyAccountTab handleAddrInput={handleAddrInput} />
     }
   ];
@@ -172,13 +172,13 @@ export default function TxCreateScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Send KAS"
+        title={`${t('Send')} KAS`}
       />
       <Content style={{ padding: '0px 16px 24px' }}>
         <Row justifyCenter>
           <Icon icon="kas" size={50} />
         </Row>
-        <Text text="Recipient" preset="regular" color="textDim" />
+        <Text text={t('Recipient')} preset="regular" color="textDim" />
         <Row justifyBetween>
           <Column full>
             <Input
@@ -204,7 +204,7 @@ export default function TxCreateScreen() {
         </Row>
         <Column mt="lg">
           <Row justifyBetween>
-            <Text text="Balance" color="textDim" />
+            <Text text={t('Balance')} color="textDim" />
             {showSafeBalance ? (
               <Text text={`${accountBalance.amount} KAS`} preset="bold" size="sm" />
             ) : (
@@ -223,12 +223,12 @@ export default function TxCreateScreen() {
             )}
           </Row>
           <Row justifyBetween>
-            <Text text="Unconfirmed KAS" color="textDim" />
-            <Text text={`${accountBalance.pending_btc_amount} KAS`} size="sm" preset="bold" color="textDim" />
+            <Text text={`${t('Unconfirmed')}KAS`} color="textDim" />
+            <Text text={`${accountBalance.pending_kas_amount} KAS`} size="sm" preset="bold" color="textDim" />
           </Row>
           {showSafeBalance && (
             <Row justifyBetween>
-              <Text text="Available (safe to send)" color="textDim" />
+              <Text text={`${t('Available')}(${t('safe to send')})` } color="textDim" />
 
               <Row
                 onClick={() => {
@@ -242,7 +242,7 @@ export default function TxCreateScreen() {
           )}
           <Input
             preset="amount"
-            placeholder={'Amount'}
+            placeholder={t('Amount')}
             // defaultValue={inputAmount}
             value={inputAmount}
             onAmountInputChange={(amount) => {
@@ -255,7 +255,7 @@ export default function TxCreateScreen() {
         </Column>
 
         <Column mt="lg">
-          <Text text="Priority Fee Rate(Optional)" color="textDim" />
+          <Text text={`${t('Priority Fee Rate')} ( ${t('Optional')} )`} color="textDim" />
 
           <FeeRateBar
             onChange={(val) => {
@@ -268,7 +268,7 @@ export default function TxCreateScreen() {
         <Button
           disabled={disabled}
           preset="primary"
-          text="Next"
+          text={t('Next')}
           onClick={(e) => {
             navigate('TxConfirmScreen', { rawTxInfo });
           }}></Button>
@@ -342,15 +342,14 @@ function RecentTab({ handleAddrInput }) {
     );
   } else {
     return (
-      <Row justifyCenter>
-        <Text text="No data" mt="md" />
-      </Row>
+      <Empty />
     );
   }
 }
 
 function ContactsTab({ handleAddrInput }) {
   const wallet = useWallet();
+  const { t } = useTranslation();
   const [items, setItems] = useState<ContactBookItem[]>([]);
   const getContacts = async () => {
     // const contacts = await wallet.getContactsByMap();
@@ -362,9 +361,7 @@ function ContactsTab({ handleAddrInput }) {
   }, []);
   if (items.length == 0) {
     return (
-      <Row justifyCenter>
-        <Text text="No contacts" mt="md" />
-      </Row>
+      <Empty text={t('No contacts')}/>
     );
   } else {
     return (

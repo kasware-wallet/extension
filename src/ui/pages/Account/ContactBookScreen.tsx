@@ -10,6 +10,7 @@ import { copyToClipboard, shortAddress, useWallet } from '@/ui/utils';
 import { EllipsisOutlined, PlusCircleOutlined } from '@ant-design/icons';
 
 import { ContactBookItem } from '@/background/service/contactBook';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 export interface ItemData {
@@ -28,6 +29,7 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
     return <div />;
   }
   const tools = useTools();
+  const { t } = useTranslation();
 
   return (
     <Card justifyBetween mt="md">
@@ -35,7 +37,7 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
         <Column
           onClick={async (e) => {
             copyToClipboard(account.address);
-            tools.toastSuccess('copied address');
+            tools.toastSuccess(t('Copied address'));
           }}>
           <Text text={account.name} />
           <Text text={`${shortAddress(account.address, 15)}`} preset="sub" />
@@ -54,6 +56,7 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
 }
 
 export default function ContackBookScreen() {
+  const { t } = useTranslation();
   const wallet = useWallet();
   const navigate = useNavigate();
   const [items, setItems] = useState<ContactBookItem[]>([]);
@@ -82,7 +85,7 @@ export default function ContackBookScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="My Contacts"
+        title={t('My Contacts')}
         RightComponent={
           <Icon
             onClick={() => {
@@ -100,7 +103,7 @@ export default function ContackBookScreen() {
         </Content>
       ) : (
         <Row justifyCenter>
-          <Text text="No contacts" mt="md" />
+          <Text text={t('No contacts')} mt="md" />
         </Row>
       )}
     </Layout>

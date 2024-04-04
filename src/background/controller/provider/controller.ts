@@ -5,7 +5,7 @@ import { permissionService, sessionService } from '@/background/service';
 import { NETWORK_TYPES, VERSION } from '@/shared/constant';
 
 import { NetworkType } from '@/shared/types';
-import { amountToSatoshis } from '@/ui/utils';
+import { amountToSompi } from '@/ui/utils';
 import { ethErrors } from 'eth-rpc-errors';
 import BaseController from '../base';
 import wallet from '../wallet';
@@ -14,10 +14,8 @@ function formatPsbtHex(psbtHex:string){
   let formatData = '';
   try{
     if(!(/^[0-9a-fA-F]+$/.test(psbtHex))){
-      // formatData = bitcoin.Psbt.fromBase64(psbtHex).toHex()
       formatData = psbtHex
     }else{
-      // bitcoin.Psbt.fromHex(psbtHex);
       formatData = psbtHex;
     }
   }catch(e){
@@ -98,50 +96,29 @@ class ProviderController extends BaseController {
     };
 
   @Reflect.metadata('SAFE', true)
-    getInscriptions = async (req) => {
-      const { data: { params: { cursor,size } } } = req;
-      const account = await wallet.getCurrentAccount();
-      if(!account) return ''
-      const {list,total} = await wallet.openapi.getAddressInscriptions(account.address,cursor,size);
-      return {list,total};
-    };
-
-  @Reflect.metadata('SAFE', true)
     getBalance = async () => {
       const account = await wallet.getCurrentAccount();
       if (!account) return null;
       const balance = await wallet.getAddressBalance(account.address)
       return {
-        confirmed: amountToSatoshis(balance.confirm_amount),
-        unconfirmed:amountToSatoshis(balance.pending_amount),
-        total:amountToSatoshis(balance.amount)
+        confirmed: amountToSompi(balance.confirm_amount),
+        unconfirmed:amountToSompi(balance.pending_amount),
+        total:amountToSompi(balance.amount)
       };
     };
 
   @Reflect.metadata('APPROVAL', ['SignPsbt', (req) => {
-    const { data: { params: { toAddress, satoshis } } } = req;
+    const { data: { params: { toAddress, sompi } } } = req;
 
   }])
     sendKaspa = async ({approvalRes:{psbtHex}}) => {
       const rawtx = psbtHex
-      // const psbt = bitcoin.Psbt.fromHex(psbtHex);
       // const psbt = 'psbt'
       // const tx = psbt.extractTransaction();
       // const rawtx = tx.toHex()
       return await wallet.pushTx(rawtx)
     }
 
-  @Reflect.metadata('APPROVAL', ['SignPsbt', (req) => {
-    const { data: { params: { toAddress, satoshis } } } = req;
-  }])
-    sendInscription = async ({approvalRes:{psbtHex}}) => {
-      const rawtx = psbtHex
-      // const psbt = bitcoin.Psbt.fromHex(psbtHex);
-      // const psbt = 'psbt'
-      // const tx = psbt.extractTransaction();
-      // const rawtx = tx.toHex()
-      return await wallet.pushTx(rawtx)
-    }
 
   @Reflect.metadata('APPROVAL', ['SignText', () => {
     // todo check text
@@ -173,8 +150,7 @@ class ProviderController extends BaseController {
     signPsbt = async ({ data: { params: { psbtHex,options } } }) => {
       const networkType = wallet.getNetworkType()
       // const psbtNetwork = toPsbtNetwork(networkType)
-      const psbtNetwork = 'bitcoin'
-      // const psbt =  bitcoin.Psbt.fromHex(psbtHex,{network:psbtNetwork})
+      const psbtNetwork = 'kaspa'
       const psbt = 'psbt'
       // const autoFinalized = (options && options.autoFinalized==false)?false:true;
       // const toSignInputs = await wallet.formatOptionsToSignInputs(psbtHex,options);
@@ -192,10 +168,8 @@ class ProviderController extends BaseController {
       if (!account) throw null;
       // const networkType = wallet.getNetworkType()
       // const psbtNetwork = toPsbtNetwork(networkType)
-      // const psbtNetwork = 'bitcoin'
       const result: string[] = [];
       for (let i = 0; i < psbtHexs.length; i++){
-        // const psbt = bitcoin.Psbt.fromHex(psbtHexs[i],{network:psbtNetwork});
         const psbt = 'psbt'
         const autoFinalized = (options && options[i] && options[i].autoFinalized==false)?false:true;
         const toSignInputs = await wallet.formatOptionsToSignInputs(psbtHexs[i],options[i]);
@@ -210,7 +184,6 @@ class ProviderController extends BaseController {
     pushPsbt = async ({ data: { params: { psbtHex } } }) => {
       // psbtHex = '{"to":"kaspadev:qpxxpgqac0dwqplyxfpkgaekgrmyflkv0at550x8st82m73nujqe52j8plx2p","amountSompi":100000000,"feeRate":0,"fee":12036}'
       // const hexData = formatPsbtHex(psbtHex);
-      // const psbt = bitcoin.Psbt.fromHex(hexData);
       // const psbt = 'psbt'
       // const tx = psbt.extractTransaction();
       // const rawtx = tx.toHex()
@@ -218,24 +191,10 @@ class ProviderController extends BaseController {
       return await wallet.pushTx(rawtx)
     }
 
-  // @Reflect.metadata('APPROVAL', ['InscribeTransfer', (req) => {
-  //   const { data: { params: { ticker } } } = req;
-  //   // todo
-  // }])
-  //   inscribeTransfer = async ({approvalRes}) => {
-  //     return approvalRes
-  //   }
-
   @Reflect.metadata('SAFE', true)
     getVersion = async () => {
       return VERSION
     };
-
-  @Reflect.metadata('SAFE', true)
-    isAtomicalsEnabled = async () => {
-      return await wallet.isAtomicalsEnabled()
-    };
-
 }
 
 export default new ProviderController();

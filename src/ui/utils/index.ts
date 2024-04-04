@@ -81,12 +81,8 @@ export const ellipsisOverflowedText = (str: string, length = 5, removeLastComma 
   return `${cut}...`;
 };
 
-export const satoshisToBTC = (amount: number) => {
+export const sompiToKAS = (amount: number) => {
   return amount / 100000000;
-};
-
-export const btcTosatoshis = (amount: number) => {
-  return Math.floor(amount * 100000000);
 };
 
 export function shortAddress(address?: string, len = 5) {
@@ -151,12 +147,12 @@ export function formatDate(date: Date, fmt = 'yyyy-MM-dd hh:mm:ss') {
   return fmt;
 }
 
-export function satoshisToAmount(val: number) {
+export function sompiToAmount(val: number) {
   const num = new BigNumber(val);
   return num.dividedBy(100000000).toString();
 }
 
-export function amountToSatoshis(val: string) {
+export function amountToSompi(val: string) {
   const num = new BigNumber(val);
   return num.multipliedBy(100000000).toNumber();
 }
@@ -196,11 +192,11 @@ export function handleTransactions(data, address): ITransactionInfo[] {
     });
     if (inputAmountSelf == 0) {
       mode = 'receive';
-      amount = satoshisToAmount(outputAmountSelf).replace(/\.0+$/, '');
+      amount = sompiToAmount(outputAmountSelf).replace(/\.0+$/, '');
       usdValue = amount;
     } else {
       mode = 'send';
-      amount = satoshisToAmount(inputAmountSelf - outputAmountSelf).replace(/\.0+$/, '');
+      amount = sompiToAmount(inputAmountSelf - outputAmountSelf).replace(/\.0+$/, '');
       usdValue = amount;
     }
 

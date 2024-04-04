@@ -56,7 +56,7 @@ export default function ExportMnemonicsScreen() {
 
   function copy(str: string) {
     copyToClipboard(str);
-    tools.toastSuccess('Copied');
+    tools.toastSuccess(t('Copied'));
   }
   const words = mnemonic.split(' ');
 

@@ -24,11 +24,13 @@ import {
   useWalletConfig
 } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
-import { handleTransactions, satoshisToAmount, shortAddress, useWallet } from '@/ui/utils';
+import { handleTransactions, shortAddress, sompiToAmount, useWallet } from '@/ui/utils';
 
+import { Empty } from '@/ui/components/Empty';
 import { accountActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { useFetchUtxosCallback, useUtxos } from '@/ui/state/transactions/hooks';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 const $noBreakStyle: CSSProperties = {
@@ -37,6 +39,7 @@ const $noBreakStyle: CSSProperties = {
 };
 
 export default function WalletTabScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const accountBalance = useAccountBalance();
@@ -75,7 +78,6 @@ export default function WalletTabScreen() {
   const [usdValue, setUSDValue] = useState('--');
   const prevRpcStatus = useRef(true);
   const dispatch = useAppDispatch();
-  // const assetTabKey = useAssetTabKey();
 
   const skipVersion = useSkipVersionCallback();
 
@@ -155,7 +157,7 @@ export default function WalletTabScreen() {
   const tabItems = [
     {
       key: 'activity',
-      label: 'Activity',
+      label: t('Activity'),
       children: <ActivityTab transactionInfos={transactionInfos} />
     },
     {
@@ -213,13 +215,12 @@ export default function WalletTabScreen() {
                 </Row>
                 {/*    <Row justifyBetween>
                   <span style={$noBreakStyle}>{'Confirmed KAS'}</span>
-                  <span style={$noBreakStyle}>{` ${accountBalance.confirm_btc_amount} KAS`}</span>
+                  <span style={$noBreakStyle}>{` ${accountBalance.confirm_kas_amount} KAS`}</span>
                 </Row>
                 <Row justifyBetween>
                   <span style={$noBreakStyle}>{'Unconfirmed KAS'}</span>
-                  <span style={$noBreakStyle}>{` ${accountBalance.pending_btc_amount} KAS`}</span>
-                </Row> */
-                }
+                  <span style={$noBreakStyle}>{` ${accountBalance.pending_kas_amount} KAS`}</span>
+                </Row> */}
               </>
             }
             overlayStyle={{
@@ -245,7 +246,7 @@ export default function WalletTabScreen() {
 
           <Row justifyBetween>
             <Button
-              text="Receive"
+              text={t('Receive')}
               preset="default"
               icon="receive"
               onClick={(e) => {
@@ -255,7 +256,7 @@ export default function WalletTabScreen() {
             />
 
             <Button
-              text="Send"
+              text={t('Send')}
               preset="default"
               icon="send"
               onClick={(e) => {
@@ -267,7 +268,7 @@ export default function WalletTabScreen() {
               <Button
                 text="Buy"
                 preset="default"
-                icon="bitcoin"
+                icon="kas"
                 onClick={(e) => {
                   navigate('FiatPayScreen');
                 }}
@@ -275,17 +276,6 @@ export default function WalletTabScreen() {
               />
             )}
           </Row>
-
-          {/* <Tabs
-            size={'small'}
-            defaultActiveKey={assetTabKey as unknown as string}
-            activeKey={assetTabKey as unknown as string}
-            items={tabItems as unknown as any[]}
-            onTabClick={(key) => {
-              dispatch(uiActions.updateAssetTabScreen({ assetTabKey: key as unknown as AssetTabKey }));
-            }}
-          /> */}
-          {/*{tabItems[assetTabKey].children}*/}
           <Tabs
             size={'small'}
             defaultActiveKey="0"
@@ -352,9 +342,7 @@ function ActivityTab({ transactionInfos }: { transactionInfos: ITransactionInfo[
     );
   } else {
     return (
-      <Row justifyCenter>
-        <Text text="No data" mt="md" />
-      </Row>
+      <Empty />
     );
   }
 }
@@ -379,7 +367,7 @@ function UTXOTab() {
               navigate('UtxoDetailScreen', { utxoDetail: e });
             }}>
             <Row full justifyBetween mt="sm">
-              <Text text={`${satoshisToAmount(Number(e.utxoEntry.amount))} kas`} />
+              <Text text={`${sompiToAmount(Number(e.utxoEntry.amount))} kas`} />
               <Text text={shortAddress(e.outpoint.transactionId)} preset="sub" />
             </Row>
           </Card>
@@ -388,9 +376,7 @@ function UTXOTab() {
     );
   } else {
     return (
-      <Row justifyCenter>
-        <Text text="No data" mt="md" />
-      </Row>
+      <Empty />
     );
   }
 }

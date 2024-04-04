@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Account, AddressSummary, AppSummary, Inscription, InscriptionSummary, TxHistoryItem } from '@/shared/types';
+import { Account, AddressSummary, AppSummary, TxHistoryItem } from '@/shared/types';
 import { createSlice } from '@reduxjs/toolkit';
 
 import { updateVersion } from '../global/actions';
@@ -13,10 +13,9 @@ export interface AccountsState {
   balanceMap: {
     [key: string]: {
       amount: string;
-      btc_amount: string;
-      confirm_btc_amount: string;
-      pending_btc_amount: string;
-      inscription_amount: string;
+      kas_amount: string;
+      confirm_kas_amount: string;
+      pending_kas_amount: string;
       expired: boolean;
     };
   };
@@ -26,14 +25,7 @@ export interface AccountsState {
       expired: boolean;
     };
   };
-  inscriptionsMap: {
-    [key: string]: {
-      list: Inscription[];
-      expired: boolean;
-    };
-  };
   appSummary: AppSummary;
-  inscriptionSummary: InscriptionSummary;
   addressSummary: AddressSummary;
 }
 
@@ -56,21 +48,13 @@ export const initialState: AccountsState = {
   loading: false,
   balanceMap: {},
   historyMap: {},
-  inscriptionsMap: {},
   appSummary: {
     apps: []
   },
-  inscriptionSummary: {
-    mintedList: []
-  },
   addressSummary: {
-    totalSatoshis: 0,
-    btcSatoshis: 0,
-    assetSatoshis: 0,
-    inscriptionCount: 0,
-    atomicalsCount: 0,
-    brc20Count: 0,
-    arc20Count: 0,
+    totalSompi: 0,
+    kasSompi: 0,
+    assetSompi: 0,
     loading: true
   }
 };
@@ -96,29 +80,26 @@ const slice = createSlice({
         payload: {
           address: string;
           amount: string;
-          btc_amount: string;
-          inscription_amount: string;
-          confirm_btc_amount: string;
-          pending_btc_amount: string;
+          kas_amount: string;
+          confirm_kas_amount: string;
+          pending_kas_amount: string;
         };
       }
     ) {
       const {
-        payload: { address, amount, btc_amount, inscription_amount, confirm_btc_amount, pending_btc_amount }
+        payload: { address, amount, kas_amount, confirm_kas_amount, pending_kas_amount }
       } = action;
       state.balanceMap[address] = state.balanceMap[address] || {
         amount: '0',
-        btc_amount: '0',
-        inscription_amount: '0',
-        confirm_btc_amount: '0',
-        pending_btc_amount: '0',
+        kas_amount: '0',
+        confirm_kas_amount: '0',
+        pending_kas_amount: '0',
         expired: true
       };
       state.balanceMap[address].amount = amount;
-      state.balanceMap[address].btc_amount = btc_amount;
-      state.balanceMap[address].inscription_amount = inscription_amount;
-      state.balanceMap[address].confirm_btc_amount = confirm_btc_amount;
-      state.balanceMap[address].pending_btc_amount = pending_btc_amount;
+      state.balanceMap[address].kas_amount = kas_amount;
+      state.balanceMap[address].confirm_kas_amount = confirm_kas_amount;
+      state.balanceMap[address].pending_kas_amount = pending_kas_amount;
       state.balanceMap[address].expired = false;
     },
     setBalances(
@@ -127,10 +108,9 @@ const slice = createSlice({
         payload: {
           address: string;
           amount: string;
-          btc_amount: string;
-          inscription_amount: string;
-          confirm_btc_amount: string;
-          pending_btc_amount: string;
+          kas_amount: string;
+          confirm_kas_amount: string;
+          pending_kas_amount: string;
         }[];
       }
     ) {
@@ -140,17 +120,15 @@ const slice = createSlice({
         const amount = payload[i].amount;
         state.balanceMap[address] = state.balanceMap[address] || {
           amount: '0',
-          btc_amount: '0',
-          inscription_amount: '0',
-          confirm_btc_amount: '0',
-          pending_btc_amount: '0',
+          kas_amount: '0',
+          confirm_kas_amount: '0',
+          pending_kas_amount: '0',
           expired: true
         };
         state.balanceMap[address].amount = amount;
-        state.balanceMap[address].btc_amount = '0';
-        state.balanceMap[address].inscription_amount = '0';
-        state.balanceMap[address].confirm_btc_amount = '0';
-        state.balanceMap[address].pending_btc_amount = '0';
+        state.balanceMap[address].kas_amount = '0';
+        state.balanceMap[address].confirm_kas_amount = '0';
+        state.balanceMap[address].pending_kas_amount = '0';
         state.balanceMap[address].expired = false;
       }
     },
@@ -180,23 +158,6 @@ const slice = createSlice({
         history.expired = true;
       }
     },
-    setInscriptions(state, action: { payload: { address: string; list: Inscription[] } }) {
-      const {
-        payload: { address, list }
-      } = action;
-      state.inscriptionsMap[address] = state.inscriptionsMap[address] || {
-        list: [],
-        expired: true
-      };
-      state.inscriptionsMap[address].list = list;
-      state.inscriptionsMap[address].expired = false;
-    },
-    expireInscriptions(state) {
-      const inscriptions = state.inscriptionsMap[state.current.address];
-      if (inscriptions) {
-        inscriptions.expired = true;
-      }
-    },
     setCurrentAccountName(state, action: { payload: string }) {
       const { payload } = action;
       state.current.alianName = payload;
@@ -212,10 +173,6 @@ const slice = createSlice({
       if (account) {
         account.flag = payload;
       }
-    },
-    setInscriptionSummary(state, action: { payload: InscriptionSummary }) {
-      const { payload } = action;
-      state.inscriptionSummary = payload;
     },
     setAppSummary(state, action: { payload: AppSummary }) {
       const { payload } = action;
@@ -249,13 +206,9 @@ const slice = createSlice({
       // todo
       if (!state.addressSummary) {
         state.addressSummary = {
-          totalSatoshis: 0,
-          btcSatoshis: 0,
-          assetSatoshis: 0,
-          inscriptionCount: 0,
-          atomicalsCount: 0,
-          brc20Count: 0,
-          arc20Count: 0
+          totalSompi: 0,
+          kasSompi: 0,
+          assetSompi: 0,
         };
       }
     });

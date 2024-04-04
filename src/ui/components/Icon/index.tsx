@@ -18,7 +18,6 @@ export const svgRegistry = {
   twitter: './images/icons/twitter.svg',
   github: './images/icons/github.svg',
 
-  btc: './images/icons/btc.svg',
   kas: './images/icons/kaspa.svg',
   qrcode: './images/icons/qrcode.svg',
 
@@ -39,17 +38,14 @@ export const svgRegistry = {
   'circle-check': '/images/icons/circle-check.svg',
   pencil: '/images/icons/pencil.svg',
   'circle-info': '/images/icons/circle-info.svg',
-  bitcoin: './images/icons/bitcoin.svg',
   'circle-question': '/images/icons/circle-question.svg',
   split: '/images/icons/scissors.svg',
-  ordinals: '/images/icons/ordinals.svg',
-  atomicals: '/images/icons/atomicals.svg',
   info: '/images/icons/info.svg',
   warning: '/images/icons/warning.svg',
 
 };
 
-const iconImgList: Array<IconTypes> = ['success', 'delete', 'btc','kas'];
+const iconImgList: Array<IconTypes> = ['success', 'delete','kas'];
 
 export type IconTypes = keyof typeof svgRegistry;
 interface IconProps {

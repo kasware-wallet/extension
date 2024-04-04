@@ -261,9 +261,6 @@ const Main = () => {
       }
 
       if (!self.summaryLoaded) {
-        wallet.getInscriptionSummary().then((data) => {
-          dispatch(accountActions.setInscriptionSummary(data));
-        });
 
         wallet.getAppSummary().then((data) => {
           dispatch(accountActions.setAppSummary(data));

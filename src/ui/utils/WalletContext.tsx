@@ -10,16 +10,13 @@ import { AddressFlagType, NETWORK_TYPES } from '@/shared/constant';
 import {
   Account,
   AddressSummary,
-  AddressTokenSummary,
   AddressType,
   AppSummary,
-  BitcoinBalance,
   DecodedPsbt,
   FeeSummary,
   IKaspaUTXOWithoutBigint,
-  Inscription,
-  InscriptionSummary,
   IScannedGroup,
+  KaspaBalance,
   NetworkType,
   SignPsbtOptions,
   TxHistoryItem,
@@ -56,17 +53,11 @@ export interface WalletController {
   setPopupOpen(isOpen: boolean): void;
   isReady(): Promise<boolean>;
 
-  getAddressBalance(address: string): Promise<BitcoinBalance>;
-  getAddressesBalance(addresses: string[]): Promise<BitcoinBalance[]>;
-  getAddressCacheBalance(address: string): Promise<BitcoinBalance>;
+  getAddressBalance(address: string): Promise<KaspaBalance>;
+  getAddressesBalance(addresses: string[]): Promise<KaspaBalance[]>;
+  getAddressCacheBalance(address: string): Promise<KaspaBalance>;
   getMultiAddressAssets(addresses: string): Promise<AddressSummary[]>;
   findGroupAssets(groups: IScannedGroup[]): Promise<IScannedGroup[]>;
-
-  getAddressInscriptions(
-    address: string,
-    cursor: number,
-    size: number
-  ): Promise<{ list: Inscription[]; total: number }>;
 
   getAddressHistory: (address: string) => Promise<TxHistoryItem[]>;
   getAddressCacheHistory: (address: string) => Promise<TxHistoryItem[]>;
@@ -142,36 +133,14 @@ export interface WalletController {
 
   signTransaction(psbt: any, inputs: ToSignInput[]): Promise<any>;
 
-  sendKAS(data: { to: string; amount: number; btcUtxos: any[]; feeRate: number; enableRBF: boolean }): Promise<string>;
+  sendKAS(data: { to: string; amount: number; kasUtxos: any[]; feeRate: number; enableRBF: boolean }): Promise<string>;
 
-  sendAllKAS(data: { to: string; btcUtxos: any[]; feeRate: number; enableRBF: boolean }): Promise<string>;
-
-  sendOrdinalsInscription(data: {
-    to: string;
-    inscriptionId: string;
-    feeRate: number;
-    outputValue: number;
-    enableRBF: boolean;
-    btcUtxos: any[];
-  }): Promise<string>;
-
-  sendOrdinalsInscriptions(data: {
-    to: string;
-    inscriptionIds: string[];
-    feeRate: number;
-    enableRBF: boolean;
-    btcUtxos: any[];
-  }): Promise<string>;
+  sendAllKAS(data: { to: string; kasUtxos: any[]; feeRate: number; enableRBF: boolean }): Promise<string>;
 
   pushTx(rawtx: string): Promise<string>;
 
-  queryDomainInfo(domain: string): Promise<Inscription>;
-
-  getInscriptionSummary(): Promise<InscriptionSummary>;
   getAppSummary(): Promise<AppSummary>;
   getKASUtxos(): Promise<IKaspaUTXOWithoutBigint[]>;
-  getAssetUtxosAtomicalsNFT(atomicalId: string): Promise<any[]>;
-  getAssetUtxosInscriptions(inscriptionId: string): Promise<any[]>;
 
   getNetworkType(): Promise<NetworkType>;
   getRpcLinks(): Promise<typeof NETWORK_TYPES>;
@@ -201,10 +170,6 @@ export interface WalletController {
 
 
   decodePsbt(psbtHex: string): Promise<DecodedPsbt>;
-
-  getBRC20Summary(address: string, ticker: string): Promise<AddressTokenSummary>;
-
-  expireUICachedData(address: string): Promise<void>;
 
   createMoonpayUrl(address: string): Promise<string>;
 

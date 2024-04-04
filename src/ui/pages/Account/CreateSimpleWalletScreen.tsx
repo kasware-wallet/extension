@@ -10,8 +10,10 @@ import { useTools } from '@/ui/components/ActionComponent';
 import { AddressTypeCard } from '@/ui/components/AddressTypeCard';
 import { FooterButtonContainer } from '@/ui/components/FooterButtonContainer';
 import { TabBar } from '@/ui/components/TabBar';
-import { satoshisToAmount, useWallet } from '@/ui/utils';
+import { sompiToAmount, useWallet } from '@/ui/utils';
 
+import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 function Step1({
@@ -21,6 +23,7 @@ function Step1({
   contextData: ContextData;
   updateContextData: (params: UpdateContextDataParams) => void;
 }) {
+  const { t } = useTranslation();
   const [wif, setWif] = useState('');
   const [disabled, setDisabled] = useState(true);
   const wallet = useWallet();
@@ -46,11 +49,11 @@ function Step1({
     try {
       const _res = await wallet.createTmpKeyringWithPrivateKey(wif, AddressType.KASPA_44_111111);
       if (_res.accounts.length == 0) {
-        throw new Error('Invalid PrivateKey');
+        throw new Error(t('Invalid PrivateKey'));
       }
     } catch (e) {
       if (e == null || e == undefined || Object.keys(e).length == 0) {
-        tools.toastError('Invalid PrivateKey');
+        tools.toastError(t('Invalid PrivateKey'));
       } else {
         tools.toastError((e as Error).message);
       }
@@ -64,10 +67,10 @@ function Step1({
 
   return (
     <Column gap="lg">
-      <Text text="Private Key" textCenter preset="bold" />
+      <Text text={t('Private Key')} textCenter preset="bold" />
 
       <Input
-        placeholder={'Hex Private Key'}
+        placeholder={t('HEX Private Key')}
         onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) => {
           if ('Enter' == e.key) {
             btnClick();
@@ -77,7 +80,7 @@ function Step1({
         autoFocus={true}
       />
       <FooterButtonContainer>
-        <Button disabled={disabled} text="Continue" preset="primary" onClick={btnClick} />
+        <Button disabled={disabled} text={t('Continue')} preset="primary" onClick={btnClick} />
       </FooterButtonContainer>
     </Column>
   );
@@ -117,11 +120,11 @@ function Step2({
   const [previewAddresses, setPreviewAddresses] = useState<string[]>(hdPathOptions.map((v) => ''));
 
   const [addressAssets, setAddressAssets] = useState<{
-    [key: string]: { total_btc: string; satoshis: number; total_inscription: number };
+    [key: string]: { total_kas: string; sompi: number };
   }>({});
 
   const selfRef = useRef({
-    maxSatoshis: 0,
+    maxSompi: 0,
     recommended: 0,
     count: 0,
     addressBalances: {}
@@ -141,14 +144,13 @@ function Step2({
     for (let i = 0; i < addresses.length; i++) {
       const address = addresses[i];
       const balance = balances[i];
-      const satoshis = balance.totalSatoshis;
+      const sompi = balance.totalSompi;
       self.addressBalances[address] = {
-        total_btc: satoshisToAmount(balance.totalSatoshis),
-        satoshis,
-        total_inscription: balance.inscriptionCount
+        total_kas: sompiToAmount(balance.totalSompi),
+        sompi,
       };
-      if (satoshis > self.maxSatoshis) {
-        self.maxSatoshis = satoshis;
+      if (sompi > self.maxSompi) {
+        self.maxSompi = sompi;
         self.recommended = i;
       }
 
@@ -177,15 +179,14 @@ function Step2({
   };
   return (
     <Column gap="lg">
-      <Text text="Address Type" preset="bold" />
+      <Text text={t('Address Type') as string} preset="bold" />
       {hdPathOptions.map((item, index) => {
         const address = previewAddresses[index];
         const assets = addressAssets[address] || {
-          total_btc: '--',
-          satoshis: 0,
-          total_inscription: 0
+          total_kas: '--',
+          sompi: 0,
         };
-        const hasVault = assets.satoshis > 0;
+        const hasVault = assets.sompi > 0;
         if (item.isKaswareLegacy && !hasVault) {
           return null;
         }
@@ -205,7 +206,7 @@ function Step2({
       })}
 
       <FooterButtonContainer>
-        <Button text="Coninue" preset="primary" onClick={onNext} />
+        <Button text={t('Coninue')} preset="primary" onClick={onNext} />
       </FooterButtonContainer>
     </Column>
   );
@@ -266,7 +267,7 @@ export default function CreateSimpleWalletScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Create Single Wallet"
+        title={t('Create Single Wallet')}
       />
       <Content>
         <Row justifyCenter>

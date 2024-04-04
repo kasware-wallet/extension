@@ -5,11 +5,13 @@ import { Button, Column, Content, Input, Layout, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { useWallet, useWalletRequest } from '@/ui/utils';
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 // type Status = '' | 'error' | 'warning' | undefined;
 
 export default function CreatePasswordScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const wallet = useWallet();
   const { state } = useLocation();
@@ -41,7 +43,7 @@ export default function CreatePasswordScreen() {
 
   const verify = (pwd2: string) => {
     if (pwd2 && pwd2 !== password) {
-      tools.toastWarning('Entered passwords differ');
+      tools.toastWarning(t('Entered passwords differ'));
     }
   };
 
@@ -50,7 +52,7 @@ export default function CreatePasswordScreen() {
 
     if (password) {
       if (password.length < 5) {
-        tools.toastWarning('Password must contain at least 5 characters');
+        tools.toastWarning(t('Password must contain at least 5 characters'));
         return;
       }
 
@@ -74,8 +76,8 @@ export default function CreatePasswordScreen() {
       <Content preset="middle">
         <Column fullX>
           <Column gap="xl" mt="xxl">
-            <Text text="Create a password" preset="title-bold" textCenter />
-            <Text text="You will use this to unlock your wallet" preset="sub" textCenter />
+            <Text text={t('Create a password')} preset="title-bold" textCenter />
+            <Text text={t('You will use this to unlock your wallet')} preset="sub" textCenter />
             <Input
               preset="password"
               onBlur={(e) => {
@@ -85,7 +87,7 @@ export default function CreatePasswordScreen() {
             />
             <Input
               preset="password"
-              placeholder="Confirm Password"
+              placeholder={t('Confirm Password')}
               onChange={(e) => {
                 setPassword2(e.target.value);
               }}
@@ -94,7 +96,7 @@ export default function CreatePasswordScreen() {
               }}
               onKeyUp={(e) => handleOnKeyUp(e)}
             />
-            <Button disabled={disabled} text="Continue" preset="primary" onClick={btnClick} />
+            <Button disabled={disabled} text={t('Continue')} preset="primary" onClick={btnClick} />
           </Column>
         </Column>
       </Content>

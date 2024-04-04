@@ -56,7 +56,7 @@ export default function ExportPrivateKeyScreen() {
 
   function copy(str: string) {
     copyToClipboard(str);
-    tools.toastSuccess('Copied');
+    tools.toastSuccess(t('Copied'));
   }
 
   return (
@@ -65,7 +65,7 @@ export default function ExportPrivateKeyScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Export Private Key"
+        title={t('Export Private Key')}
       />
       <Content>
         {privateKey.wif == '' ? (
@@ -92,17 +92,17 @@ export default function ExportPrivateKeyScreen() {
             />
             {error && <Text text={error} preset="regular" color="error" />}
 
-            <Button text="Show Private Key" preset="primary" disabled={disabled} onClick={btnClick} />
+            <Button text={t('Show Private Key')} preset="primary" disabled={disabled} onClick={btnClick} />
           </Column>
         ) : (
           <Column>
             <Text
-              text="If you ever change browsers or move computers, you will need this Private Key to access this account. Save it somewhere safe and secret"
+              text={`${t('If you ever change browsers or move computers')}, ${t('you will need this Private Key to access this account')}. ${t('Save it somewhere safe and secret')}`}
               preset="sub"
               size="sm"
               textCenter
             />
-            <Text text="Hex Private Key:" preset="sub" size="sm" textCenter mt="lg" />
+            <Text text={`${t('HEX Private Key')}:`} preset="sub" size="sm" textCenter mt="lg" />
 
             <Card
               onClick={(e) => {

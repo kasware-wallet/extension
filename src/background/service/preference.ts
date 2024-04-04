@@ -6,14 +6,10 @@ import { AddressFlagType, EVENTS, NETWORK_TYPES } from '@/shared/constant';
 import eventBus from '@/shared/eventBus';
 import {
   Account,
-  AddressTokenSummary,
   AddressType,
   AppSummary,
-  BitcoinBalance,
-  Inscription,
+  KaspaBalance,
   NetworkType,
-  TokenBalance,
-  TokenTransfer,
   TxHistoryItem
 } from '@/shared/types';
 
@@ -29,7 +25,7 @@ export interface PreferenceStore {
   currentAccount: Account | undefined | null;
   externalLinkAck: boolean;
   balanceMap: {
-    [address: string]: BitcoinBalance;
+    [address: string]: KaspaBalance;
   };
   historyMap: {
     [address: string]: TxHistoryItem[];
@@ -53,33 +49,6 @@ export interface PreferenceStore {
   };
   editingKeyringIndex: number;
   editingAccount: Account | undefined | null;
-  uiCachedData: {
-    [address: string]: {
-      allInscriptionList: {
-        currentPage: number;
-        pageSize: number;
-        total: number;
-        list: Inscription[];
-      }[];
-      brc20List: {
-        currentPage: number;
-        pageSize: number;
-        total: number;
-        list: TokenBalance[];
-      }[];
-      brc20Summary: {
-        [ticker: string]: AddressTokenSummary;
-      };
-      brc20TransferableList: {
-        [ticker: string]: {
-          currentPage: number;
-          pageSize: number;
-          total: number;
-          list: TokenTransfer[];
-        }[];
-      };
-    };
-  };
   skippedVersion: string;
   appTab: {
     summary: AppSummary;
@@ -122,7 +91,6 @@ class PreferenceService {
         rpcLinks: NETWORK_TYPES,
         keyringAlianNames: {},
         accountAlianNames: {},
-        uiCachedData: {},
         skippedVersion: '',
         appTab: {
           summary: { apps: [] },
@@ -162,7 +130,7 @@ class PreferenceService {
     }
 
     if (this.store.addressType === undefined || this.store.addressType === null) {
-      this.store.addressType = AddressType.P2WPKH;
+      this.store.addressType = AddressType.KASPA_44_111111;
     }
 
     if (!this.store.networkType) {
@@ -182,10 +150,6 @@ class PreferenceService {
 
     if (!this.store.accountAlianNames) {
       this.store.accountAlianNames = {};
-    }
-
-    if (!this.store.uiCachedData) {
-      this.store.uiCachedData = {};
     }
 
     if (!this.store.skippedVersion) {
@@ -239,7 +203,7 @@ class PreferenceService {
   };
 
   // addressBalance
-  updateAddressBalance = (address: string, data: BitcoinBalance) => {
+  updateAddressBalance = (address: string, data: KaspaBalance) => {
     const balanceMap = this.store.balanceMap || {};
     this.store.balanceMap = {
       ...balanceMap,
@@ -256,7 +220,7 @@ class PreferenceService {
     }
   };
 
-  getAddressBalance = (address: string): BitcoinBalance | null => {
+  getAddressBalance = (address: string): KaspaBalance | null => {
     const balanceMap = this.store.balanceMap || {};
     return balanceMap[address] || null;
   };
@@ -437,34 +401,6 @@ class PreferenceService {
 
   setEditingAccount = (account?: Account | null) => {
     this.store.editingAccount = account;
-  };
-
-  getUICachedData = (address: string) => {
-    this.store.uiCachedData[address] = {
-      allInscriptionList: [],
-      brc20List: [],
-      brc20Summary: {},
-      brc20TransferableList: {}
-    };
-
-    // if (!this.store.uiCachedData[address]) {
-    //   this.store.uiCachedData[address] = {
-    //     allInscriptionList: [],
-    //     brc20List: [],
-    //     brc20Summary: {},
-    //     brc20TransferableList: {}
-    //   };
-    // }
-    return this.store.uiCachedData[address];
-  };
-
-  expireUICachedData = (address: string) => {
-    this.store.uiCachedData[address] = {
-      allInscriptionList: [],
-      brc20List: [],
-      brc20Summary: {},
-      brc20TransferableList: {}
-    };
   };
 
   getSkippedVersion = () => {

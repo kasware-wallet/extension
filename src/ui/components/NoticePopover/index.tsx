@@ -4,7 +4,6 @@ import { Checkbox } from 'antd';
 import { useEffect, useState } from 'react';
 
 import { colors } from '@/ui/theme/colors';
-import { fontSizes } from '@/ui/theme/font';
 
 import { Button } from '../Button';
 import { Column } from '../Column';
@@ -44,21 +43,9 @@ export const NoticePopover = ({ onClose }: { onClose: () => void }) => {
               onChange={(e) => {
                 setChecked1(e.target.checked);
               }}>
-              <div style={{ fontSize: fontSizes.sm }}>
-                for Ordinals assets, <span style={{ color: '#EBB94C' }}>Cursed inscriptions</span> and{' '}
-                <span style={{ color: '#EBB94C' }}>Rare sats </span>are not supported.
-              </div>
             </Checkbox>
           </div>
           <Row style={{ borderTopWidth: 1, borderColor: colors.border }} my="md" />
-
-          <div>
-            <Checkbox checked={checked2} onChange={(e) => setChecked2(e.target.checked)}>
-              <div style={{ fontSize: fontSizes.sm }}>
-                for Atomicals assets, <span style={{ color: '#EBB94C' }}>Non-ARC20</span> are not supported yet.
-              </div>
-            </Checkbox>
-          </div>
         </Column>
 
         <Row full>

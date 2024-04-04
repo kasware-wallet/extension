@@ -9,6 +9,7 @@ import { Text } from '@/ui/components/Text';
 import { useUnlockCallback } from '@/ui/state/global/hooks';
 import { getUiType, useWallet } from '@/ui/utils';
 
+import { t } from 'i18next';
 import { useNavigate } from '../../MainRoute';
 
 export default function UnlockScreen() {
@@ -59,17 +60,17 @@ export default function UnlockScreen() {
           <Row justifyCenter>
             <Logo preset="large" />
           </Row>
-          <Text preset="default" text="Accelerating Kaspa adoption" textCenter color="textDim" />
+          <Text preset="default" text={t('Accelerating Kaspa adoption') as string} textCenter color="textDim" />
           <Column gap="xl" mt="xxl">
             {/* <Text preset="title-bold" text="Enter your password" textCenter /> */}
             <Input
               preset="password"
-              placeholder="Password"
+              placeholder={t('Password')}
               onChange={(e) => setPassword(e.target.value)}
               onKeyUp={(e) => handleOnKeyUp(e)}
               autoFocus={true}
             />
-            <Button disabled={disabled} text="Unlock" preset="primary" onClick={btnClick} />
+            <Button disabled={disabled} text={t('Unlock')} preset="primary" onClick={btnClick} />
           </Column>
         </Column>
       </Content>

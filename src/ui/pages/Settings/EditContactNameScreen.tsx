@@ -63,14 +63,14 @@ export default function EditContactNameScreen() {
         />
         <Button
           disabled={!validName}
-          text="Change Contact Name"
+          text={t('Change Contact Name')}
           preset="primary"
           onClick={(e) => {
             handleOnClick();
           }}
         />
         <Button
-          text="Remove Contact"
+          text={t('Remove Contact')}
           preset="danger"
           onClick={(e) => {
             setRemoveVisible(true);

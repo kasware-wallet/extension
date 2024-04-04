@@ -548,7 +548,7 @@ class KeyringService extends EventEmitter {
    *
    * Signs an KAS transaction object.
    *
-   * @param btcTx - The transaction to sign.
+   * @param kasTx - The transaction to sign.
    * @param fromAddress - The transaction 'from' address.
    * @returns  The signed transactio object.
    */

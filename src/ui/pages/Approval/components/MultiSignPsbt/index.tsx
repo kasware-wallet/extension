@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DecodedPsbt, Inscription, SignPsbtOptions, ToSignInput } from '@/shared/types';
+import { DecodedPsbt, SignPsbtOptions, ToSignInput } from '@/shared/types';
 import { Button, Card, Column, Content, Footer, Header, Icon, Layout, Row, Text, TextArea } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressText } from '@/ui/components/AddressText';
@@ -14,8 +14,9 @@ import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useAccountAddress, useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
-import { copyToClipboard, satoshisToAmount, useApproval, useWallet } from '@/ui/utils';
+import { copyToClipboard, sompiToAmount, useApproval, useWallet } from '@/ui/utils';
 import { LoadingOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   header?: React.ReactNode;
@@ -43,13 +44,9 @@ enum TabState {
 
 
 function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
-  const inscriptions = useMemo(() => {
-    return decodedPsbt.inputInfos.reduce<Inscription[]>((pre, cur) => cur.inscriptions.concat(pre), []);
-  }, [decodedPsbt]);
-
   const address = useAccountAddress();
 
-  const spendSatoshis = useMemo(() => {
+  const spendSompi = useMemo(() => {
     const inValue = decodedPsbt.inputInfos
       .filter((v) => v.address === address)
       .reduce((pre, cur) => cur.value + pre, 0);
@@ -60,13 +57,8 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
     return spend;
   }, [decodedPsbt]);
 
-  const spendAmount = useMemo(() => satoshisToAmount(spendSatoshis), [spendSatoshis]);
+  const spendAmount = useMemo(() => sompiToAmount(spendSompi), [spendSompi]);
 
-  const outputValueSaotoshis = useMemo(
-    () => inscriptions.reduce((pre, cur) => pre + cur.outputValue, 0),
-    [inscriptions]
-  );
-  const outputValueAmount = useMemo(() => satoshisToAmount(outputValueSaotoshis), [outputValueSaotoshis]);
   return (
     <Column gap="lg">
       <Text text="Sign Transaction" preset="title-bold" textCenter mt="lg" />
@@ -74,32 +66,11 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
         <Card style={{ backgroundColor: '#272626', maxWidth: 320, width: 320 }}>
           <Column gap="lg">
             <Column>
-              {inscriptions.length > 0 && (
-                <Column justifyCenter>
-                  <Text
-                    text={
-                      inscriptions.length === 1 ? 'Spend Inscription' : `Spend Inscription (${inscriptions.length})`
-                    }
-                    textCenter
-                    color="textDim"
-                  />
-                  {/* <Row overflowX gap="lg" justifyCenter style={{ width: 280 }} pb="lg">
-                    {inscriptions.map((v) => (
-                      <InscriptionPreview key={v.inscriptionId} data={v} preset="small" />
-                    ))}
-                  </Row> */}
-                </Column>
-              )}
-              {inscriptions.length > 0 && <Row style={{ borderTopWidth: 1, borderColor: colors.border }} my="md" />}
-
               <Column>
                 <Text text={'Spend Amount'} textCenter color="textDim" />
 
                 <Column justifyCenter>
                   <Text text={spendAmount} color="white" preset="bold" textCenter size="xxl" />
-                  {outputValueSaotoshis > 0 && (
-                    <Text text={`${outputValueAmount} (in inscriptions)`} preset="sub" textCenter />
-                  )}
                 </Column>
               </Column>
             </Column>
@@ -151,7 +122,7 @@ export default function MultiSignPsbt({
   handleConfirm
 }: Props) {
   const [getApproval, resolveApproval, rejectApproval] = useApproval();
-
+  const { t } = useTranslation();
   const [txInfo, setTxInfo] = useState<TxInfo>(initTxInfo);
 
   const [tabState, setTabState] = useState(TabState.DATA);
@@ -242,7 +213,7 @@ export default function MultiSignPsbt({
   const psbtHex = useMemo(() => txInfo.psbtHexs[txInfo.currentIndex], [txInfo]);
   const toSignInputs = useMemo(() => txInfo.toSignInputsArray[txInfo.currentIndex], [txInfo]);
 
-  const networkFee = useMemo(() => (decodedPsbt ? satoshisToAmount(decodedPsbt.fee) : 0), [decodedPsbt]);
+  const networkFee = useMemo(() => (decodedPsbt ? sompiToAmount(decodedPsbt.fee) : 0), [decodedPsbt]);
   const currentAccount = useCurrentAccount();
   const detailsComponent = useMemo(() => {
     if (decodedPsbt) {
@@ -368,7 +339,7 @@ export default function MultiSignPsbt({
                             </Row>
                           </Column>
                           <Row>
-                            <Text text={`${satoshisToAmount(v.value)}`} color={isToSign ? 'white' : 'textDim'} />
+                            <Text text={`${sompiToAmount(v.value)}`} color={isToSign ? 'white' : 'textDim'} />
                             <Text text="KAS" color="textDim" />
                           </Row>
                         </Row>
@@ -392,7 +363,7 @@ export default function MultiSignPsbt({
                             <Row justifyBetween>
                               <AddressText address={v.address} color={isMyAddress ? 'white' : 'textDim'} />
                               <Row>
-                                <Text text={`${satoshisToAmount(v.value)}`} color={isMyAddress ? 'white' : 'textDim'} />
+                                <Text text={`${sompiToAmount(v.value)}`} color={isMyAddress ? 'white' : 'textDim'} />
                                 <Text text="KAS" color="textDim" />
                               </Row>
                             </Row>
@@ -425,7 +396,7 @@ export default function MultiSignPsbt({
                 justifyCenter
                 onClick={(e) => {
                   copyToClipboard(psbtHex).then(() => {
-                    tools.toastSuccess('Copied');
+                    tools.toastSuccess(t('Copied'));
                   });
                 }}>
                 <Icon icon="copy" color="textDim" />
@@ -452,7 +423,7 @@ export default function MultiSignPsbt({
         <Row full>
           <Button
             preset="default"
-            text={txInfo.currentIndex === 0 ? 'Reject All' : 'Back'}
+            text={txInfo.currentIndex === 0 ? t('Reject All') : t('Back')}
             onClick={handleCancel}
             full
           />

@@ -18,9 +18,10 @@ import { Icon } from '@/ui/components/Icon';
 import { TabBar } from '@/ui/components/TabBar';
 import { useCreateAccountCallback } from '@/ui/state/global/hooks';
 import { fontSizes } from '@/ui/theme/font';
-import { copyToClipboard, generateHdPath, satoshisToAmount, useWallet } from '@/ui/utils';
+import { copyToClipboard, generateHdPath, sompiToAmount, useWallet } from '@/ui/utils';
 import { LoadingOutlined } from '@ant-design/icons';
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 function Step0({
@@ -32,7 +33,7 @@ function Step0({
 }) {
   return (
     <Column gap="lg">
-      <Text text="Choose a wallet you want to restore from" preset="title-bold" textCenter mt="xl" />
+      <Text text="Choose a wallet" preset="title-bold" textCenter mt="xl" />
       {RESTORE_WALLETS.map((item, index) => {
         return (
           <Button
@@ -57,6 +58,7 @@ function Step1_Create({
   contextData: ContextData;
   updateContextData: (params: UpdateContextDataParams) => void;
 }) {
+  const { t } = useTranslation();
   const [checked, setChecked] = useState(false);
 
   const wallet = useWallet();
@@ -81,7 +83,7 @@ function Step1_Create({
 
   function copy(str: string) {
     copyToClipboard(str).then(() => {
-      tools.toastSuccess('Copied');
+      tools.toastSuccess(t('Copied'));
     });
   }
 
@@ -381,7 +383,7 @@ function Step2({
   const [scannedGroups, setScannedGroups] = useState<IScannedGroup[]>([]);
 
   const [addressAssets, setAddressAssets] = useState<{
-    [key: string]: { total_btc: string; satoshis: number; total_inscription: number };
+    [key: string]: { total_kas: string; sompi: number};
   }>({});
 
   const [error, setError] = useState('');
@@ -455,24 +457,23 @@ function Step2({
     const balances = await wallet.getMultiAddressAssets(addresses.join(','));
     setLoading(false);
 
-    const addressAssets: { [key: string]: { total_btc: string; satoshis: number; total_inscription: number } } = {};
-    let maxSatoshis = 0;
+    const addressAssets: { [key: string]: { total_kas: string; sompi: number } } = {};
+    let maxSompi = 0;
     let recommended = 0;
     for (let i = 0; i < addresses.length; i++) {
       const address = addresses[i];
       const balance = balances[i];
-      const satoshis = balance.totalSatoshis;
+      const sompi = balance.totalSompi;
       addressAssets[address] = {
-        total_btc: satoshisToAmount(balance.totalSatoshis),
-        satoshis,
-        total_inscription: balance.inscriptionCount
+        total_kas: sompiToAmount(balance.totalSompi),
+        sompi,
       };
-      if (satoshis > maxSatoshis) {
-        maxSatoshis = satoshis;
+      if (sompi > maxSompi) {
+        maxSompi = sompi;
         recommended = i;
       }
     }
-    if (maxSatoshis > 0) {
+    if (maxSompi > 0) {
       updateContextData({
         addressTypeIndex: recommended
       });
@@ -566,7 +567,7 @@ function Step2({
         // const options = allHdPathOptions[i];
         const options = hdPathOptions[i];
         // const address_arr: string[] = [];
-        // const satoshis_arr: number[] = [];
+        // const sompi_arr: number[] = [];
         // const dtype_arr: number[] = [];
         // const index_arr: number[] = [];
         try {
@@ -601,7 +602,7 @@ function Step2({
         // groups.push({
         //   type: options.addressType,
         //   address_arr: address_arr,
-        //   satoshis_arr: satoshis_arr,
+        //   sompi_arr: sompi_arr,
         //   dtype_arr,
         //   index_arr
         // });
@@ -644,7 +645,7 @@ function Step2({
         scannedGroups.map((item, index) => {
           // const options = allHdPathOptions[index];
           const options = hdPathOptions[index];
-          if (!item.satoshis_arr.find((v) => v > 0)) {
+          if (!item.sompi_arr.find((v) => v > 0)) {
             // skip group with no vault
             return null;
           }
@@ -654,7 +655,7 @@ function Step2({
               label={`${options.label}`}
               items={item.address_arr.map((v, index) => ({
                 address: v,
-                satoshis: item.satoshis_arr[index],
+                sompi: item.sompi_arr[index],
                 // path:
                 //   (contextData.customHdPath || options.hdPath) +
                 //   '/' +
@@ -682,11 +683,10 @@ function Step2({
         hdPathOptions.map((item, index) => {
           const address = previewAddresses[index];
           const assets = addressAssets[address] || {
-            total_btc: '--',
-            satoshis: 0,
-            total_inscription: 0
+            total_kas: '--',
+            sompi: 0,
           };
-          const hasVault = contextData.isRestore && assets.satoshis > 0;
+          const hasVault = contextData.isRestore && assets.sompi > 0;
           if (item.isKaswareLegacy && !hasVault) {
             return null;
           }
@@ -701,7 +701,7 @@ function Step2({
               items={[
                 {
                   address,
-                  satoshis: assets.satoshis,
+                  sompi: assets.sompi,
                   path: hdPath
                 }
               ]}
@@ -911,7 +911,7 @@ export default function CreateHDWalletScreen() {
             window.history.go(-1);
           }
         }}
-        title={contextData.isRestore ? 'Restore from mnemonics' : 'Create a new HD Wallet'}
+        title={contextData.isRestore ? 'From seed phrase' : 'Create a new HD Wallet'}
       />
       <Content>
         <Row justifyCenter>

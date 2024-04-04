@@ -3,6 +3,7 @@
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
 import { copyToClipboard, shortAddress } from '@/ui/utils';
 
+import { useTranslation } from 'react-i18next';
 import { useTools } from '../ActionComponent';
 import { Card } from '../Card';
 import { Column } from '../Column';
@@ -12,6 +13,7 @@ import { Row } from '../Row';
 import { Text } from '../Text';
 
 export const AddressDetailPopover = ({ address, onClose }: { address: string; onClose: () => void }) => {
+  const { t } = useTranslation();
   const tools = useTools();
   const blockstreamUrl = useBlockstreamUrl();
   return (
@@ -22,7 +24,7 @@ export const AddressDetailPopover = ({ address, onClose }: { address: string; on
           preset="style2"
           onClick={(e) => {
             copyToClipboard(address).then(() => {
-              tools.toastSuccess('Copied');
+              tools.toastSuccess(t('Copied'));
             });
           }}>
           <Row itemsCenter>
@@ -42,7 +44,7 @@ export const AddressDetailPopover = ({ address, onClose }: { address: string; on
             window.open(`${blockstreamUrl}/address/${address}`);
           }}>
           <Icon icon="eye" color="textDim" />
-          <Text preset="regular-bold" text="View on Block Explorer" color="textDim" />
+          <Text preset="regular-bold" text={t('View on Block Explorer')} color="textDim" />
         </Row>
       </Column>
     </Popover>

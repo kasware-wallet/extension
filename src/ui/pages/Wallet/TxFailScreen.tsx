@@ -2,8 +2,10 @@ import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/component
 import { colors } from '@/ui/theme/colors';
 import { useLocationState } from '@/ui/utils';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function TxFailScreen() {
+  const { t } = useTranslation();
   const { error } = useLocationState<{ error: string }>();
   const [isMassResaon, setIsMassResaon] = useState(false);
   useEffect(() => {
@@ -24,8 +26,8 @@ export default function TxFailScreen() {
             <Icon icon="delete" size={50} />
           </Row>
 
-          <Text preset="title" text="Payment Failed" textCenter />
-          {isMassResaon && <Text text="You may increase transfer amount to avoid the error below." textCenter />}
+          <Text preset="title" text={t('Payment Failed')} textCenter />
+          {isMassResaon && <Text text={t('You may increase transfer amount')} textCenter />}
           <Text preset="sub" style={{ color: colors.red, wordWrap: 'break-word' }} text={error} textCenter />
         </Column>
       </Content>

@@ -28,18 +28,17 @@ import {
   Account,
   AddressType,
   AddressUserToSignInput,
-  BitcoinBalance,
   IKaspaUTXOWithoutBigint,
   IResultPsbtHex,
   IScannedGroup,
+  KaspaBalance,
   NetworkType,
   PublicKeyUserToSignInput,
   SignPsbtOptions,
   ToSignInput,
-  UTXO,
   WalletKeyring
 } from '@/shared/types';
-import { checkAddressFlag, getKaspaUTXOWithoutBigint, getKaspaUTXOs } from '@/shared/utils';
+import { getKaspaUTXOWithoutBigint, getKaspaUTXOs } from '@/shared/utils';
 // import i18n from '@pages/background/service/i18n';
 import { DisplayedKeyring, Keyring } from '@/background/service/keyring';
 import { Address, Generator } from 'kaspa-wasm';
@@ -161,18 +160,15 @@ export class WalletController extends BaseController {
     return scannedGroup;
   };
 
-  getAddressCacheBalance = (address: string | undefined): BitcoinBalance => {
-    const defaultBalance: BitcoinBalance = {
+  getAddressCacheBalance = (address: string | undefined): KaspaBalance => {
+    const defaultBalance: KaspaBalance = {
       confirm_amount: '0',
       pending_amount: '0',
       amount: '0',
       usd_value: '0',
-      confirm_btc_amount: '0',
-      pending_btc_amount: '0',
-      btc_amount: '0',
-      confirm_inscription_amount: '0',
-      pending_inscription_amount: '0',
-      inscription_amount: '0'
+      confirm_kas_amount: '0',
+      pending_kas_amount: '0',
+      kas_amount: '0'
     };
     if (!address) return defaultBalance;
     return preferenceService.getAddressBalance(address) || defaultBalance;
@@ -184,11 +180,6 @@ export class WalletController extends BaseController {
     // preferenceService.updateAddressHistory(address, data);
     // return data;
     //   todo
-  };
-
-  getAddressInscriptions = async (address: string, cursor: number, size: number) => {
-    const data = await openapiService.getAddressInscriptions(address, cursor, size);
-    return data;
   };
 
   getAddressCacheHistory = (address: string | undefined) => {
@@ -348,13 +339,13 @@ export class WalletController extends BaseController {
       addressType
     });
     const address_arr_final: string[] = [];
-    const satoshis_arr_final: number[] = [];
+    const sompi_arr_final: number[] = [];
     const dtype_arr_final: number[] = [];
     const index_arr_final: number[] = [];
     for (let i = 0; ; i = i + accountCount) {
       const receiveAddressObjArr = (originKeyring as HdKeyring).getAddresses(i, i + accountCount, 0);
       const address_arr: string[] = [];
-      const satoshis_arr: number[] = [];
+      const sompi_arr: number[] = [];
       const dtype_arr: number[] = [];
       const index_arr: number[] = [];
       const networkType = preferenceService.getNetworkType();
@@ -375,7 +366,7 @@ export class WalletController extends BaseController {
       groups.push({
         type: addressType,
         address_arr: address_arr,
-        satoshis_arr: satoshis_arr,
+        sompi_arr: sompi_arr,
         dtype_arr,
         index_arr
       });
@@ -383,7 +374,7 @@ export class WalletController extends BaseController {
       if (groupRes.length > 0) {
         const res = groupRes[0];
         address_arr_final.splice(address_arr_final.length, 0, ...res.address_arr);
-        satoshis_arr_final.splice(satoshis_arr_final.length, 0, ...res.satoshis_arr);
+        sompi_arr_final.splice(sompi_arr_final.length, 0, ...res.sompi_arr);
         dtype_arr_final.splice(dtype_arr_final.length, 0, ...res.dtype_arr);
         index_arr_final.splice(index_arr_final.length, 0, ...res.index_arr);
       } else {
@@ -392,11 +383,11 @@ export class WalletController extends BaseController {
       }
     }
     const groupsFinal: IScannedGroup[] = [];
-    if (satoshis_arr_final.length > 0) {
+    if (sompi_arr_final.length > 0) {
       groupsFinal.push({
         type: addressType,
         address_arr: address_arr_final,
-        satoshis_arr: satoshis_arr_final,
+        sompi_arr: sompi_arr_final,
         dtype_arr: dtype_arr_final,
         index_arr: index_arr_final
       });
@@ -422,14 +413,14 @@ export class WalletController extends BaseController {
       return null;
     }
     const address_arr = group.address_arr;
-    const satoshis_arr = group.satoshis_arr;
+    const sompi_arr = group.sompi_arr;
     const dtype_arr = group.dtype_arr;
     const index_arr = group.index_arr;
     for (let i = 0; i < address_arr.length; ) {
       const idDuplicated = keyring.accounts.find((a) => a.address == address_arr[i]);
       if (idDuplicated) {
         address_arr.splice(i, 1);
-        satoshis_arr.splice(i, 1);
+        sompi_arr.splice(i, 1);
         dtype_arr.splice(i, 1);
         index_arr.splice(i, 1);
       } else {
@@ -597,7 +588,6 @@ export class WalletController extends BaseController {
           script = v.witnessUtxo.script;
           value = v.witnessUtxo.value;
         } else if (v.nonWitnessUtxo) {
-          // const tx = bitcoin.Transaction.fromBuffer(v.nonWitnessUtxo);
           const tx = 'tx';
           const output = tx.outs[psbt.txInputs[index].index];
           script = output.script;
@@ -647,10 +637,6 @@ export class WalletController extends BaseController {
       if (isNotSigned && isP2TR && lostInternalPubkey) {
         // const tapInternalKey = toXOnly(Buffer.from(account.pubkey, 'hex'));
         const tapInternalKey = '0xonly';
-        // const { output } = bitcoin.payments.p2tr({
-        //   internalPubkey: tapInternalKey,
-        //   network: psbtNetwork
-        // });
         const { output } = 'output';
         if (v.witnessUtxo?.script.toString('hex') == output?.toString('hex')) {
           v.tapInternalKey = tapInternalKey;
@@ -856,7 +842,6 @@ export class WalletController extends BaseController {
   };
 
   getKASUtxos = async () => {
-    // getBTCAccount
     const account = preferenceService.getCurrentAccount();
     if (!account) throw new Error('no current account');
 
@@ -876,26 +861,26 @@ export class WalletController extends BaseController {
     feeRate,
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     enableRBF,
-    btcUtxos
+    kasUtxos
   }: {
     to: string;
     amount: number;
     // treat feeRate as priorityFee, kas unit.
     feeRate: number;
     enableRBF: boolean;
-    btcUtxos?: IKaspaUTXOWithoutBigint[];
+    kasUtxos?: IKaspaUTXOWithoutBigint[];
   }) => {
     const account = preferenceService.getCurrentAccount();
     if (!account) throw new Error('no current account');
-    if (!btcUtxos) {
-      btcUtxos = await this.getKASUtxos();
+    if (!kasUtxos) {
+      kasUtxos = await this.getKASUtxos();
     }
-    if (btcUtxos.length == 0) {
+    if (kasUtxos.length == 0) {
       throw new Error('Insufficient balance.');
     }
     const sourceAddress = account.address;
     const destinationAddress = to;
-    const entries = getKaspaUTXOs(btcUtxos);
+    const entries = getKaspaUTXOs(kasUtxos);
     // entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
     const moneySompi = amount;
     // 1. create
@@ -903,7 +888,7 @@ export class WalletController extends BaseController {
       // utxoEntries: entries,
       entries,
       outputs: [[destinationAddress, moneySompi]],
-      priorityFee: 0n,
+      priorityFee: BigInt(0),
       changeAddress: sourceAddress.toString()
       // sigOpCount,
       // minimumSignatures,
@@ -921,36 +906,36 @@ export class WalletController extends BaseController {
     feeRate,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     enableRBF,
-    btcUtxos
+    kasUtxos
   }: {
     to: string;
     feeRate: number;
     enableRBF: boolean;
-    btcUtxos?: IKaspaUTXOWithoutBigint[];
+    kasUtxos?: IKaspaUTXOWithoutBigint[];
   }) => {
     const account = preferenceService.getCurrentAccount();
     if (!account) throw new Error('no current account');
 
     // const networkType = this.getNetworkType();
 
-    if (!btcUtxos) {
-      btcUtxos = await this.getKASUtxos();
+    if (!kasUtxos) {
+      kasUtxos = await this.getKASUtxos();
     }
 
-    if (btcUtxos.length == 0) {
+    if (kasUtxos.length == 0) {
       throw new Error('Insufficient balance.');
     }
     const sourceAddress = account.address;
     const destinationAddress = to;
-    const entries = getKaspaUTXOs(btcUtxos);
+    const entries = getKaspaUTXOs(kasUtxos);
     const total = entries.reduce((agg, curr) => {
       return curr.utxoEntry.amount + agg;
-    }, 0n);
-    const moneySompi = Number(total - BigInt(entries.length) * 5000n);
+    }, BigInt(0));
+    const moneySompi = Number(total - BigInt(entries.length * 5000));
     const generator = new Generator({
       entries,
       outputs: [[destinationAddress, moneySompi]],
-      priorityFee: 0n,
+      priorityFee: BigInt(0),
       changeAddress: sourceAddress.toString()
     });
     try {
@@ -961,124 +946,6 @@ export class WalletController extends BaseController {
     } catch (e) {
       throw new Error(e);
     }
-  };
-
-  sendOrdinalsInscription = async ({
-    to,
-    inscriptionId,
-    feeRate,
-    outputValue,
-    enableRBF,
-    btcUtxos
-  }: {
-    to: string;
-    inscriptionId: string;
-    feeRate: number;
-    outputValue: number;
-    enableRBF: boolean;
-    btcUtxos?: any[];
-  }) => {
-    const account = preferenceService.getCurrentAccount();
-    if (!account) throw new Error('no current account');
-
-    const networkType = preferenceService.getNetworkType();
-
-    const utxo = await openapiService.getInscriptionUtxo(inscriptionId);
-    if (!utxo) {
-      throw new Error('UTXO not found.');
-    }
-
-    // if (utxo.inscriptions.length > 1) {
-    //   throw new Error('Multiple inscriptions are mixed together. Please split them first.');
-    // }
-
-    const assetUtxo = Object.assign(utxo, { pubkey: account.pubkey });
-
-    if (!btcUtxos) {
-      btcUtxos = await this.getKASUtxos();
-    }
-
-    if (btcUtxos.length == 0) {
-      throw new Error('Insufficient balance.');
-    }
-
-    // const { psbt, toSignInputs } = await txHelpers.sendInscription({
-    //   assetUtxo,
-    //   btcUtxos,
-    //   toAddress: to,
-    //   networkType,
-    //   changeAddress: account.address,
-    //   feeRate,
-    //   outputValue,
-    //   enableRBF,
-    //   enableMixed: true
-    // });
-    const psbt = 'psbt';
-    const toSignInputs = [];
-
-    this.setPsbtSignNonSegwitEnable(psbt, true);
-    await this.signPsbt(psbt, toSignInputs, true);
-    this.setPsbtSignNonSegwitEnable(psbt, false);
-    return psbt.toHex();
-  };
-
-  sendOrdinalsInscriptions = async ({
-    to,
-    inscriptionIds,
-    feeRate,
-    enableRBF,
-    btcUtxos
-  }: {
-    to: string;
-    inscriptionIds: string[];
-    utxos: UTXO[];
-    feeRate: number;
-    enableRBF: boolean;
-    btcUtxos?: any[];
-  }) => {
-    const account = preferenceService.getCurrentAccount();
-    if (!account) throw new Error('no current account');
-
-    const networkType = preferenceService.getNetworkType();
-
-    const inscription_utxos = await openapiService.getInscriptionUtxos(inscriptionIds);
-    if (!inscription_utxos) {
-      throw new Error('UTXO not found.');
-    }
-
-    if (inscription_utxos.find((v) => v.inscriptions.length > 1)) {
-      throw new Error('Multiple inscriptions are mixed together. Please split them first.');
-    }
-
-    const assetUtxos = inscription_utxos.map((v) => {
-      return Object.assign(v, { pubkey: account.pubkey });
-    });
-
-    if (!btcUtxos) {
-      btcUtxos = await this.getKASUtxos();
-    }
-
-    if (btcUtxos.length == 0) {
-      throw new Error('Insufficient balance.');
-    }
-
-    // const { psbt, toSignInputs } = await txHelpers.sendInscriptions({
-    //   assetUtxos,
-    //   btcUtxos,
-    //   toAddress: to,
-    //   networkType,
-    //   changeAddress: account.address,
-    //   feeRate,
-    //   enableRBF
-    // });
-    const psbt = 'psbt';
-    const toSignInputs = [];
-
-    this.setPsbtSignNonSegwitEnable(psbt, true);
-    await this.signPsbt(psbt, toSignInputs, true);
-    this.setPsbtSignNonSegwitEnable(psbt, false);
-
-    return psbt.toHex();
   };
 
   pushTx = async (rawtx: string) => {
@@ -1123,7 +990,7 @@ export class WalletController extends BaseController {
         const toSignInputs: ToSignInput[] = [{ index, publicKey }];
         const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
         // submit
-        const txid = await openapiService.submitTransaction(preSubmitPending)
+        const txid = await openapiService.submitTransaction(preSubmitPending);
         return txid;
       } catch (e) {
         throw new Error(e);
@@ -1271,16 +1138,6 @@ export class WalletController extends BaseController {
     preferenceService.setEditingAccount(account);
   };
 
-  queryDomainInfo = async (domain: string) => {
-    const data = await openapiService.getDomainInfo(domain);
-    return data;
-  };
-
-  getInscriptionSummary = async () => {
-    const data = await openapiService.getInscriptionSummary();
-    return data;
-  };
-
   getAppSummary = async () => {
     const appTab = preferenceService.getAppTab();
     try {
@@ -1304,7 +1161,6 @@ export class WalletController extends BaseController {
       preferenceService.setAppSummary(data);
       return data;
     } catch (e) {
-      // console.log('getAppSummary error:', e);
       return appTab.summary;
     }
   };
@@ -1420,21 +1276,6 @@ export class WalletController extends BaseController {
     return openapiService.decodePsbt(psbtHex);
   };
 
-  getBRC20Summary = async (address: string, ticker: string) => {
-    const uiCachedData = preferenceService.getUICachedData(address);
-    if (uiCachedData.brc20Summary[ticker]) {
-      return uiCachedData.brc20Summary[ticker];
-    }
-
-    const tokenSummary = await openapiService.getAddressTokenSummary(address, ticker);
-    uiCachedData.brc20Summary[ticker] = tokenSummary;
-    return tokenSummary;
-  };
-
-  expireUICachedData = (address: string) => {
-    return preferenceService.expireUICachedData(address);
-  };
-
   createMoonpayUrl = (address: string) => {
     return openapiService.createMoonpayUrl(address);
   };
@@ -1481,11 +1322,6 @@ export class WalletController extends BaseController {
     return openapiService.getVersionDetail(version);
   };
 
-  isAtomicalsEnabled = async () => {
-    const current = await this.getCurrentAccount();
-    if (!current) return false;
-    return checkAddressFlag(current?.flag, AddressFlagType.Is_Enable_Atomicals);
-  };
   isValidKaspaAddr = (addr: string) => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars

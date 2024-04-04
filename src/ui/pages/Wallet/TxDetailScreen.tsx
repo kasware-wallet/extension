@@ -7,7 +7,7 @@ import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/component
 
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
-import { satoshisToAmount, shortAddress } from '@/ui/utils';
+import { shortAddress, sompiToAmount } from '@/ui/utils';
 import { useLocation } from 'react-router-dom';
 
 export default function TxDetailScreen() {
@@ -151,7 +151,7 @@ function Inputs({ inputs }: { inputs: Array<any> }) {
     const data: any[] = [];
     inputs.forEach((i) => {
       const address = i.previous_outpoint_address;
-      const amount = satoshisToAmount(i.previous_outpoint_amount).replace(/\.0+$/, '');
+      const amount = sompiToAmount(i.previous_outpoint_amount).replace(/\.0+$/, '');
       data.push({
         address,
         amount
@@ -182,7 +182,7 @@ function Outputs({ outputs }: { outputs: Array<any> }) {
     const data: any[] = [];
     outputs.forEach((i) => {
       const address = i.script_public_key_address;
-      const amount = satoshisToAmount(i.amount).replace(/\.0+$/, '');
+      const amount = sompiToAmount(i.amount).replace(/\.0+$/, '');
       data.push({
         address,
         amount

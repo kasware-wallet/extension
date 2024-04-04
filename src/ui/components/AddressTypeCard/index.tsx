@@ -2,8 +2,8 @@ import { ReactEventHandler } from 'react';
 
 import { AddressAssets } from '@/shared/types';
 import { fontSizes } from '@/ui/theme/font';
-import { satoshisToBTC } from '@/ui/utils';
 
+import { sompiToKAS } from '@/ui/utils';
 import { Card } from '../Card';
 import { Column } from '../Column';
 import { CopyableAddress } from '../CopyableAddress';
@@ -20,7 +20,7 @@ interface AddressTypeCardProps {
 }
 export function AddressTypeCard(props: AddressTypeCardProps) {
   const { onClick, label, address, checked, assets } = props;
-  const hasVault = Boolean(assets.satoshis && assets.satoshis > 0);
+  const hasVault = Boolean(assets.sompi && assets.sompi > 0);
   return (
     <Card px="zero" py="zero" gap="zero" rounded onClick={onClick}>
       <Column full>
@@ -36,14 +36,8 @@ export function AddressTypeCard(props: AddressTypeCardProps) {
         {hasVault && (
           <Row justifyBetween bg="bg3" roundedBottom px="md" py="md">
             <Row justifyCenter>
-              <Icon icon="btc" size={fontSizes.iconMiddle} />
-              <Text text={`${assets.total_btc} KAS`} color="yellow" />
-            </Row>
-
-            <Row>
-              {assets.total_inscription > 0 && (
-                <Text text={`${assets.total_inscription} INSCRIPTIONS`} color="gold" preset="bold" />
-              )}
+              <Icon icon="kas" size={fontSizes.iconMiddle} />
+              <Text text={`${assets.total_kas} KAS`} color="yellow" />
             </Row>
           </Row>
         )}
@@ -57,7 +51,7 @@ interface AddressTypeCardProp2 {
   items: {
     address: string;
     path: string;
-    satoshis: number;
+    sompi: number;
   }[];
   checked: boolean;
   onClick?: ReactEventHandler<HTMLDivElement>;
@@ -83,10 +77,10 @@ export function AddressTypeCard2(props: AddressTypeCardProp2) {
 
             <Text text={`(${v.path})`} size="xs" color="textDim" disableTranslate />
 
-            {v.satoshis > 0 && (
+            {v.sompi > 0 && (
               <Row justifyCenter gap="zero" itemsCenter>
                 <Icon icon="kas" size={fontSizes.iconMiddle} />
-                <Text text={`${satoshisToBTC(v.satoshis)} KAS`} color="yellow" size="xxxs" />
+                <Text text={`${sompiToKAS(v.sompi)} KAS`} color="yellow" size="xxxs" />
               </Row>
             )}
           </Row>

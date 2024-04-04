@@ -8,8 +8,10 @@ import { Button, Column, Content, Header, Input, Layout } from '@/ui/components'
 import { useAppDispatch } from '@/ui/state/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
 import { useWallet } from '@/ui/utils';
+import { useTranslation } from 'react-i18next';
 
 export default function EditWalletNameScreen() {
+  const { t } = useTranslation();
   const { state } = useLocation();
   const { keyring } = state as {
     keyring: WalletKeyring;
@@ -57,7 +59,7 @@ export default function EditWalletNameScreen() {
           />
           <Button
             disabled={!isValidName}
-            text="Change Wallet Name"
+            text={t('Change Wallet Name')}
             preset="primary"
             onClick={(e) => {
               handleOnClick();

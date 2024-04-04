@@ -1,5 +1,3 @@
-// import bitcore from "bitcore-lib";
-// import { ECPairInterface, bitcoin } from "../bitcoin-core";
 import { SimpleKeyring } from './simple-keyring';
 interface DeserializeOption {
     hdPath?: string;
@@ -14,10 +12,8 @@ export declare class HdKeyring extends SimpleKeyring {
   mnemonic: string;
   xpriv: string;
   passphrase: string;
-  // network: bitcoin.Network;
   network: any;
   hdPath: string;
-  // root: bitcore.HDPrivateKey;
   root: any;
   hdWallet?: any;
   // wallets: ECPairInterface[];

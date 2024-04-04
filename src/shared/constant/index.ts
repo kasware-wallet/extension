@@ -7,14 +7,13 @@
 import { AddressType, Chain, NetworkType, RestoreWalletType } from '../types';
 
 export enum CHAINS_ENUM {
-  BTC = 'BTC',
   KAS = 'KAS'
 }
 
 export const CHAINS: Record<string, Chain> = {
-  [CHAINS_ENUM.BTC]: {
-    name: 'BTC',
-    enum: CHAINS_ENUM.BTC,
+  [CHAINS_ENUM.KAS]: {
+    name: 'KAS',
+    enum: CHAINS_ENUM.KAS,
     logo: '',
     network: 'mainnet'
   }
@@ -241,11 +240,11 @@ export const SORT_WEIGHT = {
 };
 
 export const GASPRICE_RANGE = {
-  [CHAINS_ENUM.BTC]: [0, 10000]
+  [CHAINS_ENUM.KAS]: [0, 10000]
 };
 
-export const COIN_NAME = 'BTC';
-export const COIN_SYMBOL = 'BTC';
+export const COIN_NAME = 'KAS';
+export const COIN_SYMBOL = 'KAS';
 
 export const COIN_DUST = 1000;
 
@@ -253,20 +252,19 @@ export const TO_LOCALE_STRING_CONFIG = {
   minimumFractionDigits: 8
 };
 
-export const SUPPORTED_DOMAINS = ['sats', 'kasware', 'x', 'btc'];
+export const SUPPORTED_DOMAINS = ['sats', 'kasware', 'x', 'kas'];
 export const SAFE_DOMAIN_CONFIRMATION = 3;
 
 export const GITHUB_URL = 'https://github.com/kasware-wallet/extension';
-export const DISCORD_URL = 'https://discord.gg/Fg7xMD8k';
+export const DISCORD_URL = 'https://discord.gg/vQ4Jd9hKU5';
 export const TWITTER_URL = 'https://twitter.com/kasware_wallet';
 export const TELEGRAM_URL = 'https://t.me/+eBTwLzz_BcwwMmE1';
 
 export const CHANNEL = process.env.channel!;
 // export const VERSION = process.env.release!;
-export const VERSION = '0.3.0';
+export const VERSION = '0.3.7';
 export const MANIFEST_VERSION = process.env.manifest!;
 
 export enum AddressFlagType {
-  // eslint-disable-next-line no-unused-vars
-  Is_Enable_Atomicals = 0b1
+  Is_Enable_Kasplex = 0b1
 }

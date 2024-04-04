@@ -7,8 +7,10 @@ import { CopyOutlined } from '@ant-design/icons';
 import { useTools } from '../ActionComponent';
 import { Row } from '../Row';
 import { Text } from '../Text';
+import { useTranslation } from 'react-i18next';
 
 export function AddressBar() {
+  const { t } = useTranslation();
   const tools = useTools();
   const address = useAccountAddress();
   return (
@@ -17,7 +19,7 @@ export function AddressBar() {
       itemsCenter
       onClick={(e) => {
         copyToClipboard(address).then(() => {
-          tools.toastSuccess('Copied');
+          tools.toastSuccess(t('Copied'));
         });
       }}>
       <Text text={shortAddress(address,9)} color="textDim" />

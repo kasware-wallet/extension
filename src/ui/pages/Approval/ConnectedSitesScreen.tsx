@@ -7,9 +7,11 @@ import { Card, Column, Content, Header, Icon, Image, Layout, Row, Text } from '@
 import { Empty } from '@/ui/components/Empty';
 import { fontSizes } from '@/ui/theme/font';
 import { useWallet } from '@/ui/utils';
+import { useTranslation } from 'react-i18next';
 
 export default function ConnectedSitesScreen() {
   const wallet = useWallet();
+  const { t } = useTranslation();
 
   const [sites, setSites] = useState<ConnectedSite[]>([]);
 
@@ -32,7 +34,7 @@ export default function ConnectedSitesScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Connected Sites"
+        title={t('Connected Sites')}
       />
       <Content>
         <Column>

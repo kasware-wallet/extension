@@ -99,7 +99,7 @@ const config = (env) => {
           // 自定义主题
           lessOptions: {
             modifyVars: {
-              'primary-color': 'rgb(234,202,68)',
+              'primary-color': '#339999',
               'primary-color-active': '#383535',
               'input-icon-hover-color': '#FFFFFF',
               'component-background': '#1C1919',

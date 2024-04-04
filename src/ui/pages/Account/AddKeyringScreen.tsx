@@ -2,9 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Card, Column, Content, Header, Layout, Text } from '@/ui/components';
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 export default function AddKeyringScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <Layout>
@@ -12,11 +14,11 @@ export default function AddKeyringScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Create a new wallet"
+        title={t('Create a new wallet')}
       />
       <Content>
         <Column>
-          <Text text="Create Wallet" preset="regular-bold" />
+          <Text text={t('Create Wallet')} preset="regular-bold" />
 
           <Card
             justifyCenter
@@ -24,11 +26,11 @@ export default function AddKeyringScreen() {
               navigate('CreateHDWalletScreen', { isImport: false });
             }}>
             <Column full justifyCenter>
-              <Text text="With seed phrase (12 words)" size="sm" />
+              <Text text={`${t('With seed phrase')}(${t('12 words')})`} size="sm" />
             </Column>
           </Card>
 
-          <Text text="Restore Wallet" preset="regular-bold" mt="lg" />
+          <Text text={t('Restore Wallet')} preset="regular-bold" mt="lg" />
 
           <Card
             justifyCenter
@@ -36,7 +38,7 @@ export default function AddKeyringScreen() {
               navigate('CreateHDWalletScreen', { isImport: true });
             }}>
             <Column full justifyCenter>
-              <Text text="From seed phrase (12 words, 24 words)" size="sm" />
+              <Text text={`${t('From seed phrase')}(${t('12 words')}, ${t('24 words')})`} size="sm" />
             </Column>
           </Card>
 
@@ -46,7 +48,7 @@ export default function AddKeyringScreen() {
               navigate('CreateSimpleWalletScreen');
             }}>
             <Column full justifyCenter>
-              <Text text="From single private key" size="sm" />
+              <Text text={t('From single private key')} size="sm" />
             </Column>
           </Card>
         </Column>

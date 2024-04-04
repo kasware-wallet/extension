@@ -9,7 +9,6 @@ import global from './global/reducer';
 import keyrings from './keyrings/reducer';
 import settings from './settings/reducer';
 import transactions from './transactions/reducer';
-import ui from './ui/reducer';
 
 const PERSISTED_KEYS: string[] = ['ui'];
 const store = configureStore({
@@ -19,7 +18,6 @@ const store = configureStore({
     settings,
     global,
     keyrings,
-    ui
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ thunk: true }).concat(save({ states: PERSISTED_KEYS, debounce: 1000 })),

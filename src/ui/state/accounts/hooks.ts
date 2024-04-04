@@ -32,9 +32,8 @@ export function useAccountBalance(address?: string) {
       accountsState.balanceMap[address] || {
         amount: '0',
         expired: false,
-        confirm_btc_amount: '0',
-        pending_btc_amount: '0',
-        inscription_amount: '0'
+        confirm_kas_amount: '0',
+        pending_kas_amount: '0',
       }
     );
   }
@@ -42,9 +41,8 @@ export function useAccountBalance(address?: string) {
     accountsState.balanceMap[currentAccount.address] || {
       amount: '0',
       expired: true,
-      confirm_btc_amount: '0',
-      pending_btc_amount: '0',
-      inscription_amount: '0'
+      confirm_kas_amount: '0',
+      pending_kas_amount: '0',
     }
   );
 }
@@ -52,17 +50,6 @@ export function useAccountBalance(address?: string) {
 export function useAddressSummary() {
   const accountsState = useAccountsState();
   return accountsState.addressSummary;
-}
-
-export function useAccountInscriptions() {
-  const accountsState = useAccountsState();
-  const currentAccount = useCurrentAccount();
-  return accountsState.inscriptionsMap[currentAccount.address] || { list: [], expired: true };
-}
-
-export function useInscriptionSummary() {
-  const accountsState = useAccountsState();
-  return accountsState.inscriptionSummary;
 }
 
 export function useAppSummary() {
@@ -209,14 +196,12 @@ export function useFetchBalanceCallback() {
       accountActions.setBalance({
         address: currentAccount.address,
         amount: _accountBalance.amount,
-        btc_amount: _accountBalance.btc_amount,
-        inscription_amount: _accountBalance.inscription_amount,
-        confirm_btc_amount: _accountBalance.confirm_btc_amount,
-        pending_btc_amount: _accountBalance.pending_btc_amount
+        kas_amount: _accountBalance.kas_amount,
+        confirm_kas_amount: _accountBalance.confirm_kas_amount,
+        pending_kas_amount: _accountBalance.pending_kas_amount
       })
     );
     if (cachedBalance.amount !== _accountBalance.amount) {
-      wallet.expireUICachedData(currentAccount.address);
       dispatch(accountActions.expireHistory());
     }
 
@@ -239,10 +224,9 @@ export function useFetchBalancesCallback() {
       balanceArray.push({
         address: addresses[i],
         amount: _accountsBalanceArray[i].amount,
-        btc_amount: _accountsBalanceArray[i].btc_amount,
-        inscription_amount: _accountsBalanceArray[i].inscription_amount,
-        confirm_btc_amount: _accountsBalanceArray[i].confirm_btc_amount,
-        pending_btc_amount: _accountsBalanceArray[i].pending_btc_amount
+        kas_amount: _accountsBalanceArray[i].kas_amount,
+        confirm_kas_amount: _accountsBalanceArray[i].confirm_kas_amount,
+        pending_kas_amount: _accountsBalanceArray[i].pending_kas_amount
       });
     }
     dispatch(accountActions.setBalances(balanceArray));
@@ -266,7 +250,6 @@ export function useReloadAccounts() {
     dispatch(accountActions.setCurrent(account));
 
     dispatch(accountActions.expireBalance());
-    dispatch(accountActions.expireInscriptions());
 
     wallet.getWalletConfig().then((data) => {
       dispatch(settingsActions.updateSettings({ walletConfig: data }));

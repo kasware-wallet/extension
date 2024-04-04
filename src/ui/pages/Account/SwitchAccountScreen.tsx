@@ -24,6 +24,7 @@ import {
 } from '@ant-design/icons';
 
 import { useNavigate } from '../MainRoute';
+import { useTranslation } from 'react-i18next';
 
 export interface ItemData {
   key: string;
@@ -36,6 +37,7 @@ interface MyItemProps {
 }
 
 export function MyItem({ account, autoNav }: MyItemProps, ref) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const currentAccount = useCurrentAccount();
   const selected = currentAccount.pubkey == account?.pubkey;
@@ -126,7 +128,7 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
             <Row
               onClick={() => {
                 copyToClipboard(account.address);
-                tools.toastSuccess('copied');
+                tools.toastSuccess(t('Copied'));
                 setOptionsVisible(false);
               }}>
               <CopyOutlined />

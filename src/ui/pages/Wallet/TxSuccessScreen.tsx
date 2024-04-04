@@ -1,14 +1,16 @@
-import { Layout, Header, Content, Icon, Text, Column, Footer, Button, Row } from '@/ui/components';
+import { Button, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
 import { spacing } from '@/ui/theme/spacing';
 import { useLocationState } from '@/ui/utils';
+import { useTranslation } from 'react-i18next';
 
 interface LocationState {
   txid: string;
 }
 
 export default function TxSuccessScreen() {
+  const { t } = useTranslation();
   const { txid } = useLocationState<LocationState>();
   const navigate = useNavigate();
   const blockstreamUrl = useBlockstreamUrl();
@@ -23,8 +25,8 @@ export default function TxSuccessScreen() {
             <Icon icon="success" size={50} style={{ alignSelf: 'center' }} />
           </Row>
 
-          <Text preset="title" text="Payment Sent" textCenter />
-          <Text preset="sub" text="Your transaction has been successfully sent" color="textDim" textCenter />
+          <Text preset="title" text={t('Payment Sent')} textCenter />
+          <Text preset="sub" text={t('Your transaction has been successfully sent')} color="textDim" textCenter />
 
           <Row
             justifyCenter
@@ -32,14 +34,14 @@ export default function TxSuccessScreen() {
               window.open(`${blockstreamUrl}/tx/${txid}`);
             }}>
             <Icon icon="eye" color="textDim" />
-            <Text preset="regular-bold" text="View on Block Explorer" color="textDim" />
+            <Text preset="regular-bold" text={t('View on Block Explorer')} color="textDim" />
           </Row>
         </Column>
       </Content>
       <Footer>
         <Button
           full
-          text="Done"
+          text={t('Done')}
           onClick={() => {
             navigate('MainScreen');
           }}

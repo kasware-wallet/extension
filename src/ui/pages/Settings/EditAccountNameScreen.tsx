@@ -60,7 +60,7 @@ export default function EditAccountNameScreen() {
         />
         <Button
           disabled={!validName}
-          text="Change Account Name"
+          text={t('Change Account Name')}
           preset="primary"
           onClick={(e) => {
             handleOnClick();

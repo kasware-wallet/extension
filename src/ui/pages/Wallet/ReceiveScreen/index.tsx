@@ -1,14 +1,16 @@
 import QRCode from 'qrcode.react';
 
-import { Content, Header, Text, AddressBar, Icon, Layout, Column, Row } from '@/ui/components';
+import { AddressBar, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useAccountAddress, useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { sizes } from '@/ui/theme/spacing';
 
+import { useTranslation } from 'react-i18next';
 import './index.less';
 
 export default function ReceiveScreen() {
   const currentAccount = useCurrentAccount();
   const address = useAccountAddress();
+  const { t } = useTranslation();
 
   return (
     <Layout>
@@ -16,7 +18,7 @@ export default function ReceiveScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Address"
+        title={t('Address')}
       />
       <Content>
         <Column gap="xl" mt="lg">

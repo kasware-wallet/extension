@@ -33,7 +33,7 @@ export default function ChangePasswordScreen() {
   const verify = async () => {
     try {
       await wallet.changePassword(originPassword, newPassword);
-      tools.toastSuccess('Success');
+      tools.toastSuccess(t('Success'));
       navigate('MainScreen');
     } catch (err) {
       tools.toastError((err as any).message);
@@ -45,13 +45,13 @@ export default function ChangePasswordScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Change Password"
+        title={t('Change Password')}
       />
       <Content>
         <Column gap="lg">
           <Input
             preset="password"
-            placeholder="Current Password"
+            placeholder={t('Current Password')}
             onChange={(e) => {
               setOriginPassword(e.target.value);
             }}
@@ -59,14 +59,14 @@ export default function ChangePasswordScreen() {
           />
           <Input
             preset="password"
-            placeholder="New Password"
+            placeholder={t('New Password')}
             onBlur={(e) => {
               if (newPassword.length < 5) {
-                tools.toastWarning('at least five characters');
+                tools.toastWarning(t('at least five characters'));
                 return;
               }
               if (newPassword.length > 0 && confirmPassword.length > 0 && newPassword !== confirmPassword) {
-                tools.toastWarning('Entered passwords differ');
+                tools.toastWarning(t('Entered passwords differ'));
               }
             }}
             onChange={(e) => {
@@ -75,7 +75,7 @@ export default function ChangePasswordScreen() {
           />
           <Input
             preset="password"
-            placeholder="Confirm Password"
+            placeholder={t('Confirm New Password')}
             onBlur={(e) => {
               if (newPassword.length > 0 && confirmPassword.length > 0 && newPassword !== confirmPassword) {
                 tools.toastWarning('Entered passwords differ');
@@ -87,7 +87,7 @@ export default function ChangePasswordScreen() {
           />
           <Button
             disabled={disabled}
-            text="Change Password"
+            text={t('Change Password')}
             preset="primary"
             onClick={() => {
               verify();
