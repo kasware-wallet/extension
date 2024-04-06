@@ -4,8 +4,10 @@ import React, { useEffect, useState } from 'react';
 
 import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
 import { isValidAddress, useWallet } from '@/ui/utils';
+import { useTranslation } from 'react-i18next';
 
 export default function CreateContactScreen() {
+  const { t } = useTranslation();
   const wallet = useWallet();
   const [disabled, setDisabled] = useState(true);
   const [alianName, setAlianName] = useState('');
@@ -63,7 +65,7 @@ export default function CreateContactScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="New contact"
+        title={t('New contact')}
       />
       <Content>
         <Column>

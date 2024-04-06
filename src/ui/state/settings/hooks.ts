@@ -35,7 +35,7 @@ export function useChangeLocaleCallback() {
         })
       );
 
-      window.location.reload();
+      // window.location.reload();
     },
     [dispatch, wallet]
   );

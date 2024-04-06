@@ -1,14 +1,9 @@
 const { Client } = require('@notionhq/client');
 const fs = require('fs');
 const { notionKey } = require('../.key.config.js');
+const { Languages } = require('./languages.js');
 const { token, database_id } = notionKey;
 let notion = new Client({ auth: token });
-const Languages = [
-  { name: 'English', symbol: 'en', messages: {} },
-  { name: 'Chinese', symbol: 'zh_CN', messages: {} },
-  { name: 'Japanese', symbol: 'ja', messages: {} },
-  { name: 'Spanish', symbol: 'es', messages: {} }
-];
 
 function getPropertyPlainText(property) {
   let arr = property.title || property.rich_text;

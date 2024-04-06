@@ -15,7 +15,7 @@ import {
 
 import browser from '../webapi/browser';
 // import { i18n, sessionService } from './index';
-import { sessionService } from './index';
+import { i18n, sessionService } from './index';
 
 // eslint-disable-next-line no-undef
 const version = process.env.release || '0';
@@ -104,7 +104,7 @@ class PreferenceService {
     if (!this.store.locale || this.store.locale !== defaultLang) {
       this.store.locale = defaultLang;
     }
-    // i18n.changeLanguage(this.store.locale);
+    i18n.changeLanguage(this.store.locale);
 
     if (!this.store.currency) {
       this.store.currency = 'USD';
@@ -264,7 +264,7 @@ class PreferenceService {
 
   setLocale = (locale: string) => {
     this.store.locale = locale;
-    // i18n.changeLanguage(locale);
+    i18n.changeLanguage(locale);
   };
 
   // currency

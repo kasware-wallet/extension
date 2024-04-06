@@ -45,6 +45,7 @@ enum TabState {
 
 function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
   const address = useAccountAddress();
+  const { t } = useTranslation();
 
   const spendSompi = useMemo(() => {
     const inValue = decodedPsbt.inputInfos
@@ -61,13 +62,13 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
 
   return (
     <Column gap="lg">
-      <Text text="Sign Transaction" preset="title-bold" textCenter mt="lg" />
+      <Text text={t('Sign Transaction')} preset="title-bold" textCenter mt="lg" />
       <Row justifyCenter>
         <Card style={{ backgroundColor: '#272626', maxWidth: 320, width: 320 }}>
           <Column gap="lg">
             <Column>
               <Column>
-                <Text text={'Spend Amount'} textCenter color="textDim" />
+                <Text text={t('Spend Amount')} textCenter color="textDim" />
 
                 <Column justifyCenter>
                   <Text text={spendAmount} color="white" preset="bold" textCenter size="xxl" />

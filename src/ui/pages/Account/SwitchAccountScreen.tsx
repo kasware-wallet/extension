@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import VirtualList from 'rc-virtual-list';
@@ -6,7 +7,12 @@ import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { Account, IScannedGroup } from '@/shared/types';
 import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
-import { useAccountBalance, useCurrentAccount, useFetchBalancesCallback, useReloadAccounts } from '@/ui/state/accounts/hooks';
+import {
+  useAccountBalance,
+  useCurrentAccount,
+  useFetchBalancesCallback,
+  useReloadAccounts
+} from '@/ui/state/accounts/hooks';
 import { accountActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
@@ -19,12 +25,14 @@ import {
   EllipsisOutlined,
   KeyOutlined,
   LoadingOutlined,
+  MergeCellsOutlined,
   PlusCircleOutlined,
   SearchOutlined
 } from '@ant-design/icons';
 
-import { useNavigate } from '../MainRoute';
+import eventBus from '@/shared/eventBus';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from '../MainRoute';
 
 export interface ItemData {
   key: string;
@@ -123,7 +131,7 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
                 navigate('EditAccountNameScreen', { account });
               }}>
               <EditOutlined />
-              <Text text="Edit Name" size="sm" />
+              <Text text={t('Edit Name')} size="sm" />
             </Row>
             <Row
               onClick={() => {
@@ -132,14 +140,14 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
                 setOptionsVisible(false);
               }}>
               <CopyOutlined />
-              <Text text="Copy address" size="sm" />
+              <Text text={t('Copy address')} size="sm" />
             </Row>
             <Row
               onClick={() => {
                 navigate('ExportPrivateKeyScreen', { account });
               }}>
               <KeyOutlined />
-              <Text text="Export Private Key" size="sm" />
+              <Text text={t('Export Private Key')} size="sm" />
             </Row>
           </Column>
         )}
@@ -149,6 +157,7 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
 }
 
 export default function SwitchAccountScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const keyring = useCurrentKeyring();
   const reloadAccounts = useReloadAccounts();
@@ -173,16 +182,38 @@ export default function SwitchAccountScreen() {
     if (result == null || result == undefined) {
       tools.showTip('no more address with balance');
     } else {
-      reloadAccounts()
+      reloadAccounts();
       const count = result.address_arr.length;
       tools.toastSuccess(`found ${count} addresses`);
     }
   };
+  const compound = async () => {
+    setLoading(true);
+    const result = await wallet.compoundUtxos(keyring.accounts);
+    setLoading(false);
+    if (result == null || result == undefined) {
+      tools.toastError('failed, please try again')
+    } else {
+      await reloadAccounts();
+      tools.toastSuccess('success');
+    }
+  };
   const [optionsVisible, setOptionsVisible] = useState(false);
-  useEffect(() => {
+  const loadBalance = () => {
+    setLoading(true);
     fetchBalances().finally(() => {
-      // self.loadingBalance = false;
+      setLoading(false);
     });
+  };
+  useEffect(() => {
+    loadBalance();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+    eventBus.addEventListener('utxosChangedNotification', (a) => {
+      loadBalance();
+    });
+    return () => {
+      eventBus.removeEventListener('utxosChangedNotification', () => {});
+    };
   }, [fetchBalances, wallet]);
 
   return (
@@ -191,7 +222,7 @@ export default function SwitchAccountScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Switch Account"
+        title={t('Switch Account')}
         RightComponent={
           <Column relative>
             {optionsVisible && (
@@ -232,7 +263,7 @@ export default function SwitchAccountScreen() {
                     navigate('CreateAccountScreen');
                   }}>
                   <PlusCircleOutlined />
-                  <Text text="New account" size="sm" />
+                  <Text text={t('New account')} size="sm" />
                 </Row>
                 <Row
                   onClick={() => {
@@ -241,7 +272,16 @@ export default function SwitchAccountScreen() {
                     // copyToClipboard(account.address);
                   }}>
                   <SearchOutlined />
-                  <Text text="Discover address" size="sm" />
+                  <Text text={t('Discover address')} size="sm" />
+                </Row>
+                <Row
+                  onClick={() => {
+                    setOptionsVisible(false);
+                    compound();
+                    // copyToClipboard(account.address);
+                  }}>
+                  <MergeCellsOutlined />
+                  <Text text="Compound" size="sm" />
                 </Row>
               </Column>
             )}

@@ -8,9 +8,11 @@ import { useSetCurrentAccountCallback } from '@/ui/state/accounts/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
 import { useWallet } from '@/ui/utils';
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 export default function CreateAccountScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const wallet = useWallet();
   const tools = useTools();
@@ -46,7 +48,7 @@ export default function CreateAccountScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="New account"
+        title={t('New account')}
       />
       <Content>
         <Column>

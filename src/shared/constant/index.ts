@@ -262,7 +262,7 @@ export const TELEGRAM_URL = 'https://t.me/+eBTwLzz_BcwwMmE1';
 
 export const CHANNEL = process.env.channel!;
 // export const VERSION = process.env.release!;
-export const VERSION = '0.3.7';
+export const VERSION = '0.4.0';
 export const MANIFEST_VERSION = process.env.manifest!;
 
 export enum AddressFlagType {

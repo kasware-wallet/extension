@@ -67,7 +67,7 @@ export default function ExportMnemonicsScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Seed Phrase"
+        title={t('Seed Phrase')}
       />
 
       <Content>
@@ -114,7 +114,7 @@ export default function ExportMnemonicsScreen() {
             />
             {error && <Text text={error} preset="regular" color="error" />}
 
-            <Button disabled={disabled} text="Show Seed Phrase" preset="primary" onClick={btnClick} style={{marginTop:5}}/>
+            <Button disabled={disabled} text={t('Show Seed Phrase')} preset="primary" onClick={btnClick} style={{marginTop:5}}/>
           </Column>
         ) : (
           <Column>

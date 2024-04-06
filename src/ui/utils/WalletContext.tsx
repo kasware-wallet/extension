@@ -81,8 +81,8 @@ export interface WalletController {
     passphrase: string;
   }>;
   createKeyringWithPrivateKey(data: string, addressType: any, alianName?: string): Promise<Account[]>;
-  getPreMnemonics(): Promise<any>;
-  generatePreMnemonic(): Promise<string>;
+  getPreMnemonics(wordCount:number): Promise<any>;
+  generatePreMnemonic(wordCount:number): Promise<string>;
   removePreMnemonics(): void;
   createKeyringWithMnemonics(
     mnemonic: string,
@@ -124,7 +124,7 @@ export interface WalletController {
   updateAlianName: (pubkey: string, name: string) => Promise<void>;
   removeContact: (address: string) => Promise<void>;
   discoverAddressesWithBalance: (keyring: WalletKeyring, accountCount?: number, startIndex?: number) => Promise<any>;
-
+  compoundUtxos(accounts: Account[]): Promise<string>;
   getCurrentAccount(): Promise<Account>;
   getAccounts(): Promise<Account[]>;
   getNextAlianName: (keyring: WalletKeyring) => Promise<string>;

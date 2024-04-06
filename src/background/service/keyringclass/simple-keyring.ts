@@ -15,7 +15,7 @@ class SimpleKeyring {
   network: any;
   wallets: TKeyPair[];
   kaspaWasm: TKaspaWasm;
-  constructor(password: string, kaspaWasm: TKaspaWasm, opts?: IOpts|string[]) {
+  constructor(password: string, kaspaWasm: TKaspaWasm, opts?: IOpts | string[]) {
     // super();
     this.type = type;
     this.kaspaWasm = kaspaWasm;
@@ -26,10 +26,10 @@ class SimpleKeyring {
   }
   serialize() {
     const seralizedWallets = this.wallets.map((wallet) => wallet.privateKey.toString());
-    return Promise.resolve(seralizedWallets)
+    return Promise.resolve(seralizedWallets);
   }
   deserialize(opts) {
-    const privateKeys:string[] = opts;
+    const privateKeys: string[] = opts;
     this.wallets = privateKeys.map((key) => {
       // From Hex string
       const privateKey = new PrivateKey(key); // From BIP0340
@@ -69,9 +69,13 @@ class SimpleKeyring {
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   signTransaction = async (psbt, inputs, opts) => {
     // psbt means pending in generator
-    const keyPair = this._getPrivateKeyFor(inputs[0].publicKey);
-    const privateKey = keyPair.privateKey;
-    await psbt.sign([privateKey]);
+    const privateKeys:any[] = [];
+    inputs.forEach((input) => {
+      const keyPair = this._getPrivateKeyFor(input.publicKey);
+      const privateKey = keyPair.privateKey;
+      privateKeys.push(privateKey);
+    });
+    await psbt.sign(privateKeys);
     return psbt;
   };
   signMessage(publicKey: string, text: string) {

@@ -23,6 +23,7 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 export interface ItemData {
@@ -36,6 +37,7 @@ interface MyItemProps {
 }
 
 export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const currentKeyring = useCurrentKeyring();
   const selected = currentKeyring.index === keyring?.index;
@@ -131,7 +133,7 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
                   navigate('EditWalletNameScreen', { keyring });
                 }}>
                 <EditOutlined />
-                <Text text="Edit Name" size="sm" />
+                <Text text={t('Edit Name')} size="sm" />
               </Row>
 
               {keyring.type === KEYRING_TYPE.HdKeyring ? (
@@ -140,7 +142,7 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
                     navigate('ExportMnemonicsScreen', { keyring });
                   }}>
                   <KeyOutlined />
-                  <Text text="Show Seed Phrase" size="sm" />
+                  <Text text={t('Show Seed Phrase')} size="sm" />
                 </Row>
               ) : (
                 <Row
@@ -148,7 +150,7 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
                     navigate('ExportPrivateKeyScreen', { account: keyring.accounts[0] });
                   }}>
                   <KeyOutlined />
-                  <Text text="Export Private Key" size="sm" />
+                  <Text text={t('Export Private Key')} size="sm" />
                 </Row>
               )}
               <Row
@@ -164,7 +166,7 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
                   <DeleteOutlined />
                 </Icon>
 
-                <Text text="Remove Wallet" size="sm" color="danger" />
+                <Text text={t('Remove Wallet')} size="sm" color="danger" />
               </Row>
             </Column>
           </Column>
@@ -184,6 +186,7 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
 }
 
 export default function SwitchKeyringScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const keyrings = useKeyrings();
@@ -207,7 +210,7 @@ export default function SwitchKeyringScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Switch Wallet"
+        title={t('Switch Wallet')}
         RightComponent={
           <Icon
             onClick={() => {

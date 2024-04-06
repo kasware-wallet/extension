@@ -382,6 +382,7 @@ function ContactsTab({ handleAddrInput }) {
 }
 
 function MyAccountTab({ handleAddrInput }) {
+  const currentAccount = useCurrentAccount();
   const keyrings = useKeyrings();
   return (
     <div>
@@ -393,7 +394,7 @@ function MyAccountTab({ handleAddrInput }) {
               return (
                 <AddressTypeCard
                   key={account.pubkey}
-                  name={account.alianName}
+                  name={currentAccount.address == account.address ? account.alianName + ' (Self)' : account.alianName}
                   address={account.address}
                   handleAddrInput={handleAddrInput}
                 />

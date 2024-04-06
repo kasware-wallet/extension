@@ -260,8 +260,8 @@ export class WalletController extends BaseController {
     this.changeKeyring(keyring);
   };
 
-  getPreMnemonics = () => keyringService.getPreMnemonics();
-  generatePreMnemonic = () => keyringService.generatePreMnemonic();
+  getPreMnemonics = (wordCount = 12) => keyringService.getPreMnemonics(wordCount);
+  generatePreMnemonic = (wordCount = 12) => keyringService.generatePreMnemonic(wordCount);
   removePreMnemonics = () => keyringService.removePreMnemonics();
   createKeyringWithMnemonics = async (
     mnemonic: string,
@@ -438,6 +438,49 @@ export class WalletController extends BaseController {
       }
     });
     return group;
+  };
+
+  compoundUtxos = async (accounts: Account[]) => {
+    const addresses: string[] = [];
+    accounts.forEach((account) => {
+      addresses.push(account.address);
+    });
+    const currentAccount = preferenceService.getCurrentAccount();
+    if (!currentAccount?.address) throw new Error('current address is null');
+    const entries = await openapiService.getKASUtxos(addresses);
+    const keyring = await this.getCurrentKeyring();
+    if (!keyring) throw new Error('no current keyring');
+    const _keyring = keyringService.keyrings[keyring.index];
+    if (!entries.length) {
+      throw new Error(`No UTXOs found for address ${addresses}`);
+    } else {
+      entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
+      try {
+        const generator = new Generator({
+          // utxoEntries: entries,
+          entries,
+          // outputs: [[destinationAddress.toString(), money]],
+          // priorityFee,
+          changeAddress: currentAccount.address
+        });
+        let pending;
+        while ((pending = await generator.next())) {
+          const toSignInputs: ToSignInput[] = [];
+          accounts.forEach((account) => {
+            const publicKey = account.pubkey;
+            const index = account.index as number;
+            toSignInputs.push({ index, publicKey });
+          });
+          const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
+          console.log(preSubmitPending);
+          // submit
+          const txid = await openapiService.submitTransaction(preSubmitPending);
+          return txid;
+        }
+      } catch (e) {
+        throw new Error(e);
+      }
+    }
   };
 
   createTmpKeyringWithPrivateKey = async (privateKey: string, addressType: AddressType) => {
@@ -845,7 +888,7 @@ export class WalletController extends BaseController {
     const account = preferenceService.getCurrentAccount();
     if (!account) throw new Error('no current account');
 
-    const utxos = await openapiService.getKASUtxos(account.address);
+    const utxos = await openapiService.getKASUtxos([account.address]);
 
     // if (openapiService.addressFlag == 1) {
     //   utxos = utxos.filter((v) => (v as any).height !== 4194303);
@@ -931,17 +974,17 @@ export class WalletController extends BaseController {
     const total = entries.reduce((agg, curr) => {
       return curr.utxoEntry.amount + agg;
     }, BigInt(0));
-    const moneySompi = Number(total - BigInt(entries.length * 5000));
+    const moneySompi = Number(total);
     const generator = new Generator({
       entries,
-      outputs: [[destinationAddress, moneySompi]],
-      priorityFee: BigInt(0),
-      changeAddress: sourceAddress.toString()
+      // outputs: [[destinationAddress, moneySompi]],
+      // priorityFee: BigInt(0),
+      changeAddress: destinationAddress
     });
     try {
       const estimate = await generator.estimate();
       const sompiFee = Number(estimate.fees);
-      const resultJson = { to, amountSompi: moneySompi - sompiFee * feeRate, feeRate, fee: sompiFee };
+      const resultJson = { to, amountSompi: moneySompi, feeRate: 0, fee: sompiFee };
       return JSON.stringify(resultJson);
     } catch (e) {
       throw new Error(e);
@@ -960,7 +1003,7 @@ export class WalletController extends BaseController {
     const _keyring = keyringService.keyrings[keyring.index];
     const sourceAddress = account.address;
     const destinationAddress = toAddress;
-    const entries = await openapiService.getKASUtxos(sourceAddress);
+    const entries = await openapiService.getKASUtxos([sourceAddress]);
     if (!entries.length) {
       throw new Error(`No UTXOs found for address ${sourceAddress}`);
     } else {
@@ -972,26 +1015,52 @@ export class WalletController extends BaseController {
       const priorityFee = BigInt(priorityFeeSompi);
       // 1. create
       try {
-        const generator = new Generator({
-          // utxoEntries: entries,
-          entries,
-          outputs: [[destinationAddress.toString(), money]],
-          priorityFee,
-          changeAddress: sourceAddress.toString()
-          // sigOpCount,
-          // minimumSignatures,
-          // payload,
-        });
-        const pending = await generator.next();
-        // const estimate = await generator.estimate();
-        // sign
-        const publicKey = account.pubkey;
-        const index = account.index as number;
-        const toSignInputs: ToSignInput[] = [{ index, publicKey }];
-        const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
-        // submit
-        const txid = await openapiService.submitTransaction(preSubmitPending);
-        return txid;
+        const total = entries.reduce((agg, curr) => {
+          return curr.utxoEntry.amount + agg;
+        }, BigInt(0));
+        const a = Number(total);
+        console.log(a);
+        console.log(money);
+        let generator;
+        if (a == money) {
+          generator = new Generator({
+            // utxoEntries: entries,
+            entries,
+            outputs: [[destinationAddress.toString(), money * 0.5]],
+            priorityFee: BigInt(0),
+            changeAddress: destinationAddress.toString()
+            // sigOpCount,
+            // minimumSignatures,
+            // payload,
+          });
+          const pending = await generator.next();
+          const publicKey = account.pubkey;
+          const index = account.index as number;
+          const toSignInputs: ToSignInput[] = [{ index, publicKey }];
+          const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
+          // submit
+          const txid = await openapiService.submitTransaction(preSubmitPending);
+          return txid;
+        } else {
+          generator = new Generator({
+            // utxoEntries: entries,
+            entries,
+            outputs: [[destinationAddress.toString(), money]],
+            priorityFee,
+            changeAddress: sourceAddress.toString()
+            // sigOpCount,
+            // minimumSignatures,
+            // payload,
+          });
+          const pending = await generator.next();
+          const publicKey = account.pubkey;
+          const index = account.index as number;
+          const toSignInputs: ToSignInput[] = [{ index, publicKey }];
+          const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
+          // submit
+          const txid = await openapiService.submitTransaction(preSubmitPending);
+          return txid;
+        }
       } catch (e) {
         throw new Error(e);
       }
@@ -1174,7 +1243,7 @@ export class WalletController extends BaseController {
   };
 
   getAddressUtxo = async (address: string) => {
-    const data = await openapiService.getKASUtxos(address);
+    const data = await openapiService.getKASUtxos([address]);
     return data;
   };
 

@@ -7,6 +7,7 @@ import { colors } from '@/ui/theme/colors';
 import { spacing } from '@/ui/theme/spacing';
 import { useWallet } from '@/ui/utils';
 
+import { useTranslation } from 'react-i18next';
 import { useTools } from '../ActionComponent';
 import { Icon } from '../Icon';
 import { Row } from '../Row';
@@ -129,7 +130,7 @@ function AmountInput(props: InputProps) {
 
 export const AddressInput = (props: InputProps) => {
   const { placeholder, onAddressInputChange, addressInputData, style: $inputStyleOverride, ...rest } = props;
-
+  const { t } = useTranslation();
   if (!addressInputData || !onAddressInputChange) {
     return <div />;
   }
@@ -187,7 +188,7 @@ export const AddressInput = (props: InputProps) => {
     <div style={{ alignSelf: 'stretch' }}>
       <div style={Object.assign({}, $baseContainerStyle, { flexDirection: 'column', minHeight: '56.5px' })}>
         <input
-          placeholder={'Address'}
+          placeholder={t('Address')}
           type={'text'}
           style={Object.assign({}, $baseInputStyle, $inputStyleOverride)}
           onChange={async (e) => {

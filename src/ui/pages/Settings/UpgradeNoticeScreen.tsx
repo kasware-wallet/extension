@@ -1,14 +1,16 @@
 import { Button, Card, Column, Content, Header, Layout } from '@/ui/components';
+import { useTranslation } from 'react-i18next';
 
 const UPGRADE_NOTICE = '...';
 export default function UpgradeNoticeScreen() {
+  const { t } = useTranslation();
   return (
     <Layout>
       <Header
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Notice"
+        title={t('Notice')}
       />
       <Content>
         <Column>

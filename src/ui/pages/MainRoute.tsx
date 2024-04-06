@@ -37,6 +37,7 @@ import EditNetworkUrlScreen from './Settings/EditNetworkUrlScreen';
 import EditWalletNameScreen from './Settings/EditWalletNameScreen';
 import ExportMnemonicsScreen from './Settings/ExportMnemonicsScreen';
 import ExportPrivateKeyScreen from './Settings/ExportPrivateKeyScreen';
+import LanguageTypeScreen from './Settings/LanguageTypeScreen';
 import NetworkTypeScreen from './Settings/NetworkTypeScreen';
 import UpgradeNoticeScreen from './Settings/UpgradeNoticeScreen';
 import TestScreen from './Test/TestScreen';
@@ -128,6 +129,10 @@ const routes = {
   NetworkTypeScreen: {
     path: '/settings/network-type',
     element: <NetworkTypeScreen />
+  },
+  LanguageTypeScreen: {
+    path: '/settings/language-type',
+    element: <LanguageTypeScreen />
   },
   ChangePasswordScreen: {
     path: '/settings/password',

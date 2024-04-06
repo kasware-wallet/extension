@@ -435,7 +435,7 @@ export class OpenApiService {
   }
 
   // async getKASUtxos(address: string): Promise<UTXO[]> {
-  async getKASUtxos(address: string): Promise<IKaspaUTXO[]> {
+  async getKASUtxos(addresses: string[]): Promise<IKaspaUTXO[]> {
     await this.handleRpcConnect('getKASUtxos');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
@@ -443,15 +443,15 @@ export class OpenApiService {
       this.rpc.disconnect();
       return [];
     }
-    const utxos = await this.rpc.getUtxosByAddresses([address]);
+    const utxos = await this.rpc.getUtxosByAddresses(addresses);
     if (utxos.length === 0) {
-      console.info('Send some kaspa to', address, 'before proceeding with the demo');
+      console.info('Send some kaspa to', addresses, 'before proceeding with the demo');
       return [];
     }
     return utxos;
   }
 
-  async submitTransaction(preSubmitPending:any){
+  async submitTransaction(preSubmitPending: any) {
     await this.handleRpcConnect('submitTransaction');
     const { isSynced } = await this.rpc.getServerInfo();
     if (!isSynced) {
@@ -460,7 +460,6 @@ export class OpenApiService {
     }
     const txid = await preSubmitPending.submit(this.rpc);
     return txid;
-
   }
 
   async getAppSummary(): Promise<AppSummary> {
@@ -546,7 +545,7 @@ export class OpenApiService {
         {
           address: 'string',
           // value:sompi unit
-          value: result.amountSompi,
+          value: result.amountSompi
         }
       ],
       feeRate: result.feeRate,

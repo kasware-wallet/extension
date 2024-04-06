@@ -26,7 +26,7 @@ export default function AddKeyringScreen() {
               navigate('CreateHDWalletScreen', { isImport: false });
             }}>
             <Column full justifyCenter>
-              <Text text={`${t('With seed phrase')}(${t('12 words')})`} size="sm" />
+              <Text text={`${t('With seed phrase')}(${t('12 words')}, ${t('24 words')})`} size="sm" />
             </Column>
           </Card>
 

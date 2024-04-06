@@ -214,19 +214,19 @@ class KeyringService extends EventEmitter {
     return keyring;
   };
 
-  private generateMnemonic = (): string => {
+  private generateMnemonic = (wordCount = 12): string => {
     // return bip39.generateMnemonic(128);
-    const mnemonic1 = this.kaspaWasm.Mnemonic.random(12);
+    const mnemonic1 = this.kaspaWasm.Mnemonic.random(wordCount);
     // an object
     return mnemonic1.phrase;
   };
 
-  generatePreMnemonic = async (): Promise<string> => {
+  generatePreMnemonic = async (wordCount = 12): Promise<string> => {
     if (!this.password) {
       // throw new Error(i18n.t('you need to unlock wallet first'));
       throw new Error('you need to unlock wallet first');
     }
-    const mnemonic = this.generateMnemonic();
+    const mnemonic = this.generateMnemonic(wordCount);
     const preMnemonics = await this.encryptor.encrypt(this.password, mnemonic);
     this.memStore.updateState({ preMnemonics });
 
@@ -243,7 +243,7 @@ class KeyringService extends EventEmitter {
     this.memStore.updateState({ preMnemonics: '' });
   };
 
-  getPreMnemonics = async (): Promise<any> => {
+  getPreMnemonics = async (wordCount = 12): Promise<any> => {
     if (!this.memStore.getState().preMnemonics) {
       return '';
     }
@@ -252,8 +252,12 @@ class KeyringService extends EventEmitter {
       // throw new Error(i18n.t('you need to unlock wallet first'));
       throw new Error('you need to unlock wallet first');
     }
-
-    return await this.encryptor.decrypt(this.password, this.memStore.getState().preMnemonics);
+    const _menmonics = await this.encryptor.decrypt(this.password, this.memStore.getState().preMnemonics);
+    if (_menmonics && _menmonics.length > 0 && (_menmonics as unknown as string).split(' ').length === wordCount) {
+      return _menmonics;
+    } else {
+      return '';
+    }
   };
 
   /**

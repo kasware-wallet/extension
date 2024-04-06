@@ -23,6 +23,7 @@ import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
 import { sompiToAmount, useApproval, useWallet } from '@/ui/utils';
 import { LoadingOutlined } from '@ant-design/icons';
+import { t } from 'i18next';
 
 interface Props {
   header?: React.ReactNode;
@@ -102,7 +103,7 @@ function SignTxDetails({ txInfo, type, rawTxInfo }: { txInfo: TxInfo; rawTxInfo?
   if (type === TxType.SIGN_TX) {
     return (
       <Column gap="lg">
-        <Text text="Sign Transaction" preset="title-bold" textCenter mt="lg" />
+        <Text text={t('Sign Transaction') as string} preset="title-bold" textCenter mt="lg" />
         <Row justifyCenter>
           <Card style={{ backgroundColor: '#272626', maxWidth: 320, width: 320 }}>
             <Column gap="lg">
@@ -131,14 +132,14 @@ function SignTxDetails({ txInfo, type, rawTxInfo }: { txInfo: TxInfo; rawTxInfo?
 
   return (
     <Column gap="lg">
-      <Text text="Sign Transaction" preset="title-bold" textCenter mt="lg" />
+      <Text text={t('Sign Transaction') as string} preset="title-bold" textCenter mt="lg" />
       <Row justifyCenter>
         <Card style={{ backgroundColor: '#272626', maxWidth: 320, width: 320 }}>
           <Column gap="lg">
             <Column>
               {rawTxInfo && (
                 <Column>
-                  <Text text={'Send to'} textCenter color="textDim" />
+                  <Text text={t('Send to') as string} textCenter color="textDim" />
                   <Row justifyCenter>
                     <AddressText addressInfo={rawTxInfo.toAddressInfo} textCenter />
                   </Row>
@@ -147,13 +148,13 @@ function SignTxDetails({ txInfo, type, rawTxInfo }: { txInfo: TxInfo; rawTxInfo?
               {rawTxInfo && <Row style={{ borderTopWidth: 1, borderColor: colors.border }} my="md" />}
 
               <Column>
-                <Text text={'Spend Amount'} textCenter color="textDim" />
+                <Text text={t('Spend Amount') as string} textCenter color="textDim" />
 
                 <Column justifyCenter>
                   <Text text={spendAmount} color="white" preset="bold" textCenter size="xxl" />
-                  {isCurrentToPayFee && <Text text={`${feeAmount} (network fee)`} preset="sub" textCenter />}
+                  {isCurrentToPayFee && <Text text={`${feeAmount} (${t('network fee')})`} preset="sub" textCenter />}
                   {isCurrentToPayFee && priorityFeeAmount > 0 && (
-                    <Text text={`${priorityFeeAmount} (priority fee)`} preset="sub" textCenter />
+                    <Text text={`${priorityFeeAmount} (${t('priority fee')})`} preset="sub" textCenter />
                   )}
                 </Column>
               </Column>
@@ -427,7 +428,10 @@ export default function SignPsbt({
             <Button
               preset="primary"
               text={type == TxType.SIGN_TX ? 'Sign' : 'Sign & Pay'}
-              onClick={handleConfirm}
+              onClick={()=>{
+                setLoading(true);
+                handleConfirm()
+              }}
               disabled={isValid == false}
               full
             />

@@ -114,6 +114,14 @@ export default function SettingsTabScreen() {
       right: true
     },
     {
+      label: t('Language'),
+      value: '',
+      desc: '',
+      action: 'languageType',
+      route: '/settings/language-type',
+      right: true
+    },
+    {
       label: t('Change Password'),
       value: t('Change your lockscreen password'),
       desc: '',

@@ -8,6 +8,7 @@ import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/component
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
 import { shortAddress, sompiToAmount } from '@/ui/utils';
+import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
 export default function TxDetailScreen() {
@@ -27,6 +28,7 @@ export default function TxDetailScreen() {
   //   })
   //   // return data;
   // }, []);
+  const { t } = useTranslation();
 
   return (
     <Layout>
@@ -34,7 +36,7 @@ export default function TxDetailScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title="History"
+        title={t('History')}
       />
       <Content>
         <Column>

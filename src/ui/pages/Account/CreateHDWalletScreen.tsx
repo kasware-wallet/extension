@@ -63,18 +63,21 @@ function Step1_Create({
 
   const wallet = useWallet();
   const tools = useTools();
+  const [words, setWords] = useState([]);
+  const [wordCount, setWordCount] = useState(12);
 
   const init = async () => {
-    const _mnemonics = (await wallet.getPreMnemonics()) || (await wallet.generatePreMnemonic());
+    const _mnemonics = (await wallet.getPreMnemonics(wordCount)) || (await wallet.generatePreMnemonic(wordCount));
     updateContextData({
       mnemonics: _mnemonics
     });
+    setWords(_mnemonics.split(' '));
   };
 
   useEffect(() => {
     init();
-  }, []);
-
+  }, [wordCount]);
+  const wordsItems = [WORDS_12_ITEM, WORDS_24_ITEM];
   const onChange = (e: CheckboxChangeEvent) => {
     const val = e.target.checked;
     setChecked(val);
@@ -93,7 +96,7 @@ function Step1_Create({
     });
   };
 
-  const words = contextData.mnemonics.split(' ');
+  // const words = contextData.mnemonics.split(' ');
   return (
     <Column gap="xl">
       <Text text="Seed Phrase" preset="title-bold" textCenter />
@@ -102,6 +105,24 @@ function Step1_Create({
         color="warning"
         textCenter
       />
+      {wordsItems.length > 1 ? (
+        <Row justifyCenter>
+          <Radio.Group
+            onChange={(e) => {
+              const wordsType = e.target.value;
+              updateContextData({ wordsType });
+              setWordCount(wordsType === WordsType.WORDS_24 ? 24 : 12);
+              // setKeys(new Array(wordsItems[wordsType].count).fill(''));
+            }}
+            value={contextData.wordsType}>
+            {wordsItems.map((v) => (
+              <Radio key={v.key} value={v.key}>
+                {v.label}
+              </Radio>
+            ))}
+          </Radio.Group>
+        </Row>
+      ) : null}
 
       <Row
         justifyCenter
@@ -114,16 +135,17 @@ function Step1_Create({
 
       <Row justifyCenter>
         <Grid columns={2}>
-          {words.map((v, index) => {
-            return (
-              <Row key={index}>
-                <Text text={`${index + 1}. `} style={{ width: 40 }} />
-                <Card preset="style2" style={{ width: 200 }}>
-                  <Text text={v} selectText disableTranslate />
-                </Card>
-              </Row>
-            );
-          })}
+          {words.length > 0 &&
+            words.map((v, index) => {
+              return (
+                <Row key={index}>
+                  <Text text={`${index + 1}. `} style={{ width: 40 }} />
+                  <Card preset="style2" style={{ width: 200 }}>
+                    <Text text={v} selectText disableTranslate />
+                  </Card>
+                </Row>
+              );
+            })}
         </Grid>
       </Row>
 
@@ -383,7 +405,7 @@ function Step2({
   const [scannedGroups, setScannedGroups] = useState<IScannedGroup[]>([]);
 
   const [addressAssets, setAddressAssets] = useState<{
-    [key: string]: { total_kas: string; sompi: number};
+    [key: string]: { total_kas: string; sompi: number };
   }>({});
 
   const [error, setError] = useState('');
@@ -466,7 +488,7 @@ function Step2({
       const sompi = balance.totalSompi;
       addressAssets[address] = {
         total_kas: sompiToAmount(balance.totalSompi),
-        sompi,
+        sompi
       };
       if (sompi > maxSompi) {
         maxSompi = sompi;
@@ -684,7 +706,7 @@ function Step2({
           const address = previewAddresses[index];
           const assets = addressAssets[address] || {
             total_kas: '--',
-            sompi: 0,
+            sompi: 0
           };
           const hasVault = contextData.isRestore && assets.sompi > 0;
           if (item.isKaswareLegacy && !hasVault) {
@@ -808,6 +830,7 @@ interface UpdateContextDataParams {
 }
 
 export default function CreateHDWalletScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { state } = useLocation();
@@ -911,7 +934,7 @@ export default function CreateHDWalletScreen() {
             window.history.go(-1);
           }
         }}
-        title={contextData.isRestore ? 'From seed phrase' : 'Create a new HD Wallet'}
+        title={contextData.isRestore ? t('From seed phrase') : t('Create a new HD Wallet')}
       />
       <Content>
         <Row justifyCenter>

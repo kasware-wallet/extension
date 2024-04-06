@@ -9,6 +9,7 @@ import {
   CheckCircleFilled,
   SettingOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
 export default function NetworkTypeScreen() {
@@ -18,13 +19,14 @@ export default function NetworkTypeScreen() {
   const reloadAccounts = useReloadAccounts();
   const tools = useTools();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <Layout>
       <Header
         onBack={() => {
           window.history.go(-1);
         }}
-        title="Switch Network"
+        title={t('Switch Network')}
       />
       <Content>
         <Column>
