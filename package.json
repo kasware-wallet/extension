@@ -182,21 +182,19 @@
     "@types/stylus": "^0.48.38",
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
-    "browserify": "^17.0.0",
-    "browserslist": "^4.18.1",
-    "typescript": "^4.7.2",
-    "typescript-transform-paths": "^3.3.1",
     "autoprefixer": "^10.4.7",
     "babel-plugin-import": "^1.13.5",
+    "browserify": "^17.0.0",
+    "browserslist": "^4.18.1",
     "esbuild-loader": "^4.1.0",
     "eslint": "^8.16.0",
-    "eslint-webpack-plugin": "^3.1.1",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-react": "^7.30.0",
     "eslint-plugin-react-hooks": "^4.5.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^2.0.0",
+    "eslint-webpack-plugin": "^3.1.1",
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
     "gulp-jsoncombine": "^1.0.4",
@@ -220,9 +218,11 @@
     "stylus-loader": "^6.2.0",
     "ts-loader": "9.1.1",
     "tsconfig-paths-webpack-plugin": "^3.5.2",
+    "typescript": "^4.7.2",
+    "typescript-transform-paths": "^3.3.1",
     "wasm-module-webpack-plugin": "^3.0.0",
-    "webpack-cli": "^4.9.2",
     "webpack": "^5.64.4",
+    "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.6.0",
     "webpack-merge": "^5.10.0"
   },
@@ -235,5 +235,16 @@
       "prettier --write"
     ]
   },
-  "__npminstall_done": false
+  "__npminstall_done": false,
+  "pnpm": {
+    "overrides": {
+      "postcss@<8.4.31": ">=8.4.31",
+      "glob-parent@<5.1.2": ">=5.1.2",
+      "nth-check@<2.0.1": ">=2.0.1",
+      "es5-ext@>=0.10.0 <0.10.63": ">=0.10.63",
+      "webpack-dev-middleware@<=5.3.3": ">=5.3.4",
+      "express@<4.19.2": ">=4.19.2",
+      "follow-redirects@<=1.15.5": ">=1.15.6"
+    }
+  }
 }
