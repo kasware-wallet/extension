@@ -134,14 +134,16 @@ function Step1_Create({
       </Row>
 
       <Row justifyCenter>
-        <Grid columns={2}>
+        <Grid columns={3}>
           {words.length > 0 &&
             words.map((v, index) => {
               return (
                 <Row key={index}>
-                  <Text text={`${index + 1}. `} style={{ width: 40 }} />
-                  <Card preset="style2" style={{ width: 200 }}>
-                    <Text text={v} selectText disableTranslate />
+                  <Card preset="style2" style={{ width: 100, margin: '3px 1px', padding: '10px 15px 10px 7px' }}>
+                    <Row full>
+                      <Text text={`${index + 1}. `} color="textDim" />
+                      <Text text={v} selectText disableTranslate />
+                    </Row>
                   </Card>
                 </Row>
               );
@@ -411,6 +413,7 @@ function Step2({
   const [error, setError] = useState('');
   const [pathError, setPathError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [discoverLoading, setDiscoverLoading] = useState(false);
 
   const createAccount = useCreateAccountCallback();
   const navigate = useNavigate();
@@ -581,30 +584,15 @@ function Step2({
 
   const scanVaultAddress = async () => {
     setScanned(true);
-    tools.showLoading(true);
+    // tools.showLoading(true);
+    setDiscoverLoading(true);
     try {
       let groups: IScannedGroup[] = [];
       // for (let i = 0; i < allHdPathOptions.length; i++) {
       for (let i = 0; i < hdPathOptions.length; i++) {
         // const options = allHdPathOptions[i];
         const options = hdPathOptions[i];
-        // const address_arr: string[] = [];
-        // const sompi_arr: number[] = [];
-        // const dtype_arr: number[] = [];
-        // const index_arr: number[] = [];
         try {
-          // const keyring = await wallet.createTmpKeyringWithMnemonics(
-          //   contextData.mnemonics,
-          //   contextData.customHdPath || options.hdPath,
-          //   contextData.passphrase,
-          //   options.addressType,
-          //   20
-          // );
-          // keyring.accounts.forEach((v, j) => {
-          //   address_arr.push(v.address);
-          //   dtype_arr.push(v.deriveType as number);
-          //   index_arr.push(v.index as number);
-          // });
           const sgroup = await wallet.createTmpKeyringWithMnemonicsWithAddressDiscovery(
             contextData.mnemonics,
             contextData.customHdPath || options.hdPath,
@@ -620,14 +608,6 @@ function Step2({
           setError((e as any).message);
           return;
         }
-
-        // groups.push({
-        //   type: options.addressType,
-        //   address_arr: address_arr,
-        //   sompi_arr: sompi_arr,
-        //   dtype_arr,
-        //   index_arr
-        // });
       }
       try {
         // groups = await wallet.findGroupAssets(groups);
@@ -637,27 +617,37 @@ function Step2({
       }
       setScannedGroups(groups);
       if (groups.length == 0) {
-        tools.showTip('Unable to find any addresses with assets');
+        // tools.showTip('Unable to find any addresses with assets');
+        tools.toastWarning('Unable to find any addresses with balance');
+      } else if (groups.length > 0) {
+        tools.toastSuccess(`Found ${groups[0].address_arr.length} addresses with balance`);
       }
     } catch (e) {
       setError((e as any).message);
     } finally {
-      tools.showLoading(false);
+      // tools.showLoading(false);
+      setDiscoverLoading(false);
     }
   };
+
+  useEffect(() => {
+    if(contextData.isRestore){
+      scanVaultAddress();
+    }
+  }, []);
 
   return (
     <Column>
       {contextData.isRestore && scanned == false ? (
         <Row justifyBetween>
           <Text text="Address Type" preset="bold" />
-          <Text
-            text="Discover more addresses..."
+          {/* <Text
+            text="Discover more addresses"
             preset="link"
             onClick={() => {
               scanVaultAddress();
             }}
-          />
+          /> */}
         </Row>
       ) : (
         <Text text="Address Type" preset="bold" />
@@ -678,13 +668,6 @@ function Step2({
               items={item.address_arr.map((v, index) => ({
                 address: v,
                 sompi: item.sompi_arr[index],
-                // path:
-                //   (contextData.customHdPath || options.hdPath) +
-                //   '/' +
-                //   item.dtype_arr[index] +
-                //   '\'/' +
-                //   item.index_arr[index].toString().substring(2) +
-                //   '\''
                 path: generateHdPath(
                   contextData.customHdPath || options.hdPath,
                   item.dtype_arr[index].toString(),
@@ -751,7 +734,26 @@ function Step2({
       </Column>
       {pathError && <Text text={pathError} color="error" />}
       {error && <Text text={error} color="error" />} */}
-
+      {!discoverLoading && contextData.isRestore && (
+        <Row justifyCenter>
+          <Text
+            text="Discover more addresses"
+            preset="link"
+            size="sm"
+            onClick={() => {
+              scanVaultAddress();
+            }}
+          />
+        </Row>
+      )}
+      {discoverLoading && (
+        <Row justifyCenter>
+          <Text text="Finding accounts with balance" size="sm" />
+          <Icon>
+            <LoadingOutlined />
+          </Icon>
+        </Row>
+      )}
       <Text text="Phrase (Optional)" preset="bold" mt="lg" />
 
       <Input
@@ -768,11 +770,12 @@ function Step2({
         <Button text="Continue" preset="primary" onClick={onNext} disabled={disabled} />
       </FooterButtonContainer>
 
-      {loading && (
+      {/* {loading && (
         <Icon>
           <LoadingOutlined />
         </Icon>
-      )}
+      )} */}
+
     </Column>
   );
 }

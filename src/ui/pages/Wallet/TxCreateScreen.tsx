@@ -39,16 +39,14 @@ export default function TxCreateScreen() {
   const safeBalance = useSafeBalance();
   const navigate = useNavigate();
   const kaspaTx = useKaspaTx();
-  const [inputAmount, setInputAmount] = useState(
-    kaspaTx.toSompi > 0 ? sompiToAmount(kaspaTx.toSompi) : ''
-  );
+  const [inputAmount, setInputAmount] = useState(kaspaTx.toSompi > 0 ? sompiToAmount(kaspaTx.toSompi) : '');
   const [disabled, setDisabled] = useState(true);
   const [toInfo, setToInfo] = useState<{
     address: string;
     domain: string;
   }>({
     address: kaspaTx.toAddress,
-    domain: kaspaTx.toDomain,
+    domain: kaspaTx.toDomain
   });
 
   const [error, setError] = useState('');
@@ -80,6 +78,7 @@ export default function TxCreateScreen() {
   const [feeRate, setFeeRate] = useState(5);
 
   const [rawTxInfo, setRawTxInfo] = useState<RawTxInfo>();
+  const [txFee, setTxFee] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   const [enableRBF, setEnableRBF] = useState(false);
@@ -120,6 +119,7 @@ export default function TxCreateScreen() {
         //   setError(`Network fee must be at leat ${data.estimateFee}`);
         //   return;
         // }
+        setTxFee(data?.fee ? Number(sompiToAmount(data.fee)) : 0);
         setRawTxInfo(data);
         setDisabled(false);
       })
@@ -228,7 +228,7 @@ export default function TxCreateScreen() {
           </Row>
           {showSafeBalance && (
             <Row justifyBetween>
-              <Text text={`${t('Available')}(${t('safe to send')})` } color="textDim" />
+              <Text text={`${t('Available')}(${t('safe to send')})`} color="textDim" />
 
               <Row
                 onClick={() => {
@@ -264,7 +264,15 @@ export default function TxCreateScreen() {
           />
         </Column>
         {error && <Text text={error} color="error" />}
-
+        <Row justifyCenter mt="xl">
+          {txFee > 0 && (
+            <Text
+              text={`${t('TX Fee:')} ${txFee} KAS`}
+              color="white"
+              // style={{ textDecoration: 'underline' }}
+            />
+          )}
+        </Row>
         <Button
           disabled={disabled}
           preset="primary"
@@ -341,9 +349,7 @@ function RecentTab({ handleAddrInput }) {
       </div>
     );
   } else {
-    return (
-      <Empty />
-    );
+    return <Empty />;
   }
 }
 
@@ -360,9 +366,7 @@ function ContactsTab({ handleAddrInput }) {
     getContacts();
   }, []);
   if (items.length == 0) {
-    return (
-      <Empty text={t('No contacts')}/>
-    );
+    return <Empty text={t('No contacts')} />;
   } else {
     return (
       <div>

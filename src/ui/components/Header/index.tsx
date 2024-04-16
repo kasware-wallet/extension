@@ -44,7 +44,7 @@ export function Header(props: HeaderProps) {
           padding: 15
         }}>
         <Row full>
-          <Column selfItemsCenter>
+          <Column selfItemsCenter classname='column-select'>
             {LeftComponent}
             {onBack && (
               <Row
@@ -55,7 +55,7 @@ export function Header(props: HeaderProps) {
                   <FontAwesomeIcon icon={faArrowLeft} />
                 </Icon>
 
-                <Text text={t('Back')} preset="regular-bold" />
+                {/* <Text text={t('Back')} preset="regular-bold" /> */}
               </Row>
             )}
           </Column>

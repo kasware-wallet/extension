@@ -53,6 +53,7 @@ export class OpenApiService {
   encoding!: number;
   networkId!: number;
   rpc!: RpcClient;
+  shouldFireBlueScore: boolean | undefined;
 
   setHost = async (host: string) => {
     this.store.host = host;
@@ -78,6 +79,7 @@ export class OpenApiService {
   };
 
   init = async () => {
+    this.shouldFireBlueScore = true;
     // if (this.rpc !== null && this.rpc !== undefined) {
     //   await this.rpc?.disconnect();
     // }
@@ -133,7 +135,6 @@ export class OpenApiService {
       }
     };
     getConfig();
-
   };
 
   rpc_connect = async () => {
@@ -162,6 +163,7 @@ export class OpenApiService {
     // clientAddress  exists
     if (this.clientAddress.length > 0) {
       await this.rpc.unsubscribeUtxosChanged([this.clientAddress]);
+      await this.rpc.unsubscribeSinkBlueScoreChanged();
     }
 
     this.clientAddress = token;
@@ -172,14 +174,30 @@ export class OpenApiService {
   subscribeUtxosChanged = async (address: string) => {
     await this.rpc.notify(async (op, payload) => {
       // TODO test
+      // blockAddedNotification
+      // virtualDaaScoreChangedNotification
+      // sinkBlueScoreChangedNotification
       if (op == 'utxosChangedNotification') {
         eventBus.emit(EVENTS.broadcastToUI, {
           method: 'utxosChangedNotification',
           params: payload
         });
       }
+      if (op == 'sinkBlueScoreChangedNotification') {
+        if (this.shouldFireBlueScore) {
+          eventBus.emit(EVENTS.broadcastToUI, {
+            method: 'rpc-block-added',
+            params: payload.sinkBlueScore
+          });
+          this.shouldFireBlueScore = false;
+          setTimeout(() => {
+            this.shouldFireBlueScore = true;
+          }, 1000);
+        }
+      }
     });
     await this.rpc.subscribeUtxosChanged([address]);
+    await this.rpc.subscribeSinkBlueScoreChanged();
   };
 
   getRespData = async (res: any) => {
@@ -308,7 +326,7 @@ export class OpenApiService {
         amount,
         confirm_kas_amount: '0',
         pending_kas_amount: '0',
-        kas_amount: '0',
+        kas_amount: amount,
         usd_value: '0'
       });
     });

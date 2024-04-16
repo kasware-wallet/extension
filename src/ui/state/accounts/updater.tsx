@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { useCallback, useEffect, useRef } from 'react';
 
 import eventBus from '@/shared/eventBus';
@@ -69,11 +70,15 @@ export default function AccountUpdater() {
       dispatch(accountActions.expireBalance());
       // }, 500);
     });
+    eventBus.addEventListener('rpc-block-added', (event: number) => {
+      dispatch(accountActions.setBlueScore(event));
+    });
     return () => {
       eventBus.removeEventListener('accountsChanged', accountChangeHandler);
       eventBus.removeEventListener('utxosChangedNotification', () => {
         //
       });
+      eventBus.removeEventListener('rpc-block-added', () => {});
       wallet.disconnectRpc();
     };
   }, [dispatch]);

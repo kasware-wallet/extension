@@ -23,12 +23,12 @@ export default function LanguageTypeScreen() {
         title={t('Switch Language')}
       />
       <Content>
-        <Column>
+        <Column full>
           {Languages &&
             Languages.length > 0 &&
             Languages.map((item, index) => {
               return (
-                <Card classname="card-select" key={index} mt="lg">
+                <Card classname="card-select" key={index} mt="zero" mb='xs'>
                   <Row
                     full
                     onClick={async () => {
@@ -48,7 +48,7 @@ export default function LanguageTypeScreen() {
                       )}
                     </Column>
                     <Column justifyCenter>
-                      <Text text={item.name} />
+                      <Text text={item.name} preset="regular-bold"/>
                       {/* <Text text={item.symbol} preset="sub" /> */}
                     </Column>
                   </Row>

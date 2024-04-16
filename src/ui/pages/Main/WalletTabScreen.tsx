@@ -14,7 +14,7 @@ import { NavTabBar } from '@/ui/components/NavTabBar';
 import { NoticePopover } from '@/ui/components/NoticePopover';
 import { UpgradePopover } from '@/ui/components/UpgradePopover';
 import { getCurrentTab } from '@/ui/features/browser/tabs';
-import { useAccountBalance, useCurrentAccount } from '@/ui/state/accounts/hooks';
+import { useAccountBalance, useBlueScore, useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
 import {
   useBlockstreamUrl,
@@ -30,6 +30,7 @@ import { Empty } from '@/ui/components/Empty';
 import { accountActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { useFetchUtxosCallback, useUtxos } from '@/ui/state/transactions/hooks';
+import { ExportOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
@@ -167,8 +168,6 @@ export default function WalletTabScreen() {
     }
   ];
 
-  const blockstreamUrl = useBlockstreamUrl();
-
   return (
     <Layout>
       <Header
@@ -193,7 +192,7 @@ export default function WalletTabScreen() {
             onClick={() => {
               navigate('SwitchKeyringScreen');
             }}>
-            <Text text={currentKeyring.alianName} size="xxs" />
+            <Text text={currentKeyring.alianName} size="xxs" style={{ padding: '3px 1px' }} />
           </Card>
         }
       />
@@ -310,6 +309,9 @@ export default function WalletTabScreen() {
 }
 function ActivityTab({ transactionInfos }: { transactionInfos: ITransactionInfo[] }) {
   const navigate = useNavigate();
+  const blockstreamUrl = useBlockstreamUrl();
+  const currentAccount = useCurrentAccount();
+  const { t } = useTranslation();
   if (transactionInfos && transactionInfos.length > 0) {
     return (
       <div>
@@ -325,7 +327,10 @@ function ActivityTab({ transactionInfos }: { transactionInfos: ITransactionInfo[
               <Column full>
                 <Row justifyBetween>
                   <Text text={e.mode} />
-                  <Text text={e.isConfirmed ? 'confirmed' : 'unconfirmed'} preset="sub" />
+                  <TxConfirmState
+                    isAccepted={e.isAccepted}
+                    acceptingBlockBlueScore={e.txDetail.accepting_block_blue_score}
+                  />
                 </Row>
                 <Row justifyBetween>
                   <Row>
@@ -338,13 +343,62 @@ function ActivityTab({ transactionInfos }: { transactionInfos: ITransactionInfo[
             </Row>
           </Card>
         ))}
+        <Card
+          key={'more-tx'}
+          classname="card-select"
+          mt="md"
+          onClick={() => {
+            window.open(`${blockstreamUrl}/address/${currentAccount.address}`);
+          }}>
+          <Row full justifyCenter>
+            <ExportOutlined style={{fontSize: 14 }} />
+            <Text preset="regular-bold" text={t('More')} size='lg'/>
+          </Row>
+        </Card>
       </div>
     );
   } else {
+    return <Empty />;
+  }
+}
+
+function TxConfirmState({
+  isAccepted,
+  acceptingBlockBlueScore
+}: {
+  isAccepted: boolean;
+  acceptingBlockBlueScore: number;
+}) {
+  const blueScore = useBlueScore();
+  if (isAccepted == false) {
     return (
-      <Empty />
+      <Row>
+        <Text text={isAccepted ? 'Accepted' : 'Not Accepted'} preset="sub" />
+      </Row>
     );
   }
+  if (!blueScore || blueScore <= 0) {
+    return (
+      <Row>
+        <Text text={isAccepted ? 'Accepted' : 'Not Accepted'} preset="sub" />
+      </Row>
+    );
+  }
+  if (blueScore - acceptingBlockBlueScore < 100) {
+    return (
+      <Row>
+        <Text text={isAccepted ? 'Accepted' : 'Not Accepted'} preset="sub" />
+        {blueScore - acceptingBlockBlueScore > 1 && (
+          <Text text={`${blueScore - acceptingBlockBlueScore} Confirmed`} preset="sub" />
+        )}
+      </Row>
+    );
+  }
+  return (
+    <Row>
+      <Text text={'Confirmed'} preset="sub" />
+    </Row>
+  );
 }
 
 function UTXOTab() {
@@ -358,9 +412,9 @@ function UTXOTab() {
   if (utxos && utxos.length > 0) {
     return (
       <div>
-        {utxos.map((e) => (
+        {utxos.map((e,index) => (
           <Card
-            key={e.outpoint.transactionId}
+            key={index}
             classname="card-select"
             mt="md"
             onClick={(event) => {
@@ -375,8 +429,6 @@ function UTXOTab() {
       </div>
     );
   } else {
-    return (
-      <Empty />
-    );
+    return <Empty />;
   }
 }

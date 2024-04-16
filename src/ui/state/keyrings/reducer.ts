@@ -17,7 +17,9 @@ const initialKeyring: WalletKeyring = {
   addressType: AddressType.KASPA_44_111111,
   accounts: [],
   alianName: '',
-  hdPath: ''
+  hdPath: '',
+  // kaspa amount
+  balanceKas: 0
 };
 
 export const initialState: KeyringsState = {
@@ -36,6 +38,17 @@ const slice = createSlice({
     setKeyrings(state, action: { payload: WalletKeyring[] }) {
       const { payload } = action;
       state.keyrings = payload;
+    },
+    setKeyringBalanceKas(state, action: { payload: { key: string; balanceKas: number } }) {
+      const { payload } = action;
+      for (let i = 0; i < state.keyrings.length; i++) {
+        if (state.keyrings[i].key === payload.key) {
+          state.keyrings[i].balanceKas = payload.balanceKas;
+        }
+      }
+      if (state.current.key === payload.key) {
+        state.current.balanceKas = payload.balanceKas;
+      }
     },
 
     reset(state) {

@@ -472,7 +472,6 @@ export class WalletController extends BaseController {
             toSignInputs.push({ index, publicKey });
           });
           const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
-          console.log(preSubmitPending);
           // submit
           const txid = await openapiService.submitTransaction(preSubmitPending);
           return txid;
@@ -1018,11 +1017,8 @@ export class WalletController extends BaseController {
         const total = entries.reduce((agg, curr) => {
           return curr.utxoEntry.amount + agg;
         }, BigInt(0));
-        const a = Number(total);
-        console.log(a);
-        console.log(money);
         let generator;
-        if (a == money) {
+        if (Number(total) == money) {
           generator = new Generator({
             // utxoEntries: entries,
             entries,
@@ -1110,7 +1106,8 @@ export class WalletController extends BaseController {
       addressType,
       accounts,
       alianName,
-      hdPath
+      hdPath,
+      balanceKas:0
     };
     return keyring;
   };

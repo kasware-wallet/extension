@@ -5,7 +5,7 @@ import { useWallet } from '@/ui/utils';
 
 import { AppState } from '..';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { useCurrentKeyring } from '../keyrings/hooks';
+import { useCurrentKeyring, useKeyrings } from '../keyrings/hooks';
 import { keyringsActions } from '../keyrings/reducer';
 import { settingsActions } from '../settings/reducer';
 import { accountActions } from './reducer';
@@ -17,6 +17,10 @@ export function useAccountsState(): AppState['accounts'] {
 export function useCurrentAccount() {
   const accountsState = useAccountsState();
   return accountsState.current;
+}
+export function useBlueScore() {
+  const accountsState = useAccountsState();
+  return accountsState.blueScore;
 }
 
 export function useAccounts() {
@@ -33,7 +37,7 @@ export function useAccountBalance(address?: string) {
         amount: '0',
         expired: false,
         confirm_kas_amount: '0',
-        pending_kas_amount: '0',
+        pending_kas_amount: '0'
       }
     );
   }
@@ -42,7 +46,7 @@ export function useAccountBalance(address?: string) {
       amount: '0',
       expired: true,
       confirm_kas_amount: '0',
-      pending_kas_amount: '0',
+      pending_kas_amount: '0'
     }
   );
 }
@@ -231,6 +235,21 @@ export function useFetchBalancesCallback() {
     }
     dispatch(accountActions.setBalances(balanceArray));
   }, [dispatch, wallet, accounts]);
+}
+
+export function useFetchKeyringsBalancesCallback() {
+  const dispatch = useAppDispatch();
+  const wallet = useWallet();
+  const keyrings = useKeyrings();
+  return useCallback(async () => {
+    for (let i = 0; i < keyrings.length; i++) {
+      const addresses: string[] = keyrings[i].accounts.map((item) => item.address);
+      if (!addresses || addresses.length == 0) break;
+      const _accountsBalanceArray = await wallet.getAddressesBalance(addresses);
+      const balanceKas = _accountsBalanceArray.reduce((pre, cur) => pre + Number(cur?.amount), 0);
+      dispatch(keyringsActions.setKeyringBalanceKas({ key: keyrings[i].key, balanceKas }));
+    }
+  }, [dispatch, wallet, keyrings]);
 }
 
 export function useReloadAccounts() {

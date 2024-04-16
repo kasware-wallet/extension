@@ -30,7 +30,7 @@ export default function TxConfirmScreen() {
       handleConfirm={() => {
         pushKaspaTx(rawTxInfo.rawtx).then(({ success, txid, error }) => {
           if (success) {
-            navigate('TxSuccessScreen', { txid });
+            navigate('TxSuccessScreen', { txid, rawtx: rawTxInfo.rawtx });
           } else {
             navigate('TxFailScreen', { error });
           }

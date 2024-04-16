@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import VirtualList from 'rc-virtual-list';
-import { forwardRef, useMemo, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useState } from 'react';
 
 import { KEYRING_TYPE } from '@/shared/constant';
 import { WalletKeyring } from '@/shared/types';
@@ -19,10 +19,12 @@ import {
   DeleteOutlined,
   EditOutlined,
   KeyOutlined,
+  LoadingOutlined,
   PlusCircleOutlined,
   SettingOutlined
 } from '@ant-design/icons';
 
+import { useFetchKeyringsBalancesCallback } from '@/ui/state/accounts/hooks';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
@@ -54,7 +56,7 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
       return 'Invalid';
     }
     const address = keyring.accounts[0].address;
-    return shortAddress(address,9);
+    return shortAddress(address, 9);
   }, []);
 
   const [optionsVisible, setOptionsVisible] = useState(false);
@@ -85,13 +87,16 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
           )}
         </Column>
 
-        <Column justifyCenter>
-          <Text text={`${keyring.alianName}`} />
+        <Column full>
+          <Row justifyBetween>
+            <Text text={`${keyring.alianName}`} />
+            {keyring?.balanceKas && <Text text={keyring?.balanceKas} />}
+          </Row>
           <Text text={`${displayAddress}`} preset="sub" />
         </Column>
       </Row>
 
-      <Column relative>
+      <Column style={{ width: 20 }} selfItemsCenter>
         {optionsVisible && (
           <div
             style={{
@@ -128,46 +133,54 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
               zIndex: 10
             }}>
             <Column>
-              <Row
-                onClick={() => {
-                  navigate('EditWalletNameScreen', { keyring });
-                }}>
-                <EditOutlined />
-                <Text text={t('Edit Name')} size="sm" />
-              </Row>
+              <Column classname="column-select">
+                <Row
+                  onClick={() => {
+                    navigate('EditWalletNameScreen', { keyring });
+                  }}>
+                  <EditOutlined />
+                  <Text text={t('Edit Name')} size="sm" />
+                </Row>
+              </Column>
 
               {keyring.type === KEYRING_TYPE.HdKeyring ? (
-                <Row
-                  onClick={() => {
-                    navigate('ExportMnemonicsScreen', { keyring });
-                  }}>
-                  <KeyOutlined />
-                  <Text text={t('Show Seed Phrase')} size="sm" />
-                </Row>
+                <Column classname="column-select">
+                  <Row
+                    onClick={() => {
+                      navigate('ExportMnemonicsScreen', { keyring });
+                    }}>
+                    <KeyOutlined />
+                    <Text text={t('Show Seed Phrase')} size="sm" />
+                  </Row>
+                </Column>
               ) : (
+                <Column classname="column-select">
+                  <Row
+                    onClick={() => {
+                      navigate('ExportPrivateKeyScreen', { account: keyring.accounts[0] });
+                    }}>
+                    <KeyOutlined />
+                    <Text text={t('Export Private Key')} size="sm" />
+                  </Row>
+                </Column>
+              )}
+              <Column classname="column-select">
                 <Row
                   onClick={() => {
-                    navigate('ExportPrivateKeyScreen', { account: keyring.accounts[0] });
+                    if (keyrings.length == 1) {
+                      tools.toastError('Removing the last wallet is not allowed');
+                      return;
+                    }
+                    setRemoveVisible(true);
+                    setOptionsVisible(false);
                   }}>
-                  <KeyOutlined />
-                  <Text text={t('Export Private Key')} size="sm" />
-                </Row>
-              )}
-              <Row
-                onClick={() => {
-                  if (keyrings.length == 1) {
-                    tools.toastError('Removing the last wallet is not allowed');
-                    return;
-                  }
-                  setRemoveVisible(true);
-                  setOptionsVisible(false);
-                }}>
-                <Icon color="danger">
-                  <DeleteOutlined />
-                </Icon>
+                  <Icon color="danger">
+                    <DeleteOutlined />
+                  </Icon>
 
-                <Text text={t('Remove Wallet')} size="sm" color="danger" />
-              </Row>
+                  <Text text={t('Remove Wallet')} size="sm" color="danger" />
+                </Row>
+              </Column>
             </Column>
           </Column>
         )}
@@ -188,6 +201,8 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
 export default function SwitchKeyringScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const fetchKeyringsBalances = useFetchKeyringsBalancesCallback();
 
   const keyrings = useKeyrings();
 
@@ -203,6 +218,16 @@ export default function SwitchKeyringScreen() {
     // });
     return _items;
   }, [keyrings]);
+  const loadBalance = () => {
+    setLoading(true);
+    fetchKeyringsBalances().finally(() => {
+      setLoading(false);
+    });
+  };
+  useEffect(() => {
+    loadBalance();
+  }, [fetchKeyringsBalances, keyrings]);
+
   const ForwardMyItem = forwardRef(MyItem);
   return (
     <Layout>
@@ -220,6 +245,13 @@ export default function SwitchKeyringScreen() {
           </Icon>
         }
       />
+      {loading && (
+        <Row justifyCenter>
+          <Icon>
+            <LoadingOutlined />
+          </Icon>
+        </Row>
+      )}
       <Content>
         <VirtualList
           data={items}
@@ -230,8 +262,8 @@ export default function SwitchKeyringScreen() {
           style={{
             boxSizing: 'border-box'
           }}
-          // onSkipRender={onAppear}
-          // onItemRemove={onAppear}
+        // onSkipRender={onAppear}
+        // onItemRemove={onAppear}
         >
           {(item, index) => <ForwardMyItem keyring={item.keyring} autoNav={true} />}
         </VirtualList>

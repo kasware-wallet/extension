@@ -8,7 +8,9 @@ import { ADDRESS_TYPES } from '@/shared/constant';
 import { WalletKeyring } from '@/shared/types';
 import { Button, Card, Column, Content, Grid, Header, Icon, Input, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
+import { colors } from '@/ui/theme/colors';
 import { copyToClipboard, useLocationState, useWallet } from '@/ui/utils';
+import { WarningOutlined } from '@ant-design/icons';
 
 type Status = '' | 'error' | 'warning' | undefined;
 
@@ -73,37 +75,25 @@ export default function ExportMnemonicsScreen() {
       <Content>
         {mnemonic == '' ? (
           <Column>
+            <Card style={{ backgroundColor: '#2c2323' }} rounded>
+              <Column>
+                <WarningOutlined style={{ fontSize: '300%', color: colors.red }} />
+              </Column>
+            </Card>
             <Column gap="lg">
               <Text
                 text="1. Seed phrase alone gives you full access to your wallets and funds."
-                preset="title"
+                preset="regular"
                 color="red"
               />
 
-              <Text
-                text="2. Never sharer it with anyone."
-                preset="title"
-                color="red"
-              />
+              <Text text="2. Never sharer it with anyone." preset="regular"color="red" />
 
-              <Text
-                text="3. Seed phrase is only stored in your browser."
-                preset="title"
-                color="red"
-              />
-              <Text
-                text="4. KasWare will never ask for your seed phrase."
-                preset="title"
-                color="red"
-              />
+              <Text text="3. Seed phrase is only stored in your browser." preset="regular" color="red" />
+              <Text text="4. KasWare will never ask for your seed phrase." preset="regular" color="red" />
             </Column>
 
-            <Text
-              text=" Please read the tips above carefully"
-              preset="title"
-              textCenter
-              my="xl"
-            />
+            <Text text="" preset="title" textCenter my="xl" />
             <Input
               preset="password"
               onChange={(e) => {
@@ -114,17 +104,25 @@ export default function ExportMnemonicsScreen() {
             />
             {error && <Text text={error} preset="regular" color="error" />}
 
-            <Button disabled={disabled} text={t('Show Seed Phrase')} preset="primary" onClick={btnClick} style={{marginTop:5}}/>
+            <Button
+              disabled={disabled}
+              text={t('Show Seed Phrase')}
+              preset="primary"
+              onClick={btnClick}
+              style={{ marginTop: 5 }}
+            />
           </Column>
         ) : (
           <Column>
-            <Text
-              text="This phrase is the ONLY way to recover your wallet. Do NOT share it with anyone! (click to copy)"
-              color="warning"
-              textCenter
-              mt="xl"
-              mb="xl"
-            />
+            <Card style={{ backgroundColor: '#2c2323' }}>
+              <Text
+                text="This phrase is the ONLY way to recover your wallet. Do NOT share it with anyone! (click to copy)"
+                color="red"
+                textCenter
+                mt="xl"
+                mb="xl"
+              />
+            </Card>
 
             <Row
               justifyCenter
@@ -136,20 +134,22 @@ export default function ExportMnemonicsScreen() {
             </Row>
 
             <Row justifyCenter>
-              <Grid columns={2}>
+              <Grid columns={3}>
                 {words.map((v, index) => {
                   return (
                     <Row key={index}>
-                      <Text text={`${index + 1}. `} style={{ width: 40 }} />
-                      <Card preset="style2" style={{ width: 200 }}>
-                        <Text text={v} selectText disableTranslate />
+                      <Card preset="style2" style={{ width: 100, margin: '3px 1px', padding: '10px 15px 10px 7px' }}>
+                        <Row full>
+                          <Text text={`${index + 1}.`} color="textDim" />
+                          <Text text={v} selectText disableTranslate />
+                        </Row>
                       </Card>
                     </Row>
                   );
                 })}
               </Grid>
             </Row>
-            <Card mt='lg'>
+            <Card mt="lg">
               <Column>
                 <Text text="Advance Options" />
                 <Text

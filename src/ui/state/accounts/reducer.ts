@@ -27,6 +27,7 @@ export interface AccountsState {
   };
   appSummary: AppSummary;
   addressSummary: AddressSummary;
+  blueScore:number;
 }
 
 const initialAccount = {
@@ -56,7 +57,8 @@ export const initialState: AccountsState = {
     kasSompi: 0,
     assetSompi: 0,
     loading: true
-  }
+  },
+  blueScore:0
 };
 
 const slice = createSlice({
@@ -177,6 +179,10 @@ const slice = createSlice({
     setAppSummary(state, action: { payload: AppSummary }) {
       const { payload } = action;
       state.appSummary = payload;
+    },
+    setBlueScore(state, action: { payload: number }) {
+      const { payload } = action;
+      state.blueScore = payload;
     },
     rejectLogin(state) {
       state.loading = false;

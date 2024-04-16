@@ -166,7 +166,7 @@ export function handleTransactions(data, address): ITransactionInfo[] {
   const transactionInfos: ITransactionInfo[] = [];
   for (let i = 0; i < data.length; i++) {
     let mode = '';
-    const isConfirmed = data[i].is_accepted as boolean;
+    const isAccepted = data[i].is_accepted as boolean;
     let amount = '0';
     let usdValue = '0';
     const block_time = data[i].block_time;
@@ -194,15 +194,19 @@ export function handleTransactions(data, address): ITransactionInfo[] {
       mode = 'receive';
       amount = sompiToAmount(outputAmountSelf).replace(/\.0+$/, '');
       usdValue = amount;
-    } else {
+    } else if (inputAmountSelf - outputAmountSelf >= 0) {
       mode = 'send';
       amount = sompiToAmount(inputAmountSelf - outputAmountSelf).replace(/\.0+$/, '');
+      usdValue = amount;
+    } else if (inputAmountSelf - outputAmountSelf < 0) {
+      mode = 'receive';
+      amount = sompiToAmount(outputAmountSelf - inputAmountSelf).replace(/\.0+$/, '');
       usdValue = amount;
     }
 
     transactionInfos.push({
       mode,
-      isConfirmed,
+      isAccepted,
       amount,
       usdValue,
       block_time,

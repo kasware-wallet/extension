@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Card, Column, Content, Header, Layout, Text } from '@/ui/components';
+import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 
+import { ImportOutlined, KeyOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
@@ -18,38 +19,62 @@ export default function AddKeyringScreen() {
       />
       <Content>
         <Column>
-          <Text text={t('Create Wallet')} preset="regular-bold" />
-
           <Card
-            justifyCenter
+            classname="card-select"
+            justifyBetween
+            mt="md"
             onClick={(e) => {
               navigate('CreateHDWalletScreen', { isImport: false });
             }}>
-            <Column full justifyCenter>
-              <Text text={`${t('With seed phrase')}(${t('12 words')}, ${t('24 words')})`} size="sm" />
-            </Column>
+            <Row>
+              <Column style={{ width: 20 }} selfItemsCenter>
+                <Icon>
+                  <PlusCircleOutlined />
+                </Icon>
+              </Column>
+              <Column>
+                <Text text="Create A New Wallet" />
+                <Text text={`${t('With seed phrase')}(${t('12 words')}, ${t('24 words')})`} preset="sub" />
+              </Column>
+            </Row>
           </Card>
-
-          <Text text={t('Restore Wallet')} preset="regular-bold" mt="lg" />
-
           <Card
-            justifyCenter
+            classname="card-select"
+            justifyBetween
+            mt="sm"
             onClick={(e) => {
               navigate('CreateHDWalletScreen', { isImport: true });
             }}>
-            <Column full justifyCenter>
-              <Text text={`${t('From seed phrase')}(${t('12 words')}, ${t('24 words')})`} size="sm" />
-            </Column>
+            <Row>
+              <Column style={{ width: 20 }} selfItemsCenter>
+                <Icon>
+                  <ImportOutlined />
+                </Icon>
+              </Column>
+              <Column>
+                <Text text="Import Seed Phrase" />
+                <Text text={`${t('Import accounts from another wallet app')}`} preset="sub" />
+              </Column>
+            </Row>
           </Card>
-
           <Card
-            justifyCenter
+            classname="card-select"
+            justifyBetween
+            mt="sm"
             onClick={(e) => {
               navigate('CreateSimpleWalletScreen');
             }}>
-            <Column full justifyCenter>
-              <Text text={t('From single private key')} size="sm" />
-            </Column>
+            <Row>
+              <Column style={{ width: 20 }} selfItemsCenter>
+                <Icon>
+                  <KeyOutlined />
+                </Icon>
+              </Column>
+              <Column>
+                <Text text="Import Private Key" />
+                <Text text={'Import a single account'} preset="sub" />
+              </Column>
+            </Row>
           </Card>
         </Column>
       </Content>

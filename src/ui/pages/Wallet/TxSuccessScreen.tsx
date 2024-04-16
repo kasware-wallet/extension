@@ -1,19 +1,32 @@
 import { Button, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
+import { colors } from '@/ui/theme/colors';
 import { spacing } from '@/ui/theme/spacing';
-import { useLocationState } from '@/ui/utils';
+import { shortAddress, sompiToAmount, useLocationState } from '@/ui/utils';
+import { ExportOutlined } from '@ant-design/icons';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface LocationState {
   txid: string;
+  rawtx: string;
 }
 
 export default function TxSuccessScreen() {
   const { t } = useTranslation();
-  const { txid } = useLocationState<LocationState>();
+  const { txid, rawtx } = useLocationState<LocationState>();
   const navigate = useNavigate();
   const blockstreamUrl = useBlockstreamUrl();
+  const toAddrss = useMemo(() => {
+    const result = JSON.parse(rawtx);
+    return result.to;
+  }, []);
+  const inputAmount = useMemo(() => {
+    const result = JSON.parse(rawtx);
+    const inputAmountSompi = result.amountSompi;
+    return sompiToAmount(inputAmountSompi);
+  }, []);
 
   return (
     <Layout>
@@ -21,20 +34,19 @@ export default function TxSuccessScreen() {
 
       <Content style={{ gap: spacing.small }}>
         <Column justifyCenter mt="xxl" gap="xl">
-          <Row justifyCenter>
-            <Icon icon="success" size={50} style={{ alignSelf: 'center' }} />
+          <Row justifyCenter mt="xxl">
+            <Icon icon="success" size={70} style={{ alignSelf: 'center' }} />
           </Row>
-
-          <Text preset="title" text={t('Payment Sent')} textCenter />
-          <Text preset="sub" text={t('Your transaction has been successfully sent')} color="textDim" textCenter />
-
+          <Text preset="title" text={t('Sent')} textCenter size='xxxl'/>
+          <Text text={`${inputAmount} KAS ${t('was successfully sent to')}`} color="textDim" textCenter />
+          <Text text={shortAddress(toAddrss)} color="textDim" textCenter />
           <Row
             justifyCenter
             onClick={() => {
-              window.open(`${blockstreamUrl}/tx/${txid}`);
+              window.open(`${blockstreamUrl}/transaction/${txid}`);
             }}>
-            <Icon icon="eye" color="textDim" />
-            <Text preset="regular-bold" text={t('View on Block Explorer')} color="textDim" />
+            <ExportOutlined style={{color:colors.aqua,fontSize:14}}/>
+            <Text preset="regular-bold" text={t('View transaction')} color="aqua" size='lg'/>
           </Row>
         </Column>
       </Content>

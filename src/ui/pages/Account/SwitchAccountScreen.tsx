@@ -120,35 +120,41 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
           <Column
             style={{
               backgroundColor: colors.black,
-              width: 160,
+              width: 170,
               position: 'absolute',
               right: 0,
               padding: 5,
               zIndex: 10
             }}>
-            <Row
-              onClick={() => {
-                navigate('EditAccountNameScreen', { account });
-              }}>
-              <EditOutlined />
-              <Text text={t('Edit Name')} size="sm" />
-            </Row>
-            <Row
-              onClick={() => {
-                copyToClipboard(account.address);
-                tools.toastSuccess(t('Copied'));
-                setOptionsVisible(false);
-              }}>
-              <CopyOutlined />
-              <Text text={t('Copy address')} size="sm" />
-            </Row>
-            <Row
-              onClick={() => {
-                navigate('ExportPrivateKeyScreen', { account });
-              }}>
-              <KeyOutlined />
-              <Text text={t('Export Private Key')} size="sm" />
-            </Row>
+            <Column classname="column-select">
+              <Row
+                onClick={() => {
+                  navigate('EditAccountNameScreen', { account });
+                }}>
+                <EditOutlined />
+                <Text text={t('Edit Name')} size="sm" />
+              </Row>
+            </Column>
+            <Column classname="column-select">
+              <Row
+                onClick={() => {
+                  copyToClipboard(account.address);
+                  tools.toastSuccess(t('Copied'));
+                  setOptionsVisible(false);
+                }}>
+                <CopyOutlined />
+                <Text text={t('Copy address')} size="sm" />
+              </Row>
+            </Column>
+            <Column classname="column-select">
+              <Row
+                onClick={() => {
+                  navigate('ExportPrivateKeyScreen', { account });
+                }}>
+                <KeyOutlined />
+                <Text text={t('Export Private Key')} size="sm" />
+              </Row>
+            </Column>
           </Column>
         )}
       </Column>
@@ -212,7 +218,7 @@ export default function SwitchAccountScreen() {
       loadBalance();
     });
     return () => {
-      eventBus.removeEventListener('utxosChangedNotification', () => {});
+      eventBus.removeEventListener('utxosChangedNotification', () => { });
     };
   }, [fetchBalances, wallet]);
 
@@ -224,7 +230,7 @@ export default function SwitchAccountScreen() {
         }}
         title={t('Switch Account')}
         RightComponent={
-          <Column relative>
+          <Column relative classname='column-select'>
             {optionsVisible && (
               <div
                 style={{
@@ -252,37 +258,43 @@ export default function SwitchAccountScreen() {
               <Column
                 style={{
                   backgroundColor: colors.black,
-                  width: 160,
+                  width: 170,
                   position: 'absolute',
                   right: 0,
                   padding: 5,
                   zIndex: 10
                 }}>
-                <Row
-                  onClick={() => {
-                    navigate('CreateAccountScreen');
-                  }}>
-                  <PlusCircleOutlined />
-                  <Text text={t('New account')} size="sm" />
-                </Row>
-                <Row
-                  onClick={() => {
-                    setOptionsVisible(false);
-                    discoverAddress();
-                    // copyToClipboard(account.address);
-                  }}>
-                  <SearchOutlined />
-                  <Text text={t('Discover address')} size="sm" />
-                </Row>
-                <Row
-                  onClick={() => {
-                    setOptionsVisible(false);
-                    compound();
-                    // copyToClipboard(account.address);
-                  }}>
-                  <MergeCellsOutlined />
-                  <Text text="Compound" size="sm" />
-                </Row>
+                <Column classname="column-select">
+                  <Row
+                    onClick={() => {
+                      navigate('CreateAccountScreen');
+                    }}>
+                    <PlusCircleOutlined />
+                    <Text text={t('New account')} size="sm" />
+                  </Row>
+                </Column>
+                <Column classname="column-select">
+                  <Row
+                    onClick={() => {
+                      setOptionsVisible(false);
+                      discoverAddress();
+                      // copyToClipboard(account.address);
+                    }}>
+                    <SearchOutlined />
+                    <Text text={t('Discover address')} size="sm" />
+                  </Row>
+                </Column>
+                <Column classname="column-select">
+                  <Row
+                    onClick={() => {
+                      setOptionsVisible(false);
+                      compound();
+                      // copyToClipboard(account.address);
+                    }}>
+                    <MergeCellsOutlined />
+                    <Text text="Compound" size="sm" />
+                  </Row>
+                </Column>
               </Column>
             )}
           </Column>

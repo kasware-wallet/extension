@@ -8,11 +8,11 @@ KasWare Wallet - the first open-source browser extension wallet for Kaspa.
 ## How to build
 
 - Install [Node.js](https://nodejs.org) version 18
-- Install [Yarn](https://yarnpkg.com/en/docs/install)
-- Install dependencies: `yarn`
-- Build the project to the `./dist/` folder with `yarn build:firefox` for Firefox
-- Build the project to the `./dist/` folder with `yarn build:chrome` for Chrome
-- Develop: `yarn build:chrome:dev`
+- Install [pnpm]
+- Install dependencies: `pnpm install`
+- Build the project to the `./dist/` folder with `pnpm run build:firefox` for Firefox
+- Build the project to the `./dist/` folder with `pnpm run build:chrome` for Chrome
+- Develop: `pnpm run build:chrome:dev`
 
 ## Special Thanks
 

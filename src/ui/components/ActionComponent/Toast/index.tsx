@@ -45,7 +45,7 @@ export function Toast(props: ToastProps) {
   useEffect(() => {
     setTimeout(() => {
       onClose();
-    }, 2000);
+    }, 5000);
   }, []);
 
   return (

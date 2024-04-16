@@ -181,6 +181,7 @@ export type WalletKeyring = {
   accounts: Account[];
   alianName: string;
   hdPath: string;
+  balanceKas: number;
 };
 
 export interface Account {
@@ -301,7 +302,7 @@ export interface IActiveIndexes {
 
 export interface ITransactionInfo {
   mode: string;
-  isConfirmed: boolean;
+  isAccepted: boolean;
   amount: string;
   usdValue: string;
   block_time: number;
