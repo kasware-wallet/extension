@@ -17,3 +17,5 @@ KasWare Wallet - the first open-source browser extension wallet for Kaspa.
 ## Special Thanks
 
 Thanks to the MetaMask team and Unisat team for their contributions to the browser extension wallet community, KasWare Wallet relies heavily on their contributions.
+
+Wallet feature is powered by kaspa-wasm module developed by kaspa core team. And the default RPC services utilized by Kasware Wallet are expertly maintained by the Aspectron team, the masterminds behind the KDX Wallet, Kaspanet Web Wallet, and the Kaspa-NG project.
