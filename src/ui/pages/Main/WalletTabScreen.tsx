@@ -76,7 +76,7 @@ export default function WalletTabScreen() {
   }, [accountBalance.amount, transactionInfos]);
   const [connected, setConnected] = useState(false);
   const [rpcStatus, setRpcStatus] = useState(true);
-  const [usdValue, setUSDValue] = useState('--');
+  const [usdValue, setUSDValue] = useState('0');
   const prevRpcStatus = useRef(true);
   const dispatch = useAppDispatch();
 
@@ -143,7 +143,7 @@ export default function WalletTabScreen() {
         const price: number = data.price;
         // 0.178
         if (accountBalance.amount === '0') {
-          setUSDValue('--');
+          setUSDValue('0');
         } else {
           const value = Number(accountBalance.amount) * price;
           setUSDValue(value.toLocaleString());
@@ -227,6 +227,7 @@ export default function WalletTabScreen() {
             }}>
             <div>
               <Text text={balanceValue + '  KAS'} preset="title-bold" textCenter size="xxxl" />
+              {usdValue && Number(usdValue) > 0 && <Text text={'$' + usdValue} preset="title" textCenter size="lg" color="textDim"/>}
             </div>
           </Tooltip>
 

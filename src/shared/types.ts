@@ -9,6 +9,7 @@ export enum AddressType {
   KASPA_44_111111,
   KASPA_44_972,
   KASPA_ONEKEY_44_111111,
+  KASPA_TANGEM_44_111111,
 }
 
 export { NetworkType };
@@ -29,7 +30,10 @@ export enum RestoreWalletType {
   KASPANET_WEB,
   KDX,
   CORE_GOLANG_CLI,
-  ONEKEY
+  OKX,
+  LEDGER,
+  ONEKEY,
+  TANGEM,
 }
 
 export interface IResultPsbtHex {

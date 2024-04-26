@@ -3,25 +3,17 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useMemo, useState } from 'react';
 
-import {
-  DecodedPsbt,
-  RawTxInfo,
-  SignPsbtOptions,
-  ToSignInput,
-  TxType
-} from '@/shared/types';
+import { DecodedPsbt, RawTxInfo, SignPsbtOptions, ToSignInput, TxType } from '@/shared/types';
 import { Button, Card, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressText } from '@/ui/components/AddressText';
 import { WarningPopover } from '@/ui/components/WarningPopover';
 import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useAccountAddress, useCurrentAccount } from '@/ui/state/accounts/hooks';
-import {
-  usePrepareSendKASCallback
-} from '@/ui/state/transactions/hooks';
+import { usePrepareSendKASCallback } from '@/ui/state/transactions/hooks';
 import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
-import { sompiToAmount, useApproval, useWallet } from '@/ui/utils';
+import { amountToSompi, sompiToAmount, useApproval, useWallet } from '@/ui/utils';
 import { LoadingOutlined } from '@ant-design/icons';
 import { t } from 'i18next';
 
@@ -96,7 +88,7 @@ function SignTxDetails({ txInfo, type, rawTxInfo }: { txInfo: TxInfo; rawTxInfo?
   const feeAmount = useMemo(() => sompiToAmount(txInfo.decodedPsbt.fee), [txInfo.decodedPsbt]);
   // const feeAmount = useMemo(() => sompiToAmount(rawTxInfo?.fee), [txInfo.decodedPsbt]);
   const priorityFeeAmount = useMemo(() => {
-    const priorityFee = txInfo.decodedPsbt.feeRate * Number(feeAmount);
+    const priorityFee = Number(sompiToAmount(txInfo.decodedPsbt.feeRate * Number(amountToSompi(feeAmount))));
     return priorityFee;
   }, [txInfo.decodedPsbt]);
 

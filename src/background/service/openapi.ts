@@ -529,15 +529,20 @@ export class OpenApiService {
       //   feeRate: 0
       // },
       {
-        title: 'Avg',
+        title: 'None',
         desc: 'About 5 sec',
         feeRate: 0
+      },
+      {
+        title: 'Avg',
+        desc: 'About 5 sec',
+        feeRate: 10
+      },
+      {
+        title: 'Fast',
+        desc: 'About 5 sec',
+        feeRate: 20
       }
-      // {
-      //   title: 'Fast',
-      //   desc: 'About 10 minutes',
-      //   feeRate: 56
-      // }
     ];
 
     return Promise.resolve({ list: fee });

@@ -35,6 +35,7 @@ function Step0({
     <Column gap="lg">
       <Text text="Choose a wallet" preset="title-bold" textCenter mt="xl" />
       {RESTORE_WALLETS.map((item, index) => {
+        if (item.value == RestoreWalletType.TANGEM) return null;
         return (
           <Button
             // disabled={item.value == RestoreWalletType.CORE_GOLANG_CLI}
@@ -184,6 +185,8 @@ function Step1_Import({
       return [WORDS_24_ITEM];
     } else if (contextData.restoreWalletType === RestoreWalletType.CORE_GOLANG_CLI) {
       return [WORDS_24_ITEM];
+    } else if (contextData.restoreWalletType === RestoreWalletType.OKX) {
+      return [WORDS_12_ITEM];
     } else {
       return [WORDS_12_ITEM, WORDS_24_ITEM];
     }
@@ -615,13 +618,33 @@ function Step2({
         tools.showTip((e as any).message);
         groups = [];
       }
-      setScannedGroups(groups);
       if (groups.length == 0) {
         // tools.showTip('Unable to find any addresses with assets');
         tools.toastWarning('Unable to find any addresses with balance');
       } else if (groups.length > 0) {
-        tools.toastSuccess(`Found ${groups[0].address_arr.length} addresses with balance`);
+        // first time to scan vault address
+        if (scannedGroups.length == 0) {
+          tools.toastSuccess(`Found ${groups[0].address_arr.length} addresses with balance`);
+          // scan valult address again.
+        } else {
+          const scannedGroup = scannedGroups[0];
+          const scannedAddresses = scannedGroup.address_arr;
+          const group = groups[0];
+          const groupAddresses = group.address_arr;
+          let newAddrNum = 0;
+          for (let i = 0; i < groupAddresses.length; i++) {
+            if (!scannedAddresses.find((v) => v == groupAddresses[i])) {
+              newAddrNum++;
+            }
+          }
+          if (newAddrNum > 0) {
+            tools.toastSuccess(`Found ${newAddrNum} more addresses with balance`);
+          }else{
+            tools.toastWarning('No new addresses with balance found');
+          }
+        }
       }
+      setScannedGroups(groups);
     } catch (e) {
       setError((e as any).message);
     } finally {
@@ -631,7 +654,7 @@ function Step2({
   };
 
   useEffect(() => {
-    if(contextData.isRestore){
+    if (contextData.isRestore) {
       scanVaultAddress();
     }
   }, []);
@@ -754,7 +777,7 @@ function Step2({
           </Icon>
         </Row>
       )}
-      <Text text="Phrase (Optional)" preset="bold" mt="lg" />
+      <Text text="Passphrase (Optional)" preset="bold" mt="lg" />
 
       <Input
         placeholder={'Passphrase'}
@@ -775,7 +798,6 @@ function Step2({
           <LoadingOutlined />
         </Icon>
       )} */}
-
     </Column>
   );
 }

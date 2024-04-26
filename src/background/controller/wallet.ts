@@ -983,7 +983,7 @@ export class WalletController extends BaseController {
     try {
       const estimate = await generator.estimate();
       const sompiFee = Number(estimate.fees);
-      const resultJson = { to, amountSompi: moneySompi, feeRate: 0, fee: sompiFee };
+      const resultJson = { to, amountSompi: moneySompi, feeRate, fee: sompiFee };
       return JSON.stringify(resultJson);
     } catch (e) {
       throw new Error(e);
@@ -1023,7 +1023,7 @@ export class WalletController extends BaseController {
             // utxoEntries: entries,
             entries,
             outputs: [[destinationAddress.toString(), money * 0.5]],
-            priorityFee: BigInt(0),
+            priorityFee,
             changeAddress: destinationAddress.toString()
             // sigOpCount,
             // minimumSignatures,

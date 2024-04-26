@@ -10,9 +10,10 @@ import { Row } from '../Row';
 import { Text } from '../Text';
 
 enum FeeRateType {
+  NONE,
   // SLOW,
   AVG,
-  // FAST,
+  FAST,
   CUSTOM
 }
 
@@ -26,7 +27,7 @@ export function FeeRateBar({ onChange }: { onChange: (val: number) => void }) {
     });
   }, []);
 
-  const [feeOptionIndex, setFeeOptionIndex] = useState(FeeRateType.AVG);
+  const [feeOptionIndex, setFeeOptionIndex] = useState(FeeRateType.NONE);
   const [feeRateInputVal, setFeeRateInputVal] = useState('');
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export function FeeRateBar({ onChange }: { onChange: (val: number) => void }) {
               <Text text={v.title} textCenter style={{ color: selected ? colors.black : colors.white }} />
               {v.title !== 'Custom' && (
                 <Text
-                  text={`${v.feeRate} kas`}
+                  text={`${v.feeRate}`}
                   size="xxs"
                   textCenter
                   style={{ color: selected ? colors.black : colors.white }}

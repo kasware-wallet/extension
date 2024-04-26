@@ -879,10 +879,15 @@ class KeyringService extends EventEmitter {
     this.emit('unlock');
   };
 
-  publicKeyToAddress = (pubkey, addressType, networkType: NetworkType) => {
+  publicKeyToAddress = (pubkey: string, addressType: AddressType, networkType: NetworkType) => {
     const { createAddress } = this.kaspaWasm;
-    const addr = createAddress(pubkey, networkType).toString();
-    return addr;
+    if (addressType == AddressType.KASPA_TANGEM_44_111111) {
+      const addr = createAddress(pubkey, networkType,true).toString();
+      return addr;
+    } else {
+      const addr = createAddress(pubkey, networkType).toString();
+      return addr;
+    }
   };
 
   transfer_by_generate = async (sourcePrivateKey, destinationAddress, amount: number) => {

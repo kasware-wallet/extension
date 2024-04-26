@@ -75,11 +75,12 @@ export default function TxCreateScreen() {
 
   const dustAmount = useMemo(() => sompiToAmount(COIN_DUST), [COIN_DUST]);
 
-  const [feeRate, setFeeRate] = useState(5);
+  const [feeRate, setFeeRate] = useState(0);
 
   const [rawTxInfo, setRawTxInfo] = useState<RawTxInfo>();
   const [txFee, setTxFee] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [feeDrawerVisible, setFeeDrawerVisible] = useState(false);
 
   const [enableRBF, setEnableRBF] = useState(false);
   useEffect(() => {
@@ -103,9 +104,9 @@ export default function TxCreateScreen() {
     }
 
     // if (feeRate <= 0) {
-    if (feeRate < 0) {
-      return;
-    }
+    // if (feeRate < 0) {
+    //   return;
+    // }
 
     if (toInfo.address == kaspaTx.toAddress && toSompi == kaspaTx.toSompi && feeRate == kaspaTx.feeRate) {
       //Prevent repeated triggering caused by setAmount
@@ -254,7 +255,7 @@ export default function TxCreateScreen() {
           />
         </Column>
 
-        <Column mt="lg">
+        {/* <Column mt="lg">
           <Text text={`${t('Priority Fee Rate')} ( ${t('Optional')} )`} color="textDim" />
 
           <FeeRateBar
@@ -262,17 +263,23 @@ export default function TxCreateScreen() {
               setFeeRate(val);
             }}
           />
-        </Column>
+        </Column> */}
         {error && <Text text={error} color="error" />}
-        <Row justifyCenter mt="xl">
-          {txFee > 0 && (
+        <Column
+          justifyCenter
+          mt="xl"
+          onClick={() => {
+            setFeeDrawerVisible(true);
+          }}>
+          {txFee > 0 && <Text preset="link" text={`${t('TX Fee:')} ${txFee} KAS`} textCenter />}
+          {feeRate > 0 && (
             <Text
-              text={`${t('TX Fee:')} ${txFee} KAS`}
-              color="white"
-              // style={{ textDecoration: 'underline' }}
+              preset="link"
+              text={`${t('Priority Fee:')} ${sompiToAmount(feeRate * Number(amountToSompi(txFee.toString())))} KAS`}
+              textCenter
             />
           )}
-        </Row>
+        </Column>
         <Button
           disabled={disabled}
           preset="primary"
@@ -296,6 +303,34 @@ export default function TxCreateScreen() {
             // console.log(key);
           }}
         />
+      </Drawer>
+      <Drawer
+        placement={'bottom'}
+        closable={false}
+        onClose={() => setFeeDrawerVisible(false)}
+        open={feeDrawerVisible}
+        key={'fee-drawer'}>
+        <Column mt="lg">
+          <Text text={`${t('Priority Fee Rate')} ( ${t('Optional')} )`} color="textDim" />
+          <FeeRateBar
+            onChange={(val) => {
+              console.log('val', val);
+              setFeeRate(val);
+            }}
+          />
+          <Text
+            mt="xxl"
+            color="white"
+            text={`${t('Priority Fee:')} ${sompiToAmount(feeRate * Number(amountToSompi(txFee.toString())))} KAS`}
+            textCenter
+          />
+          <Row mt="xxl" full></Row>
+          <Button
+            disabled={disabled}
+            preset="primary"
+            text={t('Close')}
+            onClick={() => setFeeDrawerVisible(false)}></Button>
+        </Column>
       </Drawer>
     </Layout>
   );

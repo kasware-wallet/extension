@@ -139,6 +139,14 @@ export const ADDRESS_TYPES: {
     displayIndex: 0,
     isKaswareLegacy: false
   },
+  {
+    value: AddressType.KASPA_TANGEM_44_111111,
+    label: 'Tangem',
+    name: 'Tangem',
+    hdPath: "m/44'/111111'/0'",
+    displayIndex: 0,
+    isKaswareLegacy: false
+  },
 ];
 
 export const OW_HD_PATH = "m/86'/0'/0'";
@@ -175,9 +183,24 @@ export const RESTORE_WALLETS: { value: RestoreWalletType; name: string; addressT
     addressTypes: [AddressType.KASPA_44_111111]
   },
   {
+    value: RestoreWalletType.OKX,
+    name: 'OKX Wallet',
+    addressTypes: [AddressType.KASPA_44_111111]
+  },
+  {
+    value: RestoreWalletType.LEDGER,
+    name: 'Ledger Wallet',
+    addressTypes: [AddressType.KASPA_44_111111]
+  },
+  {
     value: RestoreWalletType.ONEKEY,
     name: 'OneKey Wallet',
     addressTypes: [AddressType.KASPA_ONEKEY_44_111111]
+  },
+  {
+    value: RestoreWalletType.TANGEM,
+    name: 'Tangem Wallet',
+    addressTypes: [AddressType.KASPA_TANGEM_44_111111]
   }
 ];
 
@@ -262,7 +285,7 @@ export const TELEGRAM_URL = 'https://t.me/+eBTwLzz_BcwwMmE1';
 
 export const CHANNEL = process.env.channel!;
 // export const VERSION = process.env.release!;
-export const VERSION = '0.4.9';
+export const VERSION = '0.5.0';
 export const MANIFEST_VERSION = process.env.manifest!;
 
 export enum AddressFlagType {
