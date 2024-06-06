@@ -17,7 +17,7 @@ enum FeeRateType {
   CUSTOM
 }
 
-export function FeeRateBar({ onChange }: { onChange: (val: number) => void }) {
+export function FeeRateBar({ feeRate, onChange }: { feeRate: number | null; onChange: (val: number) => void }) {
   const wallet = useWallet();
   const [feeOptions, setFeeOptions] = useState<{ title: string; desc?: string; feeRate: number }[]>([]);
 
@@ -29,6 +29,26 @@ export function FeeRateBar({ onChange }: { onChange: (val: number) => void }) {
 
   const [feeOptionIndex, setFeeOptionIndex] = useState(FeeRateType.NONE);
   const [feeRateInputVal, setFeeRateInputVal] = useState('');
+
+  useEffect(() => {
+    switch (feeRate) {
+      case null:
+        if (feeOptionIndex !== FeeRateType.NONE) setFeeOptionIndex(FeeRateType.NONE);
+        break;
+      case 0:
+        if (feeOptionIndex !== FeeRateType.NONE) setFeeOptionIndex(FeeRateType.NONE);
+        break;
+      case 10:
+        if (feeOptionIndex !== FeeRateType.AVG) setFeeOptionIndex(FeeRateType.AVG);
+        break;
+      case 20:
+        if (feeOptionIndex !== FeeRateType.FAST) setFeeOptionIndex(FeeRateType.FAST);
+        break;
+      default:
+        if (feeOptionIndex !== FeeRateType.CUSTOM) setFeeOptionIndex(FeeRateType.CUSTOM);
+        setFeeRateInputVal(feeRate.toString());
+    }
+  }, []);
 
   useEffect(() => {
     const defaultOption = feeOptions[1];
@@ -58,7 +78,7 @@ export function FeeRateBar({ onChange }: { onChange: (val: number) => void }) {
   };
 
   return (
-    <Column>
+    <Column mt='lg'>
       <Row justifyCenter>
         {feeOptions.map((v, index) => {
           const selected = index === feeOptionIndex;
@@ -107,19 +127,21 @@ export function FeeRateBar({ onChange }: { onChange: (val: number) => void }) {
         })}
       </Row>
       {feeOptionIndex === FeeRateType.CUSTOM && (
-        <Input
-          preset="amount"
-          placeholder={'multiple of network fee'}
-          value={feeRateInputVal}
-          onAmountInputChange={(amount) => {
-            adjustFeeRateInput(amount);
-          }}
-          // onBlur={() => {
-          //   const val = parseInt(feeRateInputVal) + '';
-          //   setFeeRateInputVal(val);
-          // }}
-          autoFocus={true}
-        />
+        <Column mt='lg'>
+          <Input
+            preset="amount"
+            placeholder={'multiple of network fee'}
+            value={feeRateInputVal}
+            onAmountInputChange={(amount) => {
+              adjustFeeRateInput(amount);
+            }}
+            // onBlur={() => {
+            //   const val = parseInt(feeRateInputVal) + '';
+            //   setFeeRateInputVal(val);
+            // }}
+            autoFocus={true}
+          />
+        </Column>
       )}
     </Column>
   );

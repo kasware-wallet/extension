@@ -464,6 +464,7 @@ export class WalletController extends BaseController {
           changeAddress: currentAccount.address
         });
         let pending;
+        const txids:any[] = []
         while ((pending = await generator.next())) {
           const toSignInputs: ToSignInput[] = [];
           accounts.forEach((account) => {
@@ -474,8 +475,10 @@ export class WalletController extends BaseController {
           const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
           // submit
           const txid = await openapiService.submitTransaction(preSubmitPending);
-          return txid;
+          txids.push(txid)
+          // return txid;
         }
+        return txids[0];
       } catch (e) {
         throw new Error(e);
       }
@@ -1029,14 +1032,6 @@ export class WalletController extends BaseController {
             // minimumSignatures,
             // payload,
           });
-          const pending = await generator.next();
-          const publicKey = account.pubkey;
-          const index = account.index as number;
-          const toSignInputs: ToSignInput[] = [{ index, publicKey }];
-          const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
-          // submit
-          const txid = await openapiService.submitTransaction(preSubmitPending);
-          return txid;
         } else {
           generator = new Generator({
             // utxoEntries: entries,
@@ -1048,15 +1043,19 @@ export class WalletController extends BaseController {
             // minimumSignatures,
             // payload,
           });
-          const pending = await generator.next();
+        }
+        let pending
+        const txids:any[] = []
+        while ((pending = await generator.next())) {
           const publicKey = account.pubkey;
           const index = account.index as number;
           const toSignInputs: ToSignInput[] = [{ index, publicKey }];
           const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
           // submit
           const txid = await openapiService.submitTransaction(preSubmitPending);
-          return txid;
+          txids.push(txid)
         }
+        return txids[0];
       } catch (e) {
         throw new Error(e);
       }

@@ -191,15 +191,15 @@ export function handleTransactions(data, address): ITransactionInfo[] {
       }
     });
     if (inputAmountSelf == 0) {
-      mode = 'receive';
+      mode = 'Receive';
       amount = sompiToAmount(outputAmountSelf).replace(/\.0+$/, '');
       usdValue = amount;
     } else if (inputAmountSelf - outputAmountSelf >= 0) {
-      mode = 'send';
+      mode = 'Send';
       amount = sompiToAmount(inputAmountSelf - outputAmountSelf).replace(/\.0+$/, '');
       usdValue = amount;
     } else if (inputAmountSelf - outputAmountSelf < 0) {
-      mode = 'receive';
+      mode = 'Receive';
       amount = sompiToAmount(outputAmountSelf - inputAmountSelf).replace(/\.0+$/, '');
       usdValue = amount;
     }
@@ -245,14 +245,14 @@ export function handleTransactionsAddresses(data, address): IRecentTransactoinAd
       }
     });
     if (inputAmountSelf == 0) {
-      mode = 'receive';
+      mode = 'Receive';
       item.inputs.map((e) => {
         if (e.previous_outpoint_address != address) {
           relatedAddresses.push(e.previous_outpoint_address);
         }
       });
     } else {
-      mode = 'send';
+      mode = 'Send';
       item.outputs.map((e) => {
         if (e.script_public_key_address != address) {
           relatedAddresses.push(e.script_public_key_address);

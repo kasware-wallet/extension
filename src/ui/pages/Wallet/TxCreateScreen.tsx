@@ -6,14 +6,18 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ContactBookItem } from '@/background/service/contactBook';
 import { COIN_DUST } from '@/shared/constant';
-import { IRecentTransactoinAddresses, RawTxInfo } from '@/shared/types';
+import { IRecentTransactoinAddresses, IResultPsbtHex, NetworkType, RawTxInfo } from '@/shared/types';
 import { Button, Card, Column, Content, Header, Icon, Input, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { Empty } from '@/ui/components/Empty';
 import { FeeRateBar } from '@/ui/components/FeeRateBar';
+import { KasAmountInput } from '@/ui/components/Input';
 import { useNavigate } from '@/ui/pages/MainRoute';
-import { useAccountBalance, useCurrentAccount } from '@/ui/state/accounts/hooks';
+import { useAccountBalance, useCurrentAccount, useKasPrice } from '@/ui/state/accounts/hooks';
+import { accountActions } from '@/ui/state/accounts/reducer';
+import { useAppDispatch } from '@/ui/state/hooks';
 import { useKeyrings } from '@/ui/state/keyrings/hooks';
+import { useNetworkType } from '@/ui/state/settings/hooks';
 import {
   useFetchUtxosCallback,
   useKaspaTx,
@@ -28,10 +32,14 @@ import {
   isValidAddress,
   shortAddress,
   sompiToAmount,
+  useLocationState,
   useWallet
 } from '@/ui/utils';
 import { Drawer, Tabs } from 'antd';
 import { useTranslation } from 'react-i18next';
+interface LocationState {
+  rawTxInfo: RawTxInfo;
+}
 
 export default function TxCreateScreen() {
   const { t } = useTranslation();
@@ -40,6 +48,7 @@ export default function TxCreateScreen() {
   const navigate = useNavigate();
   const kaspaTx = useKaspaTx();
   const [inputAmount, setInputAmount] = useState(kaspaTx.toSompi > 0 ? sompiToAmount(kaspaTx.toSompi) : '');
+  const [inputAmountUsd, setInputAmountUsd] = useState('');
   const [disabled, setDisabled] = useState(true);
   const [toInfo, setToInfo] = useState<{
     address: string;
@@ -48,8 +57,9 @@ export default function TxCreateScreen() {
     address: kaspaTx.toAddress,
     domain: kaspaTx.toDomain
   });
-
+  const networkType = useNetworkType();
   const [error, setError] = useState('');
+  const kasPrice = useKasPrice();
 
   const [autoAdjust, setAutoAdjust] = useState(false);
   const fetchUtxos = useFetchUtxosCallback();
@@ -72,6 +82,7 @@ export default function TxCreateScreen() {
     if (!inputAmount) return 0;
     return amountToSompi(inputAmount);
   }, [inputAmount]);
+  const [inputAmountType, setInputAmountType] = useState<'kas' | 'usd'>('kas');
 
   const dustAmount = useMemo(() => sompiToAmount(COIN_DUST), [COIN_DUST]);
 
@@ -81,6 +92,7 @@ export default function TxCreateScreen() {
   const [txFee, setTxFee] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [feeDrawerVisible, setFeeDrawerVisible] = useState(false);
+  const dispatch = useAppDispatch();
 
   const [enableRBF, setEnableRBF] = useState(false);
   useEffect(() => {
@@ -130,10 +142,34 @@ export default function TxCreateScreen() {
       });
   }, [toInfo, inputAmount, feeRate, enableRBF]);
 
+  useEffect(() => {
+    if (networkType !== NetworkType.Mainnet) return;
+    fetch('https://api.kaspa.org/info/price')
+      .then((response) => response.json())
+      .then((data) => {
+        const price = Number(data.price);
+        // 0.178
+        if (price && price > 0) dispatch(accountActions.setKasPrice(price));
+      });
+  }, []);
+
   const showSafeBalance = useMemo(
     () => !new BigNumber(accountBalance.amount).eq(new BigNumber(safeBalance)),
     [accountBalance.amount, safeBalance]
   );
+  const dataFromForward = useLocationState<LocationState>();
+  useEffect(() => {
+    if (dataFromForward && dataFromForward.rawTxInfo) {
+      const rawtxFromForward = dataFromForward.rawTxInfo.rawtx;
+      const result: IResultPsbtHex = JSON.parse(rawtxFromForward);
+      const toAddress = result.to;
+      const inputAmount = sompiToAmount(result.amountSompi);
+      setInputAmount(inputAmount);
+      setInputAmountUsd((Number(inputAmount) * Number(kasPrice)).toLocaleString());
+      setFeeRate(result.feeRate);
+      setToInfo({ address: toAddress, domain: '' });
+    }
+  }, [dataFromForward]);
 
   const handleAddrInput = (address: string) => {
     setToInfo({ address, domain: '' });
@@ -171,7 +207,8 @@ export default function TxCreateScreen() {
     <Layout>
       <Header
         onBack={() => {
-          window.history.go(-1);
+          // window.history.go(-1);
+          navigate('MainScreen');
         }}
         title={`${t('Send')} KAS`}
       />
@@ -213,6 +250,7 @@ export default function TxCreateScreen() {
                 onClick={() => {
                   setAutoAdjust(true);
                   setInputAmount(accountBalance.amount);
+                  setInputAmountUsd((Number(accountBalance.amount) * Number(kasPrice)).toLocaleString());
                 }}>
                 <Text
                   text="MAX"
@@ -235,23 +273,38 @@ export default function TxCreateScreen() {
                 onClick={() => {
                   setAutoAdjust(true);
                   setInputAmount(safeBalance.toString());
+                  setInputAmountUsd((Number(safeBalance) * Number(kasPrice)).toLocaleString());
                 }}>
                 <Text text={'MAX'} color={autoAdjust ? 'yellow' : 'textDim'} size="sm" />
                 <Text text={`${safeBalance} KAS`} preset="bold" size="sm" />
               </Row>
             </Row>
           )}
-          <Input
+          <KasAmountInput
             preset="amount"
+            inputAmountType={inputAmountType}
             placeholder={t('Amount')}
             // defaultValue={inputAmount}
-            value={inputAmount}
+            value={inputAmountType == 'kas' ? inputAmount : inputAmountUsd}
             onAmountInputChange={(amount) => {
               if (autoAdjust == true) {
                 setAutoAdjust(false);
               }
-              setInputAmount(amount);
+              if (inputAmountType == 'usd' && kasPrice > 0) {
+                setInputAmountUsd(amount);
+                setInputAmount((Number(amount) / kasPrice).toLocaleString());
+              } else {
+                setInputAmount(amount);
+                setInputAmountUsd((Number(amount) * kasPrice).toLocaleString());
+              }
             }}
+          />
+          <SubInputAmount
+            inputAmountType={inputAmountType}
+            setInputAmountType={setInputAmountType}
+            inputAmountUsd={inputAmountUsd}
+            kasPrice={kasPrice}
+            inputAmount={inputAmount}
           />
         </Column>
 
@@ -313,8 +366,8 @@ export default function TxCreateScreen() {
         <Column mt="lg">
           <Text text={`${t('Priority Fee Rate')} ( ${t('Optional')} )`} color="textDim" />
           <FeeRateBar
+            feeRate={feeRate}
             onChange={(val) => {
-              console.log('val', val);
               setFeeRate(val);
             }}
           />
@@ -334,6 +387,29 @@ export default function TxCreateScreen() {
       </Drawer>
     </Layout>
   );
+}
+
+function SubInputAmount({ inputAmountType, setInputAmountType, inputAmountUsd, kasPrice, inputAmount }) {
+  const [hover, setHover] = useState(false);
+  if (kasPrice > 0 && Number(inputAmount) > 0) {
+    return (
+      <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+        <Row
+          itemsCenter
+          onClick={() => {
+            inputAmountType == 'kas' ? setInputAmountType('usd') : setInputAmountType('kas');
+          }}>
+          <Icon icon="send" color={hover ? 'text' : 'textDim'} size={12} />
+          {inputAmountType == 'kas' && kasPrice > 0 && (
+            <Text text={`$${Number(inputAmountUsd)}`} color={hover ? 'text' : 'textDim'} />
+          )}
+          {inputAmountType == 'usd' && kasPrice > 0 && <Text text={`${Number(inputAmount)} KAS`} color={hover ? 'text' : 'textDim'} />}
+        </Row>
+      </div>
+    );
+  } else {
+    return <></>;
+  }
 }
 
 function RecentTab({ handleAddrInput }) {

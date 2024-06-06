@@ -140,8 +140,9 @@ export default function WalletTabScreen() {
     fetch('https://api.kaspa.org/info/price')
       .then((response) => response.json())
       .then((data) => {
-        const price: number = data.price;
+        const price = Number(data.price);
         // 0.178
+        if(price && price > 0) dispatch(accountActions.setKasPrice(price));
         if (accountBalance.amount === '0') {
           setUSDValue('0');
         } else {
@@ -199,6 +200,18 @@ export default function WalletTabScreen() {
       <Content>
         <Column gap="xl">
           {currentKeyring.type === KEYRING_TYPE.HdKeyring && <AccountSelect />}
+          {/* <Row itemsCenter justifyCenter mt='sm'> */}
+          <AddressBar />
+          {/* <Row
+              style={{ marginLeft: 8 }}
+              itemsCenter
+              onClick={() => {
+                window.open(`${blockstreamUrl}/address/${currentAccount.address}`);
+              }}>
+              <Text text={'View History'} size="xs" />
+              <Icon icon="link" size={fontSizes.xs} />
+            </Row> */}
+          {/* </Row> */}
 
           {isTestNetwork && <Text text="Kaspa Testnet activated." color="danger" textCenter />}
           {rpcStatus == false && <Text text="Connecting network..." color="danger" textCenter />}
@@ -231,18 +244,6 @@ export default function WalletTabScreen() {
             </div>
           </Tooltip>
 
-          <Row itemsCenter justifyCenter>
-            <AddressBar />
-            {/* <Row
-              style={{ marginLeft: 8 }}
-              itemsCenter
-              onClick={() => {
-                window.open(`${blockstreamUrl}/address/${currentAccount.address}`);
-              }}>
-              <Text text={'View History'} size="xs" />
-              <Icon icon="link" size={fontSizes.xs} />
-            </Row> */}
-          </Row>
 
           <Row justifyBetween>
             <Button
@@ -335,7 +336,7 @@ function ActivityTab({ transactionInfos }: { transactionInfos: ITransactionInfo[
                 </Row>
                 <Row justifyBetween>
                   <Row>
-                    <Text text={e.mode == 'receive' ? '+' : '-'} color={e.mode == 'receive' ? 'green' : 'red'} />
+                    <Text text={e.mode == 'Receive' ? '+' : '-'} color={e.mode == 'Receive' ? 'green' : 'red'} />
                     <Text text={`${e.amount} kas`} />
                   </Row>
                   <Text text={new Date(e.block_time).toLocaleString()} preset="sub" />

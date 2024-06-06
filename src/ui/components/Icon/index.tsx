@@ -19,6 +19,7 @@ export const svgRegistry = {
   github: './images/icons/github.svg',
 
   kas: './images/icons/kaspa.svg',
+  'kaspa-white': './images/icons/kaspa-black.svg',
   qrcode: './images/icons/qrcode.svg',
 
   user: '/images/icons/user-solid.svg',

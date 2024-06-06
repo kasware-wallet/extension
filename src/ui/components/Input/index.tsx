@@ -34,6 +34,7 @@ export interface InputProps {
   disabled?: boolean;
   disableDecimal?: boolean;
   id?: string;
+  inputAmountType?: 'kas' | 'usd';
 }
 
 type Presets = keyof typeof $inputPresets;
@@ -124,6 +125,58 @@ function AmountInput(props: InputProps) {
         disabled={disabled}
         {...rest}
       />
+    </div>
+  );
+}
+
+export function KasAmountInput(props: InputProps) {
+  const {
+    inputAmountType,
+    placeholder,
+    onAmountInputChange,
+    disabled,
+    style: $inputStyleOverride,
+    disableDecimal,
+    ...rest
+  } = props;
+  const $style = Object.assign({}, $baseInputStyle, $inputStyleOverride, disabled ? { color: colors.textDim } : {});
+
+  if (!onAmountInputChange) {
+    return <div />;
+  }
+  const [inputValue, setInputValue] = useState('');
+  const [validAmount, setValidAmount] = useState('');
+  useEffect(() => {
+    onAmountInputChange(validAmount);
+  }, [validAmount]);
+
+  const handleInputAmount = (e) => {
+    const value = e.target.value;
+    if (disableDecimal) {
+      if (/^[1-9]\d*$/.test(value) || value === '') {
+        setValidAmount(value);
+        setInputValue(value);
+      }
+    } else {
+      if (/^\d*\.?\d{0,8}$/.test(value) || value === '') {
+        setValidAmount(value);
+        setInputValue(value);
+      }
+    }
+  };
+  return (
+    <div style={$baseContainerStyle}>
+      {inputAmountType && inputAmountType == 'usd' && Number(inputValue) > 0 && <Text text="$" color="textDim" style={{ marginRight: spacing.tiny }} />}
+      <input
+        placeholder={placeholder || 'Amount'}
+        type={'text'}
+        value={inputValue}
+        onChange={handleInputAmount}
+        style={$style}
+        disabled={disabled}
+        {...rest}
+      />
+      {inputAmountType && inputAmountType == 'kas' && Number(inputValue) > 0 && <Text text="KAS" color="textDim" />}
     </div>
   );
 }

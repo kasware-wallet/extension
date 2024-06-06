@@ -3,6 +3,7 @@
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { shortAddress } from '@/ui/utils';
+import { RightOutlined } from '@ant-design/icons';
 
 import { Icon } from '../Icon';
 import { Row } from '../Row';
@@ -16,6 +17,7 @@ const AccountSelect = () => {
   return (
     <Row
       justifyBetween
+      itemsCenter
       px="md"
       py="md"
       bg="card"
@@ -23,9 +25,10 @@ const AccountSelect = () => {
       onClick={(e) => {
         navigate('SwitchAccountScreen');
       }}>
-      <Icon icon="user" />
+      <Icon icon="kaspa-white" size={20}/>
       <Text text={shortAddress(currentAccount?.alianName, 8)} />
-      <Icon icon="down" />
+      {/* <Icon icon="down" /> */}
+      <RightOutlined />
     </Row>
   );
 };

@@ -19,13 +19,15 @@ export default function TxConfirmScreen() {
       header={
         <Header
           onBack={() => {
-            window.history.go(-1);
+            // window.history.go(-1);
+            navigate('TxCreateScreen', { rawTxInfo });
           }}
         />
       }
       params={{ data: { psbtHex: rawTxInfo.psbtHex, type: TxType.SEND_KASPA, rawTxInfo } }}
       handleCancel={() => {
-        window.history.go(-1);
+        // window.history.go(-1);
+        navigate('TxCreateScreen', { rawTxInfo });
       }}
       handleConfirm={() => {
         pushKaspaTx(rawTxInfo.rawtx).then(({ success, txid, error }) => {

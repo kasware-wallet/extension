@@ -23,6 +23,11 @@ export function useBlueScore() {
   return accountsState.blueScore;
 }
 
+export function useKasPrice() {
+  const accountsState = useAccountsState();
+  return accountsState.kasPrice;
+}
+
 export function useAccounts() {
   const accountsState = useAccountsState();
   return accountsState.accounts;

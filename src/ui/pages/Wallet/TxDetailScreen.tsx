@@ -46,10 +46,14 @@ export default function TxDetailScreen() {
                 <Row justifyBetween key={key}>
                   <Text text="Transaction ID" />
                   <Row
+                    justifyBetween
+                    itemsCenter
                     onClick={() => {
                       window.open(`${blockstreamUrl}/transaction/${value}`);
                     }}>
-                    <Text text={shortAddress(value)} preset="sub" />
+                    <div className="text-select">
+                      <Text text={shortAddress(value)} preset="sub" />
+                    </div>
                     <Icon icon="link" size={fontSizes.xs} />
                   </Row>
                 </Row>
@@ -161,13 +165,23 @@ function Inputs({ inputs }: { inputs: Array<any> }) {
     });
     return data;
   }, []);
+  const blockstreamUrl = useBlockstreamUrl();
   return (
     <div>
       <div>Inputs</div>
       {senders.map((sender, index: number) => (
         <Column key={index}>
           <Row justifyBetween>
-            <Text text={shortAddress(sender.address)} />
+            <Row
+              itemsCenter
+              onClick={() => {
+                window.open(`${blockstreamUrl}/address/${sender.address}`);
+              }}>
+              <div className="text-select">
+                <Text text={shortAddress(sender.address)} />
+              </div>
+              <Icon icon="link" size={fontSizes.xs} />
+            </Row>
             <Row>
               <Text text={'-'} color={'red'} />
               <Text text={`${sender.amount} kas`} preset="sub" />
@@ -192,13 +206,23 @@ function Outputs({ outputs }: { outputs: Array<any> }) {
     });
     return data;
   }, []);
+  const blockstreamUrl = useBlockstreamUrl();
   return (
     <div>
       <div>Outputs</div>
       {recipients.map((sender, index: number) => (
         <Column key={index}>
           <Row justifyBetween>
-            <Text text={shortAddress(sender.address)} />
+            <Row
+              itemsCenter
+              onClick={() => {
+                window.open(`${blockstreamUrl}/address/${sender.address}`);
+              }}>
+              <div className="text-select">
+                <Text text={shortAddress(sender.address)} />
+              </div>
+              <Icon icon="link" size={fontSizes.xs} />
+            </Row>
             <Row>
               <Text text={'+'} color={'green'} />
               <Text text={`${sender.amount} kas`} preset="sub" />
