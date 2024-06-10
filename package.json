@@ -4,7 +4,9 @@
   "private": true,
   "homepage": "https://github.com/kasware-wallet/extension#readme",
   "bugs": {
-    "url": "https://github.com/kasware-wallet/extension/issues"
+    "url": "https://github.com/kasware-wallet/extension/issues",
+    "krc20testnet": "0",
+    "krc20mainnet": "0"
   },
   "repository": {
     "type": "git",
