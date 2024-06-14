@@ -16,6 +16,7 @@ export interface AccountsState {
       kas_amount: string;
       confirm_kas_amount: string;
       pending_kas_amount: string;
+      outgoing?: string;
       expired: boolean;
     };
   };
@@ -87,23 +88,26 @@ const slice = createSlice({
           kas_amount: string;
           confirm_kas_amount: string;
           pending_kas_amount: string;
+          outgoing?: string;
         };
       }
     ) {
       const {
-        payload: { address, amount, kas_amount, confirm_kas_amount, pending_kas_amount }
+        payload: { address, amount, kas_amount, confirm_kas_amount, pending_kas_amount, outgoing }
       } = action;
       state.balanceMap[address] = state.balanceMap[address] || {
         amount: '0',
         kas_amount: '0',
         confirm_kas_amount: '0',
         pending_kas_amount: '0',
+        outgoing: '0',
         expired: true
       };
       state.balanceMap[address].amount = amount;
       state.balanceMap[address].kas_amount = kas_amount;
       state.balanceMap[address].confirm_kas_amount = confirm_kas_amount;
       state.balanceMap[address].pending_kas_amount = pending_kas_amount;
+      state.balanceMap[address].outgoing = outgoing ? outgoing : '0';
       state.balanceMap[address].expired = false;
     },
     setBalances(
@@ -115,6 +119,7 @@ const slice = createSlice({
           kas_amount: string;
           confirm_kas_amount: string;
           pending_kas_amount: string;
+          outgoing?:string;
         }[];
       }
     ) {
@@ -127,12 +132,14 @@ const slice = createSlice({
           kas_amount: '0',
           confirm_kas_amount: '0',
           pending_kas_amount: '0',
+          outgoing: '0',
           expired: true
         };
         state.balanceMap[address].amount = amount;
         state.balanceMap[address].kas_amount = '0';
         state.balanceMap[address].confirm_kas_amount = '0';
         state.balanceMap[address].pending_kas_amount = '0';
+        state.balanceMap[address].outgoing = '0';
         state.balanceMap[address].expired = false;
       }
     },

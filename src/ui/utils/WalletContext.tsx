@@ -16,6 +16,7 @@ import {
   FeeSummary,
   IKaspaUTXOWithoutBigint,
   IScannedGroup,
+  ITransactionInfo,
   KaspaBalance,
   NetworkType,
   SignPsbtOptions,
@@ -141,6 +142,7 @@ export interface WalletController {
 
   getAppSummary(): Promise<AppSummary>;
   getKASUtxos(): Promise<IKaspaUTXOWithoutBigint[]>;
+  getTxActivities(): Promise<ITransactionInfo[]>;
 
   getNetworkType(): Promise<NetworkType>;
   getRpcLinks(): Promise<typeof NETWORK_TYPES>;
@@ -196,6 +198,7 @@ export interface WalletController {
 
   getVersionDetail(version: string): Promise<VersionDetail>;
   disconnectRpc(): void;
+  handleRpcConnect():Promise<void>;
   isValidKaspaAddr: (addr: string) => Promise<boolean>;
 }
 

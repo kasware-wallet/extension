@@ -1,5 +1,9 @@
 # KasWare Wallet Release Notes
 
+## v0.6.0
+
+- updated kaspa-wasm from v0.13.1 to RC v0.14.1
+
 ## v0.5.0
 
 - display fiat value of balance

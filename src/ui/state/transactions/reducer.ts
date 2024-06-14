@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IKaspaUTXOWithoutBigint } from '@/shared/types';
+import { IKaspaUTXOWithoutBigint, ITransactionInfo } from '@/shared/types';
 import { createSlice } from '@reduxjs/toolkit';
 
 import { updateVersion } from '../global/actions';
@@ -26,6 +26,8 @@ export interface TransactionsState {
   kaspaTx: KaspaTx;
   utxos: IKaspaUTXOWithoutBigint[];
   kasUtxos:string;
+  txActivities: ITransactionInfo[];
+  incomingTx: boolean
 }
 
 export const initialState: TransactionsState = {
@@ -46,6 +48,8 @@ export const initialState: TransactionsState = {
   },
   utxos: [],
   kasUtxos:'',
+  txActivities: [],
+  incomingTx:false
 };
 
 const slice = createSlice({
@@ -77,6 +81,12 @@ const slice = createSlice({
     },
     setUtxos(state, action: { payload: any[] }) {
       state.utxos = action.payload;
+    },
+    setTxActivities(state, action: { payload: any[] }) {
+      state.txActivities = action.payload;
+    },
+    setIncomingTx(state, action: { payload: boolean }) {
+      state.incomingTx = action.payload;
     },
     setKasUtxos(state, action: { payload: string }) {
       state.kasUtxos = action.payload;

@@ -38,7 +38,7 @@ import {
   ToSignInput,
   WalletKeyring
 } from '@/shared/types';
-import { getKaspaUTXOWithoutBigint, getKaspaUTXOs } from '@/shared/utils';
+import { getKaspaUTXOWithoutBigint } from '@/shared/utils';
 // import i18n from '@pages/background/service/i18n';
 import { DisplayedKeyring, Keyring } from '@/background/service/keyring';
 import { Address, Generator } from 'kaspa-wasm';
@@ -92,12 +92,9 @@ export class WalletController extends BaseController {
     }
   };
   disconnectRpc = async () => {
-    // if (this.openapi.rpc != null || undefined) {
-    //   this.openapi.rpc.disconnect();
-    // }
     await this.openapi.disconnectRpc();
   };
-  connectRpc = async () => {
+  handleRpcConnect = async () => {
     await this.openapi.handleRpcConnect('connectRPC');
   };
   subscribeUtxosChanged = async () => {
@@ -132,6 +129,7 @@ export class WalletController extends BaseController {
     await keyringService.setLocked();
     sessionService.broadcastEvent('accountsChanged', []);
     sessionService.broadcastEvent('lock');
+    this.disconnectRpc()
   };
 
   setPopupOpen = (isOpen: boolean) => {
@@ -454,17 +452,16 @@ export class WalletController extends BaseController {
     if (!entries.length) {
       throw new Error(`No UTXOs found for address ${addresses}`);
     } else {
-      entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
+      entries.sort((a, b) => a.amount > b.amount || -(a.amount < b.amount));
       try {
+        const networkId = openapiService.getNetworkId();
         const generator = new Generator({
-          // utxoEntries: entries,
           entries,
-          // outputs: [[destinationAddress.toString(), money]],
           // priorityFee,
-          changeAddress: currentAccount.address
+          changeAddress: currentAccount.address,
+          networkId
         });
         let pending;
-        const txids:any[] = []
         while ((pending = await generator.next())) {
           const toSignInputs: ToSignInput[] = [];
           accounts.forEach((account) => {
@@ -475,10 +472,8 @@ export class WalletController extends BaseController {
           const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
           // submit
           const txid = await openapiService.submitTransaction(preSubmitPending);
-          txids.push(txid)
-          // return txid;
+          return txid;
         }
-        return txids[0];
       } catch (e) {
         throw new Error(e);
       }
@@ -855,15 +850,15 @@ export class WalletController extends BaseController {
 
     if (networkType === NetworkType.Mainnet) {
       this.openapi.setHost(OPENAPI_URL_MAINNET);
-      this.openapi.setNetworkId(NetworkType.Mainnet);
+      this.openapi.setNetworkId('mainnet');
       this.openapi.setRpcHost(rpcLinks[0].url);
     } else if (networkType === NetworkType.Testnet) {
       this.openapi.setHost(OPENAPI_URL_TESTNET);
-      this.openapi.setNetworkId(NetworkType.Testnet);
+      this.openapi.setNetworkId('testnet-11');
       this.openapi.setRpcHost(rpcLinks[1].url);
     } else if (networkType === NetworkType.Devnet) {
       this.openapi.setHost(OPENAPI_URL_DEVNET);
-      this.openapi.setNetworkId(NetworkType.Devnet);
+      this.openapi.setNetworkId('devnet');
       this.openapi.setRpcHost(rpcLinks[2].url);
     }
     const network = this.getNetworkName();
@@ -899,6 +894,13 @@ export class WalletController extends BaseController {
     const kasUtxos = getKaspaUTXOWithoutBigint(utxos);
     return kasUtxos;
   };
+
+  getTxActivities = async () => {
+    const account = preferenceService.getCurrentAccount();
+    if (!account) throw new Error('no current account');
+    const trans = await openapiService.getTxActivities(account.address);
+    return trans;
+  };
   // 1. create and sign a transaction
   sendKAS = async ({
     to,
@@ -923,27 +925,23 @@ export class WalletController extends BaseController {
     if (kasUtxos.length == 0) {
       throw new Error('Insufficient balance.');
     }
-    const sourceAddress = account.address;
-    const destinationAddress = to;
-    const entries = getKaspaUTXOs(kasUtxos);
-    // entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
-    const moneySompi = amount;
-    // 1. create
-    const generator = new Generator({
-      // utxoEntries: entries,
-      entries,
-      outputs: [[destinationAddress, moneySompi]],
-      priorityFee: BigInt(0),
-      changeAddress: sourceAddress.toString()
-      // sigOpCount,
-      // minimumSignatures,
-      // payload,
-    });
-    const estimate = await generator.estimate();
-    // const finalId = estimate.finalTransactionId;
-    const sompiFee = Number(estimate.fees);
-    const resultJson = { to, amountSompi: amount, feeRate, fee: sompiFee };
-    return JSON.stringify(resultJson);
+    try {
+      const account = preferenceService.getCurrentAccount();
+      if (!account) throw new Error('no current account');
+      const sourceAddress = account.address;
+      const destinationAddress = to;
+      const changeAddress = sourceAddress;
+      const moneySompi = BigInt(amount);
+      // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+      const generator = await openapiService.createGenerator(sourceAddress, destinationAddress, changeAddress, moneySompi);
+      const summary = await generator.estimate();
+      const sompiFee = Number(summary.fees);
+      const resultJson = { to, amountSompi: amount, feeRate, fee: sompiFee };
+      return JSON.stringify(resultJson);
+
+    } catch (e: any) {
+      throw new Error(e);
+    }
   };
 
   sendAllKAS = async ({
@@ -972,23 +970,22 @@ export class WalletController extends BaseController {
     }
     const sourceAddress = account.address;
     const destinationAddress = to;
-    const entries = getKaspaUTXOs(kasUtxos);
-    const total = entries.reduce((agg, curr) => {
-      return curr.utxoEntry.amount + agg;
-    }, BigInt(0));
-    const moneySompi = Number(total);
-    const generator = new Generator({
-      entries,
-      // outputs: [[destinationAddress, moneySompi]],
-      // priorityFee: BigInt(0),
-      changeAddress: destinationAddress
-    });
+    const changeAddress = destinationAddress;
+    const total = await openapiService.getAddressBalanceOfKas(sourceAddress);
+    const moneySompi = BigInt(total * 0.5);
+    const generator = await openapiService.createGenerator(
+      sourceAddress,
+      destinationAddress,
+      changeAddress,
+      moneySompi
+    );
+
     try {
-      const estimate = await generator.estimate();
-      const sompiFee = Number(estimate.fees);
-      const resultJson = { to, amountSompi: moneySompi, feeRate, fee: sompiFee };
+      const summary = await generator.estimate();
+      const sompiFee = Number(summary.fees);
+      const resultJson = { to, amountSompi: Number(total) - sompiFee * feeRate, feeRate, fee: sompiFee };
       return JSON.stringify(resultJson);
-    } catch (e) {
+    } catch (e: any) {
       throw new Error(e);
     }
   };
@@ -1009,7 +1006,7 @@ export class WalletController extends BaseController {
     if (!entries.length) {
       throw new Error(`No UTXOs found for address ${sourceAddress}`);
     } else {
-      entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
+      entries.sort((a, b) => a.amount > b.amount || -(a.amount < b.amount));
       // const sigOpCount = 10;
       // const minimumSignatures = 1;
       // const payload = 'test';
@@ -1018,35 +1015,37 @@ export class WalletController extends BaseController {
       // 1. create
       try {
         const total = entries.reduce((agg, curr) => {
-          return curr.utxoEntry.amount + agg;
+          return curr.amount + agg;
         }, BigInt(0));
         let generator;
         if (Number(total) == money) {
-          generator = new Generator({
-            // utxoEntries: entries,
-            entries,
-            outputs: [[destinationAddress.toString(), money * 0.5]],
-            priorityFee,
-            changeAddress: destinationAddress.toString()
-            // sigOpCount,
-            // minimumSignatures,
-            // payload,
-          });
+          const moneySompi = BigInt(money * 0.5);
+          const changeAddress = destinationAddress.toString();
+          generator = await openapiService.createGenerator(
+            sourceAddress,
+            destinationAddress,
+            changeAddress,
+            moneySompi,
+            priorityFee
+          );
         } else {
-          generator = new Generator({
-            // utxoEntries: entries,
-            entries,
-            outputs: [[destinationAddress.toString(), money]],
-            priorityFee,
-            changeAddress: sourceAddress.toString()
-            // sigOpCount,
-            // minimumSignatures,
-            // payload,
-          });
+          const changeAddress = sourceAddress;
+          const moneySompi = BigInt(money);
+          generator = await openapiService.createGenerator(
+            sourceAddress,
+            destinationAddress,
+            changeAddress,
+            moneySompi,
+            priorityFee
+          );
+
         }
+
         let pending
         const txids:any[] = []
         while ((pending = await generator.next())) {
+          // await pending.sign([privateKey]);
+          // const txid = await pending.submit(rpc);
           const publicKey = account.pubkey;
           const index = account.index as number;
           const toSignInputs: ToSignInput[] = [{ index, publicKey }];
@@ -1055,11 +1054,21 @@ export class WalletController extends BaseController {
           const txid = await openapiService.submitTransaction(preSubmitPending);
           txids.push(txid)
         }
+        // const publicKey = account.pubkey;
+        // const index = account.index as number;
+        // const toSignInputs: ToSignInput[] = [{ index, publicKey }];
+        // const preSubmitPending = await keyringService.signTransaction(_keyring, pending, toSignInputs);
+        // // submit
+        // const txid = await openapiService.submitTransaction(preSubmitPending);
         return txids[0];
+
+
+
       } catch (e) {
         throw new Error(e);
       }
     }
+    // }
   };
 
   getAccounts = async () => {
@@ -1106,7 +1115,7 @@ export class WalletController extends BaseController {
       accounts,
       alianName,
       hdPath,
-      balanceKas:0
+      balanceKas: 0
     };
     return keyring;
   };

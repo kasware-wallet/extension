@@ -49,7 +49,7 @@ export interface IScannedGroup {
   address_arr: string[];
   sompi_arr: number[];
   dtype_arr: number[];
-  index_arr: number[]
+  index_arr: number[];
   // Number('1' + deriveType.toString() + keyringindex.toString());
 }
 
@@ -63,6 +63,7 @@ export interface Chain {
 export interface KaspaBalance {
   confirm_amount: string;
   pending_amount: string;
+  outgoing?: string;
   amount: string;
   confirm_kas_amount: string;
   pending_kas_amount: string;
@@ -120,14 +121,20 @@ export interface IKaspaUTXO {
 }
 
 export interface IKaspaUTXOWithoutBigint {
-  address: string;
-  outpoint: { index: number; transactionId: string };
-  utxoEntry: {
+  amount: string;
+  blockDaaScore: string;
+  entry: {
+    address?: string;
     amount: string;
     blockDaaScore: string;
     isCoinbase: boolean;
-    scriptPublicKey: string;
+    outpoint: { index: number; transactionId: string };
+    scriptPublicKey: {
+      script: string;
+      version: number;
+    };
   };
+  isCoinbase: boolean;
 }
 
 export interface UTXO {
@@ -292,16 +299,16 @@ export interface VersionDetail {
 
 export interface IOpts {
   activeIndexes: number[] | IActiveIndexes;
-  activeChangeIndexes?:number[] | IActiveIndexes;
+  activeChangeIndexes?: number[] | IActiveIndexes;
   hdPath: string;
   mnemonic: string;
   passphrase: string;
-  addressType:AddressType
+  addressType: AddressType;
 }
 
 export interface IActiveIndexes {
-  receiveIndexes: number[]
-  changeIndexes:number[]
+  receiveIndexes: number[];
+  changeIndexes: number[];
 }
 
 export interface ITransactionInfo {
@@ -312,7 +319,7 @@ export interface ITransactionInfo {
   block_time: number;
   transaction_id: string;
   relatedAddresses?: string[];
-  txDetail:any
+  txDetail: any;
 }
 
 export interface IRecentTransactoinAddresses {

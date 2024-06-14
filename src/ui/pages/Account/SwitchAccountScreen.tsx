@@ -215,6 +215,7 @@ export default function SwitchAccountScreen() {
     loadBalance();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     eventBus.addEventListener('utxosChangedNotification', (a) => {
+      console.log('utxosChangedNotification11111111',a)
       loadBalance();
     });
     return () => {

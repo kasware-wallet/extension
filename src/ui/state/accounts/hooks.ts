@@ -42,7 +42,8 @@ export function useAccountBalance(address?: string) {
         amount: '0',
         expired: false,
         confirm_kas_amount: '0',
-        pending_kas_amount: '0'
+        pending_kas_amount: '0',
+        outgoing: '0'
       }
     );
   }
@@ -51,7 +52,8 @@ export function useAccountBalance(address?: string) {
       amount: '0',
       expired: true,
       confirm_kas_amount: '0',
-      pending_kas_amount: '0'
+      pending_kas_amount: '0',
+      outgoing: '0'
     }
   );
 }
@@ -207,7 +209,8 @@ export function useFetchBalanceCallback() {
         amount: _accountBalance.amount,
         kas_amount: _accountBalance.kas_amount,
         confirm_kas_amount: _accountBalance.confirm_kas_amount,
-        pending_kas_amount: _accountBalance.pending_kas_amount
+        pending_kas_amount: _accountBalance.pending_kas_amount,
+        outgoing: _accountBalance?.pending_kas_amount ? _accountBalance?.pending_kas_amount : '0'
       })
     );
     if (cachedBalance.amount !== _accountBalance.amount) {

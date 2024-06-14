@@ -236,8 +236,8 @@ export const OPENAPI_RPC_TESTNET = 'wss://eu-1.kaspa-ng.org/testnet-11';
 export const OPENAPI_RPC_DEVNET = 'ws://127.0.0.1:17610';
 
 export const NETWORK_TYPES = [
-  { value: NetworkType.Mainnet, label: 'Kaspa Mainnet', name: 'kaspa_mainnet', validNames: [0, 'kaspa_mainnet'],url:OPENAPI_RPC_MAINNET },
-  { value: NetworkType.Testnet, label: 'Kaspa Testnet', name: 'kaspa_testnet', validNames: ['kaspa_testnet'],url:OPENAPI_RPC_TESTNET },
+  { value: NetworkType.Mainnet, label: 'Kaspa Mainnet', name: 'kaspa_mainnet', validNames: [0, 'kaspa_mainnet'],url:undefined },
+  { value: NetworkType.Testnet, label: 'Kaspa Testnet 11', name: 'kaspa_testnet', validNames: ['kaspa_testnet'],url:undefined },
   { value: NetworkType.Devnet, label: 'Kaspa Devnet', name: 'kaspa_devnet', validNames: ['kaspa_devnet'],url:OPENAPI_RPC_DEVNET},
   { value: NetworkType.Simnet, label: 'Kaspa Simnet', name: 'kaspa_simnet', validNames: ['kaspa_simnet'],url:'' }
   // { value: NetworkType.MAINNET, label: 'LIVENET', name: 'livenet', validNames: [0, 'livenet', 'mainnet'] },
@@ -269,7 +269,7 @@ export const GASPRICE_RANGE = {
 export const COIN_NAME = 'KAS';
 export const COIN_SYMBOL = 'KAS';
 
-export const COIN_DUST = 1000;
+export const COIN_DUST = 20000000;
 
 export const TO_LOCALE_STRING_CONFIG = {
   minimumFractionDigits: 8
@@ -285,7 +285,7 @@ export const TELEGRAM_URL = 'https://t.me/+eBTwLzz_BcwwMmE1';
 
 export const CHANNEL = process.env.channel!;
 // export const VERSION = process.env.release!;
-export const VERSION = '0.5.0';
+export const VERSION = '0.6.0';
 export const MANIFEST_VERSION = process.env.manifest!;
 
 export enum AddressFlagType {

@@ -3,10 +3,13 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import eventBus from '@/shared/eventBus';
 import { Account } from '@/shared/types';
-import { useWallet } from '@/ui/utils';
+import { sompiToKas, useWallet } from '@/ui/utils';
+import { IBalanceEvent } from 'kaspa-wasm';
 
 import { useIsUnlocked } from '../global/hooks';
 import { useAppDispatch } from '../hooks';
+import { useFetchTxActivitiesCallback } from '../transactions/hooks';
+import { transactionsActions } from '../transactions/reducer';
 import { useAccountBalance, useCurrentAccount, useFetchBalanceCallback, useReloadAccounts } from './hooks';
 import { accountActions } from './reducer';
 
@@ -41,6 +44,7 @@ export default function AccountUpdater() {
   }, [currentAccount && currentAccount.key, isUnlocked]);
 
   const fetchBalance = useFetchBalanceCallback();
+  const fetchTxActivities = useFetchTxActivitiesCallback();
   useEffect(() => {
     if (self.loadingBalance) {
       return;
@@ -64,21 +68,42 @@ export default function AccountUpdater() {
       }
     };
     eventBus.addEventListener('accountsChanged', accountChangeHandler);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-    eventBus.addEventListener('utxosChangedNotification', (a) => {
-      // setTimeout(() => {
+    eventBus.addEventListener('utxosChangedNotification', () => {
       dispatch(accountActions.expireBalance());
-      // }, 500);
+      dispatch(transactionsActions.setIncomingTx(true));
+      setTimeout(() => {
+        fetchTxActivities()
+        console.log('utxosChangedNotification true')
+      }, 15000);
     });
-    eventBus.addEventListener('rpc-block-added', (event: number) => {
+
+    eventBus.addEventListener('processor-balance-event', (event: IBalanceEvent) => {
+      const amount = sompiToKas(event.balance?.mature);
+      const pending = sompiToKas(event.balance?.pending);
+      const outgoing = sompiToKas(event.balance?.outgoing);
+      dispatch(
+        accountActions.setBalance({
+          address: currentAccount.address,
+          amount: amount,
+          kas_amount: amount,
+          confirm_kas_amount: '0',
+          pending_kas_amount: pending,
+          outgoing
+        })
+      );
+      wallet.expireUICachedData(currentAccount.address);
+      dispatch(accountActions.expireHistory());
+    });
+    eventBus.addEventListener('eventbus-sink-blue-score-changed', (event: number) => {
       dispatch(accountActions.setBlueScore(event));
     });
     return () => {
       eventBus.removeEventListener('accountsChanged', accountChangeHandler);
       eventBus.removeEventListener('utxosChangedNotification', () => {
-        //
+        // console.log('removed utxo changed');
       });
-      eventBus.removeEventListener('rpc-block-added', () => {});
+      eventBus.removeEventListener('processor-balance-event', () => {});
+      eventBus.removeEventListener('eventbus-sink-blue-score-changed', () => {});
       wallet.disconnectRpc();
     };
   }, [dispatch]);

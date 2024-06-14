@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -5,8 +6,8 @@ import { Tabs, Tooltip } from 'antd';
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 
 import { KEYRING_TYPE } from '@/shared/constant';
-import { ITransactionInfo, NetworkType } from '@/shared/types';
-import { Card, Column, Content, Footer, Header, Layout, Row, Text } from '@/ui/components';
+import { NetworkType } from '@/shared/types';
+import { Card, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import AccountSelect from '@/ui/components/AccountSelect';
 import { AddressBar } from '@/ui/components/AddressBar';
 import { Button } from '@/ui/components/Button';
@@ -24,13 +25,13 @@ import {
   useWalletConfig
 } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
-import { handleTransactions, shortAddress, sompiToAmount, useWallet } from '@/ui/utils';
+import { shortAddress, sompiToAmount, useWallet } from '@/ui/utils';
 
 import { Empty } from '@/ui/components/Empty';
 import { accountActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
-import { useFetchUtxosCallback, useUtxos } from '@/ui/state/transactions/hooks';
-import { ExportOutlined } from '@ant-design/icons';
+import { useFetchTxActivitiesCallback, useFetchUtxosCallback, useIncomingTx, useTxActivities, useUtxos } from '@/ui/state/transactions/hooks';
+import { ExportOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
@@ -48,9 +49,8 @@ export default function WalletTabScreen() {
   const isTestNetwork = networkType === NetworkType.Testnet;
 
   const currentKeyring = useCurrentKeyring();
-  const currentAccount = useCurrentAccount();
   const wallet = useWallet();
-  const [transactionInfos, setTransactionInfos] = useState<ITransactionInfo[]>([]);
+  // const [transactionInfos, setTransactionInfos] = useState<ITransactionInfo[]>([]);
   // const [balanceValue, setBalanceValue] = useState('--');
   // const getCacheBalance = async () => {
   //   if (accountBalance.amount === '0') {
@@ -68,17 +68,25 @@ export default function WalletTabScreen() {
   //   getCacheBalance();
   // }, [accountBalance.amount]);
   const balanceValue = useMemo(() => {
-    if (accountBalance.amount === '0' && transactionInfos.length === 0) {
-      return '--';
-    } else {
+    // if (accountBalance.amount === '0' && transactionInfos.length === 0) {
+    //   return '--';
+    // } else {
       return accountBalance.amount;
-    }
-  }, [accountBalance.amount, transactionInfos]);
+    // }
+  }, [accountBalance.amount]);
+  const pendingValue = useMemo(() => {
+    return accountBalance.pending_kas_amount;
+  }, [accountBalance?.pending_kas_amount]);
+  const outgoingValue = useMemo(() => {
+    return accountBalance.outgoing;
+  }, [accountBalance?.outgoing]);
   const [connected, setConnected] = useState(false);
   const [rpcStatus, setRpcStatus] = useState(true);
   const [usdValue, setUSDValue] = useState('0');
   const prevRpcStatus = useRef(true);
   const dispatch = useAppDispatch();
+  const currentNetworkType = useNetworkType();
+  // const assetTabKey = useAssetTabKey();
 
   const skipVersion = useSkipVersionCallback();
 
@@ -87,19 +95,11 @@ export default function WalletTabScreen() {
 
   const [showSafeNotice, setShowSafeNotice] = useState(false);
 
-  const fetchActivity = async () => {
-    fetch(
-      `https://api.kaspa.org/addresses/${currentAccount.address}/full-transactions?limit=10&resolve_previous_outpoints=light`
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        const trans = handleTransactions(data, currentAccount.address);
-        setTransactionInfos(trans);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-  };
+
+  useEffect(() => {
+    wallet.handleRpcConnect().finally(() => {});
+    // The rpc disconnection is handled by background
+  }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -123,20 +123,14 @@ export default function WalletTabScreen() {
   useEffect(() => {
     const monitorRpcStatus = setInterval(async () => {
       const status = await wallet.getRpcStatus();
-      // re-fetch balance if rpc status is false
-      if (prevRpcStatus.current == false && status == true) {
-        dispatch(accountActions.expireBalance());
-        fetchActivity();
-        await wallet.subscribeUtxosChanged();
-      }
       setRpcStatus(status);
-    }, 4000);
+    }, 1000);
     return () => {
       clearInterval(monitorRpcStatus);
     };
   }, []);
   useEffect(() => {
-    if (networkType !== NetworkType.Mainnet) return;
+    // if (networkType !== NetworkType.Mainnet) return;
     fetch('https://api.kaspa.org/info/price')
       .then((response) => response.json())
       .then((data) => {
@@ -152,15 +146,11 @@ export default function WalletTabScreen() {
       });
   }, [accountBalance.amount, networkType]);
 
-  useEffect(() => {
-    fetchActivity();
-  }, [accountBalance.amount]);
-
   const tabItems = [
     {
       key: 'activity',
       label: t('Activity'),
-      children: <ActivityTab transactionInfos={transactionInfos} />
+      children: <ActivityTab />
     },
     {
       key: 'utxos-list',
@@ -241,6 +231,12 @@ export default function WalletTabScreen() {
             <div>
               <Text text={balanceValue + '  KAS'} preset="title-bold" textCenter size="xxxl" />
               {usdValue && Number(usdValue) > 0 && <Text text={'$' + usdValue} preset="title" textCenter size="lg" color="textDim"/>}
+              {outgoingValue && Number(outgoingValue) > 0 && (
+                <Text text={outgoingValue + '  KAS'} preset="title-bold" textCenter size="xxxl" />
+              )}
+              {pendingValue && Number(pendingValue) > 0 && (
+                <Text text={pendingValue + '  KAS'} preset="title-bold" textCenter size="xxxl" />
+              )}
             </div>
           </Tooltip>
 
@@ -309,14 +305,48 @@ export default function WalletTabScreen() {
     </Layout>
   );
 }
-function ActivityTab({ transactionInfos }: { transactionInfos: ITransactionInfo[] }) {
+function ActivityTab() {
   const navigate = useNavigate();
+  const transactionInfos = useTxActivities();
+  const incomingTx =  useIncomingTx()
+  const fetchTxActivities = useFetchTxActivitiesCallback();
+
   const blockstreamUrl = useBlockstreamUrl();
   const currentAccount = useCurrentAccount();
   const { t } = useTranslation();
+  const currentNetworkType = useNetworkType();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTxActivities()
+    }, 800);
+   return () => {
+     clearTimeout(timer);
+   }
+  }, [currentAccount]);
+
+  if (currentNetworkType !== NetworkType.Mainnet && currentNetworkType !== NetworkType.Testnet) {
+    return (
+      <Row justifyCenter>
+        <Text text="Not Supported." mt="md" />
+      </Row>
+    );
+  }
   if (transactionInfos && transactionInfos.length > 0) {
     return (
       <div>
+        {incomingTx && (
+        <Card
+        key={'incomingtx'}
+        classname="card-select"
+        mt="md">
+            <Row full justifyCenter>
+              <Text text="incoming transaction..." size="sm" />
+              <Icon>
+                <LoadingOutlined size={16}/>
+              </Icon>
+            </Row>
+        </Card>
+      )}
         {transactionInfos.map((e) => (
           <Card
             key={e.transaction_id}
@@ -390,9 +420,7 @@ function TxConfirmState({
     return (
       <Row>
         <Text text={isAccepted ? 'Accepted' : 'Not Accepted'} preset="sub" />
-        {blueScore - acceptingBlockBlueScore > 1 && (
-          <Text text={`${blueScore - acceptingBlockBlueScore} Confirmed`} preset="sub" />
-        )}
+        <Text text={`${blueScore - acceptingBlockBlueScore} Confirmed`} preset="sub" />
       </Row>
     );
   }
@@ -414,17 +442,21 @@ function UTXOTab() {
   if (utxos && utxos.length > 0) {
     return (
       <div>
-        {utxos.map((e,index) => (
+        {utxos.map((e, index) => (
           <Card
             key={index}
             classname="card-select"
             mt="md"
             onClick={(event) => {
-              navigate('UtxoDetailScreen', { utxoDetail: e });
+              navigate('UtxoDetailScreen', { utxoDetail: e.entry });
             }}>
             <Row full justifyBetween mt="sm">
-              <Text text={`${sompiToAmount(Number(e.utxoEntry.amount))} kas`} />
-              <Text text={shortAddress(e.outpoint.transactionId)} preset="sub" />
+              <Text text={`${sompiToAmount(Number(e.amount))} kas`} />
+              {e?.entry.outpoint?.transactionId ? (
+                <Text text={shortAddress(e?.entry.outpoint?.transactionId)} preset="sub" />
+              ) : (
+                <Text text={e.blockDaaScore} preset="sub" />
+              )}
             </Row>
           </Card>
         ))}

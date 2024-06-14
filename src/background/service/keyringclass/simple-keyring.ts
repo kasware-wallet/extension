@@ -101,10 +101,10 @@ class SimpleKeyring {
     return wallet.privateKey.toString();
   }
   removeAccount(publicKey) {
-    if (!this.wallets.map((wallet) => wallet.publicKey.toString('hex')).includes(publicKey)) {
+    if (!this.wallets.map((wallet) => wallet.publicKey.toString()).includes(publicKey)) {
       throw new Error(`PublicKey ${publicKey} not found in this keyring`);
     }
-    this.wallets = this.wallets.filter((wallet) => wallet.publicKey.toString('hex') !== publicKey);
+    this.wallets = this.wallets.filter((wallet) => wallet.publicKey.toString() !== publicKey);
   }
   private _getWalletForAccount(publicKey: string) {
     const wallet = this.wallets.find((wallet) => wallet.publicKey == publicKey);

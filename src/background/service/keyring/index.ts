@@ -890,49 +890,6 @@ class KeyringService extends EventEmitter {
     }
   };
 
-  transfer_by_generate = async (sourcePrivateKey, destinationAddress, amount: number) => {
-    // From BIP0340
-    const networkId = 2;
-    const privateKey = new PrivateKey(sourcePrivateKey);
-    const sourceAddress = privateKey.toKeypair().toAddress(networkId);
-    const rpc = openapiService.rpc;
-    const entries = await rpc.getUtxosByAddresses([sourceAddress]);
-    if (!entries.length) {
-      console.error(`No UTXOs found for address ${sourceAddress}`);
-    } else {
-      entries.sort((a, b) => a.utxoEntry.amount > b.utxoEntry.amount || -(a.utxoEntry.amount < b.utxoEntry.amount));
-      const sigOpCount = 10;
-      const minimumSignatures = 1;
-      const payload = 'test';
-      const money = kaspaToSompi(amount);
-      // 1. create
-      const generator = new Generator({
-        // utxoEntries: entries,
-        entries,
-        outputs: [[destinationAddress.toString(), money]],
-        priorityFee: 10000n,
-        changeAddress: sourceAddress.toString()
-        // sigOpCount,
-        // minimumSignatures,
-        // payload,
-      });
-      const pending = await generator.next();
-      const estimate = await generator.estimate();
-      const finalId = estimate.finalTransactionId;
-      const fee = estimate.fees;
-      const finalAmount = estimate.finalAmount;
-      // while ((pending = await generator.next())) {
-      // sign
-      await pending.sign([privateKey]);
-
-      // submit
-      const txid = await pending.submit(rpc);
-      // }
-      const success = true;
-
-      return txid;
-    }
-  };
 }
 
 export default new KeyringService();

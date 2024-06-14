@@ -85,6 +85,8 @@ browserRuntimeOnConnect((port) => {
     eventBus.addEventListener(EVENTS.broadcastToUI, boardcastCallback);
     port.onDisconnect.addListener(() => {
       eventBus.removeEventListener(EVENTS.broadcastToUI, boardcastCallback);
+      // gradually close rpc when popup window is closed --shwan
+      openapiService.countDownToCloseRpc()
     });
 
     return;

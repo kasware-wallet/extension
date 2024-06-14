@@ -1,9 +1,9 @@
 import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 
-import { IKaspaUTXOWithoutBigint } from '@/shared/types';
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
 import { shortAddress, sompiToAmount } from '@/ui/utils';
+import { IUtxoEntry } from 'kaspa-wasm';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
@@ -11,7 +11,7 @@ export default function UtxoDetailScreen() {
   const { t } = useTranslation();
   const { state } = useLocation();
   const { utxoDetail } = state as {
-    utxoDetail: IKaspaUTXOWithoutBigint;
+    utxoDetail: IUtxoEntry;
   };
 
   return (
@@ -38,14 +38,57 @@ export default function UtxoDetailScreen() {
               if (key == 'outpoint') {
                 return <Outpoint key={key} outpoint={value} />;
               }
-
-              if (key == 'utxoEntry') {
-                return <UtxoEntry key={key} utxoEntry={value} />;
+              // if (key == 'utxoEntry') {
+              //   return <UtxoEntry key={key} utxoEntry={value} />;
+              // }
+              if (key == 'amount') {
+                return (
+                  <Column mt="md" key={key}>
+                    <Row justifyBetween>
+                      <Text text="Amount" preset="sub" />
+                      <Row>
+                        <Text text={`${sompiToAmount(Number(value))} kas`} />
+                      </Row>
+                    </Row>
+                  </Column>
+                );
+              }
+              if (key == 'scriptPublicKey') {
+                return (
+                  <Column mt="md" key={key}>
+                    <Text text="script Public Key" preset="sub" />
+                    <Text text={value.script} style={{ wordWrap: 'break-word' }} />
+                  </Column>
+                );
+              }
+              if (key == 'blockDaaScore') {
+                return (
+                  <Column mt="md" key={key}>
+                    <Row justifyBetween>
+                      <Text text="Block DAA Score" preset="sub" />
+                      <Row>
+                        <Text text={`${value}`} />
+                      </Row>
+                    </Row>
+                  </Column>
+                );
+              }
+              if (key == 'isCoinbase') {
+                return (
+                  <Column mt="md" key={key}>
+                    <Row justifyBetween>
+                      <Text text="is Coinbase" preset="sub" />
+                      <Row>
+                        <Text text={`${value}`} />
+                      </Row>
+                    </Row>
+                  </Column>
+                );
               }
               return (
                 <Row key={key}>
-                  <Text text={key} />
-                  <Text text={value} preset="sub" />
+                  <Text text={key} preset="sub" />
+                  <Text text={value} />
                 </Row>
               );
             })}
@@ -64,46 +107,10 @@ function Outpoint({ outpoint }) {
           onClick={() => {
             window.open(`${blockstreamUrl}/transaction/${outpoint.transactionId}`);
           }}>
-          <Text text={shortAddress(outpoint.transactionId,15) } />
+          <Text text={shortAddress(outpoint.transactionId, 15)} />
           <Icon icon="link" size={fontSizes.xs} />
         </Row>
       </div>
     </Column>
-  );
-}
-function UtxoEntry({ utxoEntry }: { utxoEntry: IKaspaUTXOWithoutBigint['utxoEntry'] }) {
-  return (
-    <div>
-      <div>UTXO Entry</div>
-      <Column mt="md">
-        <Row justifyBetween>
-          <Text text="Amount" preset="sub" />
-          <Row>
-            <Text text={`${sompiToAmount(Number(utxoEntry.amount))} kas`} />
-          </Row>
-        </Row>
-      </Column>
-      <Column mt="md">
-        <Row justifyBetween>
-          <Text text="block DAA Score" preset="sub" />
-          <Row>
-            <Text text={`${utxoEntry.blockDaaScore}`} />
-          </Row>
-        </Row>
-      </Column>
-      <Column mt="md">
-        <Row justifyBetween>
-          <Text text="is Coinbase" preset="sub" />
-          <Row>
-            <Text text={`${utxoEntry.isCoinbase}`} />
-          </Row>
-        </Row>
-      </Column>
-      <Column mt="md">
-        <Text text="script Public Key" preset="sub" />
-        <Text text={utxoEntry.scriptPublicKey} style={{ wordWrap: 'break-word' }} />
-
-      </Column>
-    </div>
   );
 }

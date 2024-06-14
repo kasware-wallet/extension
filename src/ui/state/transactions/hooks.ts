@@ -42,7 +42,7 @@ export function usePrepareSendKASCallback() {
       if (_utxos.length === 0) {
         _utxos = await fetchUtxos();
       }
-      const safeBalance = _utxos.reduce((pre, cur) => pre + Number(cur?.utxoEntry.amount), 0);
+      const safeBalance = _utxos.reduce((pre, cur) => pre + Number(cur.amount), 0);
       if (safeBalance < toAmount) {
         throw new Error(
           `Insufficient balance. Balance(${sompiToAmount(
@@ -149,6 +149,16 @@ export function useUtxos() {
   return transactionsState.utxos;
 }
 
+export function useTxActivities() {
+  const transactionsState = useTransactionsState();
+  return transactionsState.txActivities;
+}
+
+export function useIncomingTx() {
+  const transactionsState = useTransactionsState();
+  return transactionsState.incomingTx;
+}
+
 export function useFetchUtxosCallback() {
   const dispatch = useAppDispatch();
   const wallet = useWallet();
@@ -161,12 +171,26 @@ export function useFetchUtxosCallback() {
   }, [wallet, account]);
 }
 
+export function useFetchTxActivitiesCallback() {
+  const dispatch = useAppDispatch();
+  const wallet = useWallet();
+  const incomingTx = useIncomingTx();
+  const account = useCurrentAccount();
+  return useCallback(async () => {
+    const data = await wallet.getTxActivities(); 
+    dispatch(transactionsActions.setTxActivities(data));
+    if(incomingTx) dispatch(transactionsActions.setIncomingTx(false));
+    // dispatch(transactionsActions.setKasUtxos(kasUtxosStr));
+    return data;
+  }, [wallet, account]);
+}
+
 
 export function useSafeBalance() {
   const utxos: IKaspaUTXOWithoutBigint[] = useUtxos();
   return useMemo(() => {
     const sompi = utxos.reduce((agg, curr) => {
-      return Number(curr.utxoEntry.amount) + agg;
+      return Number(curr.amount) + agg;
     }, 0);
     return sompiToAmount(sompi);
   }, [utxos]);

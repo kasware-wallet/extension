@@ -1,39 +1,39 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import randomstring from 'randomstring';
 
 import { createPersistStore } from '@/background/utils';
-import {
-  CHANNEL,
-  EVENTS,
-  OPENAPI_RPC_MAINNET,
-  OPENAPI_URL_DEVNET,
-  OPENAPI_URL_MAINNET,
-  OPENAPI_URL_TESTNET,
-  VERSION
-} from '@/shared/constant';
+import { CHANNEL, EVENTS, OPENAPI_RPC_MAINNET, OPENAPI_URL_MAINNET, VERSION } from '@/shared/constant';
 import {
   AddressSummary,
   AddressType,
-  AppSummary,
-  DecodedPsbt,
-  FeeSummary,
-  IKaspaUTXO,
   IResultPsbtHex,
   IScannedGroup,
+  ITransactionInfo,
   KaspaBalance,
   NetworkType,
-  VersionDetail,
   WalletConfig
 } from '@/shared/types';
-import { Encoding, RpcClient } from 'kaspa-wasm';
+import {
+  Encoding,
+  Generator,
+  Resolver,
+  RpcClient,
+  RpcEventMap,
+  TransactionRecord,
+  UtxoContext,
+  UtxoEntryReference,
+  UtxoProcessor,
+  UtxoProcessorEventMap
+} from 'kaspa-wasm';
 
 import eventBus from '@/shared/eventBus';
-import { sompiToAmount } from '@/ui/utils';
+import { handleTransactions, sompiToAmount } from '@/ui/utils';
 import { preferenceService } from '.';
 
 interface OpenApiStore {
   host: string;
-  rpchost: string;
+  rpchost: string | undefined;
   deviceId: string;
   config?: WalletConfig;
 }
@@ -51,28 +51,35 @@ export class OpenApiService {
   clientAddress = '';
   addressFlag = 0;
   encoding!: number;
-  networkId!: number;
+  // networkId!: 'mainnet' | 'testnet-10' | 'testnet-11' | 'devnet';
+  networkId!: string;
   rpc!: RpcClient;
   shouldFireBlueScore: boolean | undefined;
+  context = undefined as unknown as UtxoContext;
+  processor = undefined as unknown as UtxoProcessor;
+  closeRpctimeID = undefined as unknown as any;
 
   setHost = async (host: string) => {
     this.store.host = host;
     // await this.init();
   };
-  setRpcHost = async (rpchost: string) => {
+  setRpcHost = async (rpchost: string | undefined) => {
     this.store.rpchost = rpchost;
     await this.init();
-    // await this.disconnectRpc()
+    await this.disconnectRpc();
   };
-  setNetworkId = (networkId: number) => {
+  setNetworkId = (networkId: string) => {
     this.networkId = networkId;
+  };
+  getNetworkId = () => {
+    return this.networkId;
   };
 
   getHost = () => {
     return this.store.host;
   };
   getRpcStatus = () => {
-    if (this.rpc && this.rpc.open == true) {
+    if (this.rpc && this.rpc.isConnected == true) {
       return true;
     }
     return false;
@@ -83,7 +90,7 @@ export class OpenApiService {
     // if (this.rpc !== null && this.rpc !== undefined) {
     //   await this.rpc?.disconnect();
     // }
-    await this.disconnectRpc();
+    // await this.disconnectRpc();
     // this.rpc = null as unknown as RpcClient;
     this.encoding = Encoding.Borsh;
     this.store = await createPersistStore({
@@ -95,15 +102,23 @@ export class OpenApiService {
       }
     });
 
-    if (![OPENAPI_URL_MAINNET, OPENAPI_URL_DEVNET, OPENAPI_URL_TESTNET].includes(this.store.host)) {
-      const networkType = preferenceService.getNetworkType();
-      if (networkType === NetworkType.Mainnet) {
-        this.store.host = OPENAPI_URL_MAINNET;
-      } else if (networkType === NetworkType.Devnet) {
-        this.store.host = OPENAPI_URL_DEVNET;
-      } else {
-        this.store.host = OPENAPI_URL_TESTNET;
-      }
+    // if (![OPENAPI_URL_MAINNET, OPENAPI_URL_DEVNET, OPENAPI_URL_TESTNET].includes(this.store.host)) {
+    //   const networkType = preferenceService.getNetworkType();
+    //   if (networkType === NetworkType.Mainnet) {
+    //     this.store.host = OPENAPI_URL_MAINNET;
+    //   } else if (networkType === NetworkType.Devnet) {
+    //     this.store.host = OPENAPI_URL_DEVNET;
+    //   } else {
+    //     this.store.host = OPENAPI_URL_TESTNET;
+    //   }
+    // }
+    const networkType = preferenceService.getNetworkType();
+    if (networkType === NetworkType.Mainnet) {
+      this.networkId = 'mainnet';
+    } else if (networkType === NetworkType.Testnet) {
+      this.networkId = 'testnet-11';
+    } else {
+      this.networkId = 'devnet';
     }
     // if (![OPENAPI_RPC_MAINNET, OPENAPI_RPC_TESTNET, OPENAPI_RPC_DEVNET].includes(this.store.rpchost)) {
     //   const networkType = preferenceService.getNetworkType();
@@ -138,56 +153,73 @@ export class OpenApiService {
   };
 
   rpc_connect = async () => {
-    this.rpc = new RpcClient(this.store.rpchost, this.encoding, this.networkId); //works in popup, not in background.
-    // const rpc = new RpcClient('wss://kaspa.aspectron.com:443/mainnet', encoding, 0);
+    const networkType = preferenceService.getNetworkType();
+    if (networkType == NetworkType.Devnet) {
+      this.rpc = new RpcClient({
+        url: '127.0.0.1',
+        encoding: this.encoding,
+        networkId: 'devnet'
+      });
+    } else {
+      this.rpc = new RpcClient({
+        resolver: new Resolver(),
+        networkId: networkType === NetworkType.Mainnet ? 'mainnet' : 'testnet-11'
+      });
+    }
+    this.processor = new UtxoProcessor({ rpc: this.rpc, networkId: this.networkId });
+    await this.processor.start();
+    this.context = await new UtxoContext({ processor: this.processor });
     await this.rpc.connect({});
-    // .then(() => {
-    //   // console.log('rpc connected', this.rpc);
-    // })
-    // .catch((e) => {
-    //   console.log('rpc catch error', e);
-    // });
   };
   // token is address
   setClientAddress = async (token: string, flag: number) => {
-    if (this.rpc == null || this.rpc == undefined || this.rpc.open == false) return;
+    if (this.rpc == null || this.rpc == undefined || this.rpc.isConnected == false) return;
     await this.handleRpcConnect('setClientAddress');
-    const { isSynced } = await this.rpc.getServerInfo();
-    if (!isSynced) {
-      console.error('Please wait for the node to sync');
-      this.rpc.disconnect();
-      return 0;
-    }
     // current clientAddress equals to new clientAddress
     if (this.clientAddress.length > 0 && this.clientAddress == token) return;
     // clientAddress  exists
     if (this.clientAddress.length > 0) {
       await this.rpc.unsubscribeUtxosChanged([this.clientAddress]);
+      // await this.context.unregisterAddresses([new Address(this.clientAddress)]);
+      await this.context.clear();
       await this.rpc.unsubscribeSinkBlueScoreChanged();
     }
-
     this.clientAddress = token;
     this.addressFlag = flag;
-    this.subscribeUtxosChanged(token);
+    this.rpc.subscribeUtxosChanged([token]);
+    if (this.context) {
+      await this.context.trackAddresses([token]);
+      // await this.context.unregisterAddresses([token]);
+    }
   };
 
   subscribeUtxosChanged = async (address: string) => {
-    await this.rpc.notify(async (op, payload) => {
-      // TODO test
-      // blockAddedNotification
-      // virtualDaaScoreChangedNotification
-      // sinkBlueScoreChangedNotification
-      if (op == 'utxosChangedNotification') {
+    const currentAccount = preferenceService.getCurrentAccount();
+    this.rpc.addEventListener('*' as keyof RpcEventMap, async (event) => {
+      if (event && event.type == 'open') {
+        if (currentAccount?.address) {
+          await this.rpc.subscribeUtxosChanged([currentAccount.address]);
+        }
+        await this.rpc.subscribeBlockAdded();
+        await this.rpc.subscribeFinalityConflict();
+        await this.rpc.subscribeFinalityConflictResolved();
+        await this.rpc.subscribeVirtualDaaScoreChanged();
+      }
+    });
+    this.rpc.addEventListener('utxos-changed', (event) => {
+      if (event && event.data) {
         eventBus.emit(EVENTS.broadcastToUI, {
           method: 'utxosChangedNotification',
-          params: payload
+          params: 'utxochanged'
         });
       }
-      if (op == 'sinkBlueScoreChangedNotification') {
+    });
+    this.rpc.addEventListener('sink-blue-score-changed', (event) => {
+      if (event.data) {
         if (this.shouldFireBlueScore) {
           eventBus.emit(EVENTS.broadcastToUI, {
-            method: 'rpc-block-added',
-            params: payload.sinkBlueScore
+            method: 'eventbus-sink-blue-score-changed',
+            params: Number(event.data.sinkBlueScore)
           });
           this.shouldFireBlueScore = false;
           setTimeout(() => {
@@ -196,7 +228,55 @@ export class OpenApiService {
         }
       }
     });
-    await this.rpc.subscribeUtxosChanged([address]);
+    this.processor.addEventListener('*' as keyof UtxoProcessorEventMap, (e: any) => {
+      if (e?.type && e.type !== 'daa-score-change') {
+        // console.log('p:', e.type, e.data);
+      }
+    });
+    this.processor.addEventListener('utxo-proc-start', async () => {
+      // console.log('utxo-proc-start', e);
+      if (currentAccount?.address) await this.context.trackAddresses([currentAccount?.address]);
+    });
+    // utxo-proc-stop
+    this.processor.addEventListener('utxo-proc-stop', async () => {
+      // console.log('utxo-proc-start', e);
+    });
+    // daa-score-change
+    this.processor.addEventListener('connect', async () => {
+      // console.log('connect', this.processor, e.data);
+    });
+    this.processor.addEventListener('disconnect', async () => {
+      // console.log('disconnect', this.processor, e);
+    });
+    this.processor.addEventListener('balance', async (event) => {
+      eventBus.emit(EVENTS.broadcastToUI, {
+        method: 'processor-balance-event',
+        params: event
+      });
+      // IBalanceEvent
+      // await this.context.trackAddresses([address]);
+    });
+    this.processor.addEventListener('error', async () => {
+      // console.log('error', e.data);
+    });
+    this.processor.addEventListener('server-status', async () => {
+      // console.log('server-status', e.data);
+    });
+    this.processor.addEventListener('sync-state', async () => {
+      // console.log('sync-state', e.data);
+    });
+    this.processor.addEventListener('discovery', async ({ type, data }: { type: string; data: TransactionRecord }) => {
+      // const addr = currentAccount?.address;
+      // if (addr) {
+      //   const addrObj = new Address(addr);
+      //   const hasAddr = data.hasAddress(addrObj);
+      //   if (hasAddr) {
+      //     const a = data.toJSON();
+      //     // console.log('a', a);
+      //   }
+      // }
+    });
+    // await this.rpc.subscribeUtxosChanged([address]);
     await this.rpc.subscribeSinkBlueScoreChanged();
   };
 
@@ -314,15 +394,16 @@ export class OpenApiService {
     return kaspaBalance;
   }
   async getAddressesBalance(addresses: string[]): Promise<KaspaBalance[]> {
-    const balance: { entries: { address: string; balance: bigint }[] } = await this.rpc.getBalancesByAddresses({
+    const balanceInfo = await this.rpc.getBalancesByAddresses({
       addresses
     });
     const kaspaBalanceArray: KaspaBalance[] = [] as KaspaBalance[];
-    balance.entries.forEach((entry) => {
+    balanceInfo.entries.forEach((entry) => {
       const amount = sompiToAmount(Number(entry.balance));
       kaspaBalanceArray.push({
         confirm_amount: '0',
         pending_amount: '0',
+        outgoing: '0',
         amount,
         confirm_kas_amount: '0',
         pending_kas_amount: '0',
@@ -337,32 +418,96 @@ export class OpenApiService {
     if (this.rpc == null || this.rpc == undefined) {
       return;
     }
-    await this.rpc.disconnect();
+    console.log('disconnect rpc');
+    await this.context.clear();
+    this.processor.removeEventListener('*', async () => {});
+    await this.processor.stop();
+    if (this.rpc.isConnected == true) await this.rpc.disconnect();
     this.rpc = null as unknown as RpcClient;
+  }
+  // gradually close rpc when popup window is closed --shwan
+  countDownToCloseRpc() {
+    this.closeRpctimeID = setTimeout(() => {
+      this.disconnectRpc();
+    }, 1000 * 5);
   }
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   async handleRpcConnect(source?: string) {
-    // console.log('source', source);
-    if (this.rpc != null && this.rpc != undefined && this.rpc.open == true && this.rpc.url == this.store.rpchost) {
+    // console.log('handleRpcConnect source', source);
+    if (this.closeRpctimeID != undefined) {
+      clearTimeout(this.closeRpctimeID);
+      this.closeRpctimeID = undefined;
+    }
+    if (
+      this.rpc != null &&
+      this.rpc != undefined &&
+      this.rpc.isConnected == true &&
+      this.processor.networkId == this.networkId
+    ) {
       return;
     }
-    if (this.rpc != null && this.rpc != undefined && this.rpc.open == true && this.rpc.url != this.store.rpchost) {
-      await this.rpc.disconnect();
+    if (
+      this.rpc != null &&
+      this.rpc != undefined &&
+      this.processor.networkId == this.networkId &&
+      this.rpc.isConnected == false
+    ) {
+      // await this.rpc.connect();
+      return;
+    }
+    if (this.rpc != null && this.rpc != undefined && this.rpc.isConnected == true) {
+      await this.disconnectRpc();
+    }
+    if (this.rpc != null && this.rpc != undefined && this.rpc.isConnected == false) {
       this.rpc = null as unknown as RpcClient;
     }
-    if (this.rpc != null && this.rpc != undefined && this.rpc.open == false) {
-      await this.rpc.disconnect();
-      this.rpc = null as unknown as RpcClient;
+    const networkType = preferenceService.getNetworkType();
+    if (networkType == NetworkType.Devnet) {
+      if (this.store.rpchost) {
+        this.rpc = new RpcClient({
+          url: this.store.rpchost,
+          encoding: this.encoding,
+          networkId: 'devnet'
+        });
+      } else {
+        this.rpc = new RpcClient({
+          url: '127.0.0.1',
+          encoding: this.encoding,
+          networkId: 'devnet'
+        });
+      }
+    } else {
+      if (this.store.rpchost) {
+        this.rpc = new RpcClient({
+          url: this.store.rpchost,
+          encoding: this.encoding,
+          networkId: this.networkId
+        });
+      } else {
+        this.rpc = new RpcClient({
+          resolver: new Resolver(),
+          // networkId: networkType === NetworkType.Mainnet ? 'mainnet' : 'testnet-11'
+          networkId: this.networkId
+        });
+      }
     }
-    this.rpc = new RpcClient(this.store.rpchost, this.encoding, this.networkId); //works in popup, not in background.
+    this.processor = new UtxoProcessor({ rpc: this.rpc, networkId: this.networkId });
+    await this.processor.start();
+    // 3) Create one of more UtxoContext, passing UtxoProcessor to it
+    // you can create UtxoContext objects as needed to monitor different
+    // address sets.
+    this.context = await new UtxoContext({ processor: this.processor });
+    // this.rpc = new RpcClient(this.store.rpchost, this.encoding, this.networkId);
+    //works in popup, not in background.
     // const rpc = new RpcClient('wss://kaspa.aspectron.com:443/mainnet', encoding, 0);
     await this.rpc.connect({});
     const currentAccount = preferenceService.getCurrentAccount();
-    if (this.rpc.open == true && currentAccount?.address) {
+    if (this.rpc.isConnected == true && currentAccount?.address) {
       this.subscribeUtxosChanged(currentAccount.address);
     }
-    // const info = await this.rpc.getServerInfo();
+    // this.subscribeUtxosChanged();
   }
+  //  the balance unit is sompi
   async getAddressBalanceOfKas(address: string) {
     await this.handleRpcConnect('getAddressBalanceOfKas');
     const { isSynced } = await this.rpc.getServerInfo();
@@ -371,10 +516,10 @@ export class OpenApiService {
       this.rpc.disconnect();
       return 0;
     }
-    const balance: { entries: { address: string; balance: bigint }[] } = await this.rpc.getBalancesByAddresses({
+    const balanceInfo = await this.rpc.getBalancesByAddresses({
       addresses: [address]
     });
-    const totalBigInt: bigint = balance?.entries[0].balance;
+    const totalBigInt: bigint = balanceInfo?.entries[0].balance;
     const total = Number(totalBigInt);
     // this.subscribeUtxosChanged(address)
     return total;
@@ -417,11 +562,11 @@ export class OpenApiService {
       this.rpc.disconnect();
       return [];
     }
-    const balance: { entries: { address: string; balance: bigint }[] } = await this.rpc.getBalancesByAddresses({
+    const balanceInfo = await this.rpc.getBalancesByAddresses({
       addresses
     });
     const sompiArr: number[] = [];
-    balance.entries.forEach((entry) => {
+    balanceInfo.entries.forEach((entry) => {
       sompiArr.push(Number(entry.balance));
     });
     const balanceSompiArr = sompiArr as number[];
@@ -453,20 +598,55 @@ export class OpenApiService {
   }
 
   // async getKASUtxos(address: string): Promise<UTXO[]> {
-  async getKASUtxos(addresses: string[]): Promise<IKaspaUTXO[]> {
-    await this.handleRpcConnect('getKASUtxos');
-    const { isSynced } = await this.rpc.getServerInfo();
-    if (!isSynced) {
-      console.error('Please wait for the node to sync');
-      this.rpc.disconnect();
+  async getKASUtxos(address: string[]): Promise<UtxoEntryReference[]> {
+    // return this.httpGet('/address/btc-utxo', {
+    //   address,
+    // });
+    // await this.handleRpcConnect('getKASUtxos');
+    const { entries } = await this.rpc.getUtxosByAddresses(address);
+    if (entries.length === 0) {
+      console.info('Send some kaspa to', address, 'before proceeding with the demo');
       return [];
     }
-    const utxos = await this.rpc.getUtxosByAddresses(addresses);
-    if (utxos.length === 0) {
-      console.info('Send some kaspa to', addresses, 'before proceeding with the demo');
-      return [];
-    }
-    return utxos;
+    return entries as any as UtxoEntryReference[];
+  }
+
+  async getTxActivities(address: string): Promise<ITransactionInfo[] | null> {
+    // return this.httpGet('/address/btc-utxo', {
+    //   address,
+    // });
+    let API = 'https://api.kaspa.org'
+    if (this.networkId =='testnet') API = 'https://explorer-tn11.kaspa.org';
+      const response = await   fetch(
+        `${API}/addresses/${address}/full-transactions?limit=10&resolve_previous_outpoints=light`
+      )
+      if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+      }
+      const data = await response.json();
+      const trans = handleTransactions(data, address);
+      return trans;
+  }
+
+  async createGenerator(
+    sourceAddress: string,
+    destinationAddress: string,
+    changeAddress: string,
+    moneySompi: bigint,
+    priorityFee = BigInt(0)
+  ) {
+    // const entries = await this.getKASUtxos([sourceAddress]);
+    // entries.sort((a, b) => (a.amount > b.amount ? 1 : -1));
+    const generator = new Generator({
+      entries: this.context,
+      outputs: [{ address: destinationAddress, amount: moneySompi }],
+      priorityFee: priorityFee,
+      changeAddress
+    });
+    // const summary = await generator.estimate();
+    // console.log('summary', summary);
+    // return {summary };
+    return generator;
   }
 
   async submitTransaction(preSubmitPending: any) {
@@ -502,23 +682,6 @@ export class OpenApiService {
     };
     return Promise.resolve(appSummary);
   }
-  // 3. submit a transaction to node
-  // async pushTx(rawTxInfo: RawTxInfo, inputAmount: number): Promise<string> {
-  //   // return this.httpPost('/tx/broadcast', {
-  //   //   rawtx,
-  //   // });
-  //   const privateKey_str = 'ee9463c1a7bced9fb055ed49eb484ab6543ddcc407ea11d487e3687604036f15';
-  //   const privateKey = new PrivateKey(privateKey_str);
-  //   const generator = psbtHex;
-  //   let pending;
-  //   const a = await generator.next();
-  //   while ((pending = await generator.next())) {
-  //     await pending.sign([privateKey]);
-  //     const txid = await pending.submit(rpc);
-  //   }
-
-  //   return txid;
-  // }
 
   async getFeeSummary(): Promise<FeeSummary> {
     // return this.httpGet('/default/fee-summary', {});

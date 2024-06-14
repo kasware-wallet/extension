@@ -78,7 +78,7 @@ export default function EditNetworkUrlScreen() {
       <Content>
         <Column gap="lg">
           <Input
-            placeholder={item.url}
+            placeholder={item.url?item.url:'Automatic'}
             defaultValue={item.url}
             onChange={(e) => {
               setAlianName(e.target.value);

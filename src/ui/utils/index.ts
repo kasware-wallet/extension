@@ -151,6 +151,11 @@ export function sompiToAmount(val: number) {
   const num = new BigNumber(val);
   return num.dividedBy(100000000).toString();
 }
+export function sompiToKas(val: bigint | undefined) {
+  if (val === undefined) return '0';
+  const num = Number(val);
+  return (num / 100000000).toString();
+}
 
 export function amountToSompi(val: string) {
   const num = new BigNumber(val);

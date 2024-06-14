@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 
 import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 
+import { useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
 import { shortAddress, sompiToAmount } from '@/ui/utils';
@@ -71,7 +72,7 @@ export default function TxDetailScreen() {
               return (
                 <Row justifyBetween key={key}>
                   <Text text="Detail" />
-                  <Text text={value ? 'confirmed' : 'unconfirmed'} preset="sub" />
+                  <Text text={value ? 'Accepted' : 'Not Accepted'} preset="sub" />
                 </Row>
               );
             }
@@ -153,14 +154,17 @@ function BlockHash({ blockhashs }) {
   );
 }
 function Inputs({ inputs }: { inputs: Array<any> }) {
+  const currentAccount = useCurrentAccount();
   const senders = useMemo(() => {
     const data: any[] = [];
     inputs.forEach((i) => {
       const address = i.previous_outpoint_address;
       const amount = sompiToAmount(i.previous_outpoint_amount).replace(/\.0+$/, '');
+      const alianName = currentAccount.address == address ? 'Self' : undefined;
       data.push({
         address,
-        amount
+        amount,
+        alianName
       });
     });
     return data;
@@ -194,14 +198,17 @@ function Inputs({ inputs }: { inputs: Array<any> }) {
 }
 
 function Outputs({ outputs }: { outputs: Array<any> }) {
+  const currentAccount = useCurrentAccount();
   const recipients = useMemo(() => {
     const data: any[] = [];
     outputs.forEach((i) => {
       const address = i.script_public_key_address;
       const amount = sompiToAmount(i.amount).replace(/\.0+$/, '');
+      const alianName = currentAccount.address == address ? 'Self' : undefined;
       data.push({
         address,
-        amount
+        amount,
+        alianName
       });
     });
     return data;

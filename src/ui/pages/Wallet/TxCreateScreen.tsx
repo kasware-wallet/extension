@@ -110,10 +110,10 @@ export default function TxCreateScreen() {
       return;
     }
 
-    if (toSompi > safeSompi) {
-      setError('Amount exceeds your available balance');
-      return;
-    }
+    // if (toSatoshis > safeSatoshis) {
+    //   setError('Amount exceeds your available balance');
+    //   return;
+    // }
 
     // if (feeRate <= 0) {
     // if (feeRate < 0) {
@@ -138,7 +138,11 @@ export default function TxCreateScreen() {
       })
       .catch((e) => {
         console.log(e);
-        setError(e.message);
+        if (e.message && e.message === 'Storage mass exceeds maximum') {
+          setError('Amount is too small.');
+        } else {
+          setError(e.message);
+        }
       });
   }, [toInfo, inputAmount, feeRate, enableRBF]);
 

@@ -6,7 +6,7 @@ import { HDPrivateKey } from '@brucelei/kaspacore';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { Buffer } from 'buffer';
 import * as kaspa_wasm from 'kaspa-wasm';
-import { PrivateKey, XPrivateKey } from 'kaspa-wasm';
+import { PrivateKey, PrivateKeyGenerator } from 'kaspa-wasm';
 import { SimpleKeyring } from './simple-keyring';
 
 type TKaspaWasm = typeof kaspa_wasm;
@@ -148,7 +148,7 @@ class HdKeyring extends SimpleKeyring {
     }
     this.root = this.hdWallet.derivePath(hdPath);
     const root_xprv_str = this.root.intoString('xprv');
-    const child = new XPrivateKey(root_xprv_str, false, 0n);
+    const child = new PrivateKeyGenerator(root_xprv_str, false, 0n);
     const receivePrivateKey = child.receiveKey(index);
     const keyPair = receivePrivateKey.toKeypair();
     const address = keyPair.publicKey;
@@ -339,7 +339,7 @@ class HdKeyring extends SimpleKeyring {
         // handle onekey tweaked private key
       } else if (this.addressType && this.addressType == AddressType.KASPA_ONEKEY_44_111111) {
         // this.hdPath == "m/44'/111111'/0'"
-        const child = new XPrivateKey(root_xprv_str, false, 0n);
+        const child = new PrivateKeyGenerator(root_xprv_str, false, 0n);
         if (dType == 0) {
           const kaspaReceivePrivateKey = child.receiveKey(i);
 
@@ -379,7 +379,7 @@ class HdKeyring extends SimpleKeyring {
         }
       } else {
         // this.hdPath == "m/44'/111111'/0'"
-        const child = new XPrivateKey(root_xprv_str, false, 0n);
+        const child = new PrivateKeyGenerator(root_xprv_str, false, 0n);
         // 3  generate kaspa address e.g. receive_pubkeys,changes_pubkeys
         if (dType == 0) {
           const receivePrivateKey = child.receiveKey(i);

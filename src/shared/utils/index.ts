@@ -3,7 +3,8 @@ import { keyBy } from 'lodash';
 import browser from '@/background/webapi/browser';
 import { AddressFlagType, CHAINS } from '@/shared/constant';
 
-import { IKaspaUTXO, IKaspaUTXOWithoutBigint } from '../types';
+import { Address, UtxoEntryReference } from 'kaspa-wasm';
+import { IKaspaUTXOWithoutBigint } from '../types';
 import BroadcastChannelMessage from './message/broadcastChannelMessage';
 import PortMessage from './message/portMessage';
 
@@ -37,33 +38,55 @@ export const checkAddressFlag = (currentFlag: number, flag: AddressFlagType): bo
   return Boolean(currentFlag & flag);
 };
 
-export const getKaspaUTXOWithoutBigint = (utxos: IKaspaUTXO[]) => {
+export const getKaspaUTXOWithoutBigint = (utxos: UtxoEntryReference[]) => {
   const newUtxos: IKaspaUTXOWithoutBigint[] = utxos.map((v) => {
     return {
-      address: v.address,
-      outpoint: v.outpoint,
-      utxoEntry: {
-        amount: v.utxoEntry.amount.toString(),
-        blockDaaScore: v.utxoEntry.blockDaaScore.toString(),
-        isCoinbase: v.utxoEntry.isCoinbase,
-        scriptPublicKey: v.utxoEntry.scriptPublicKey
-      }
+      amount: v.amount.toString(),
+      blockDaaScore: v.blockDaaScore.toString(),
+      entry: {
+        address: v.entry?.address?.toString(),
+        amount: v.entry.amount.toString(),
+        blockDaaScore: v.entry.blockDaaScore.toString(),
+        isCoinbase: v.entry.isCoinbase,
+        outpoint: v.entry.outpoint,
+        scriptPublicKey: v.entry.scriptPublicKey
+      },
+      isCoinbase: v.isCoinbase
     } as IKaspaUTXOWithoutBigint;
   });
   return newUtxos;
 };
-export const getKaspaUTXOs = (utxos: IKaspaUTXOWithoutBigint[]) => {
-  const newUtxos: IKaspaUTXO[] = utxos.map((v) => {
-    return {
-      address: v.address,
-      outpoint: v.outpoint,
-      utxoEntry: {
-        amount: BigInt(v.utxoEntry.amount),
-        blockDaaScore: BigInt(v.utxoEntry.blockDaaScore),
-        isCoinbase: v.utxoEntry.isCoinbase,
-        scriptPublicKey: v.utxoEntry.scriptPublicKey
-      }
-    } as IKaspaUTXO;
+export const getKaspaUTXOWithBigint = (utxos: IKaspaUTXOWithoutBigint[]) => {
+  const newUtxos: UtxoEntryReference[] = utxos.map((v) => {
+    if (v.entry.address) {
+      return {
+        amount: BigInt(v.amount),
+        blockDaaScore: BigInt(v.blockDaaScore),
+        entry: {
+          address: new Address(v.entry.address),
+          amount: BigInt(v.entry.amount),
+          blockDaaScore: BigInt(v.entry.blockDaaScore.toString()),
+          isCoinbase: v.entry.isCoinbase,
+          outpoint: v.entry.outpoint,
+          scriptPublicKey: v.entry.scriptPublicKey
+        },
+        isCoinbase: v.isCoinbase
+      };
+    } else {
+      return {
+        amount: BigInt(v.amount),
+        blockDaaScore: BigInt(v.blockDaaScore),
+        entry: {
+          // address: new Address(v.entry.address),
+          amount: BigInt(v.entry.amount),
+          blockDaaScore: BigInt(v.entry.blockDaaScore.toString()),
+          isCoinbase: v.entry.isCoinbase,
+          outpoint: v.entry.outpoint,
+          scriptPublicKey: v.entry.scriptPublicKey
+        },
+        isCoinbase: v.isCoinbase
+      };
+    }
   });
   return newUtxos;
 };
