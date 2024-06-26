@@ -5,7 +5,7 @@
   "homepage": "https://github.com/kasware-wallet/extension#readme",
   "bugs": {
     "url": "https://github.com/kasware-wallet/extension/issues",
-    "krc20testnet": "0",
+    "krc20testnet": "1",
     "krc20mainnet": "0"
   },
   "repository": {
