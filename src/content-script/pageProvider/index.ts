@@ -1,27 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-unused-vars */
+
 // this script is injected into webpage's context
 import { ethErrors, serializeError } from 'eth-rpc-errors';
 import { EventEmitter } from 'events';
+import log from 'loglevel';
+import { evmProvider } from 'node_modules/@kasware-wallet/page-provider/dist/index.js';
 
+import type {
+  BuildScriptType,
+  ISubmitCommitParams,
+  ISubmitRevealParams,
+  SighashBiType,
+  TSignMessage
+} from '@/shared/types';
 import { TxType } from '@/shared/types';
 import BroadcastChannelMessage from '@/shared/utils/message/broadcastChannelMessage';
 
+import { sompiToAmount } from '@/shared/utils/format';
 import PushEventHandlers from './pushEventHandlers';
 import ReadyPromise from './readyPromise';
 import { $, domReadyCall } from './utils';
 
-const log = (event, ...args) => {
-  // eslint-disable-next-line no-undef
-  if (process.env.NODE_ENV !== 'production') {
-    // console.log(
-    //   `%c [kasware] (${new Date().toTimeString().slice(0, 8)}) ${event}`,
-    //   'font-weight: 600; background-color: #7d6ef9; color: white;',
-    //   ...args
-    // );
-  }
-};
 const script = document.currentScript;
 const channelName = script?.getAttribute('channel') || 'KASWARE';
 
@@ -37,13 +36,13 @@ interface StateProvider {
   initialized: boolean;
   isPermanentlyDisconnected: boolean;
 }
-const EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR = 'Extension context invalidated.';
 export class KaswareProvider extends EventEmitter {
   _selectedAddress: string | null = null;
   _network: string | null = null;
   _isConnected = false;
   _initialized = false;
   _isUnlocked = false;
+  ethereum: typeof evmProvider | null = null;
 
   _state: StateProvider = {
     accounts: null,
@@ -63,6 +62,7 @@ export class KaswareProvider extends EventEmitter {
     this.setMaxListeners(maxListeners);
     this.initialize();
     this._pushEventHandlers = new PushEventHandlers(this);
+    this.ethereum = evmProvider;
   }
 
   initialize = async () => {
@@ -134,17 +134,13 @@ export class KaswareProvider extends EventEmitter {
   };
 
   private _handleBackgroundMessage = ({ event, data }) => {
-    log('[push event]', event, data);
+    log.debug('[push event]', event, data);
     if (this._pushEventHandlers[event]) {
       return this._pushEventHandlers[event](data);
     }
 
     this.emit(event, data);
   };
-  // TODO: support multi request!
-  // request = async (data) => {
-  //   return this._request(data);
-  // };
 
   _request = async (data) => {
     if (!data) {
@@ -154,15 +150,16 @@ export class KaswareProvider extends EventEmitter {
     this._requestPromiseCheckVisibility();
 
     return this._requestPromise.call(() => {
-      log('[request]', JSON.stringify(data, null, 2));
+      const request = JSON.stringify(data, null, 2);
+      if (!request.toLocaleLowerCase().includes('keepalive')) log.debug('[request]', request);
       return this._bcm
         .request(data)
         .then((res) => {
-          log('[request: success]', data.method, res);
+          if (data.method !== 'keepAlive') log.debug('[request: success]', data.method, res);
           return res;
         })
         .catch((err) => {
-          log('[request: error]', data.method, serializeError(err));
+          log.debug('[request: error]', data.method, serializeError(err));
           throw serializeError(err);
         });
     });
@@ -208,36 +205,262 @@ export class KaswareProvider extends EventEmitter {
     });
   };
 
-  signMessage = async (text: string, type: string) => {
+  getKRC20Balance = async () => {
+    return this._request({
+      method: 'getKRC20Balance'
+    });
+  };
+
+  getUtxoEntries = async (address: string) => {
+    return this._request({
+      method: 'getUtxoEntries',
+      params: {
+        address
+      }
+    });
+  };
+
+  getP2shAddress = async (inscribeJsonString: string) => {
+    return this._request({
+      method: 'getP2shAddress',
+      params: {
+        inscribeJsonString
+      }
+    });
+  };
+
+  createKRC20Order = async (arg0: {
+    krc20Tick: string;
+    krc20Amount: number;
+    kasAmount: number;
+    psktExtraOutput?: [{ address: string; amount: number }];
+    priorityFee?: number;
+  }) => {
+    const tickLength = arg0?.krc20Tick?.length;
+    if (tickLength == null || tickLength < 4 || tickLength > 6) {
+      throw new Error(`Invalid krc20Tick length: ${tickLength}. Must be between 4 and 6 characters`);
+    }
+    return this._request({
+      method: 'createKRC20Order',
+      params: {
+        krc20Tick: arg0.krc20Tick,
+        krc20Amount: arg0.krc20Amount,
+        kasAmount: arg0.kasAmount,
+        psktExtraOutput: arg0.psktExtraOutput,
+        priorityFee: arg0.priorityFee,
+        type: 'createKRC20Order'
+      }
+    });
+  };
+  cancelKRC20Order = async (arg0: { krc20Tick: string; txJsonString: string; sendCommitTxId: string }) => {
+    return this._request({
+      method: 'cancelKRC20Order',
+      params: {
+        krc20Tick: arg0.krc20Tick,
+        txJsonString: arg0.txJsonString,
+        sendCommitTxId: arg0.sendCommitTxId,
+        type: 'cancelKRC20Order'
+      }
+    });
+  };
+  signCancelKRC20Order = async (arg0: { krc20Tick: string; txJsonString: string; sendCommitTxId: string }) => {
+    return this._request({
+      method: 'signCancelKRC20Order',
+      params: {
+        krc20Tick: arg0.krc20Tick,
+        txJsonString: arg0.txJsonString,
+        sendCommitTxId: arg0.sendCommitTxId,
+        type: 'signCancelKRC20Order'
+      }
+    });
+  };
+  buyKRC20Token = async (arg0: {
+    txJsonString: string;
+    extraOutput?: [{ address: string; amount: number }];
+    priorityFee?: number;
+  }) => {
+    return this._request({
+      method: 'buyKRC20Token',
+      params: {
+        txJsonString: arg0.txJsonString,
+        extraOutput: arg0.extraOutput,
+        priorityFee: arg0.priorityFee,
+        type: 'buyKRC20Token'
+      }
+    });
+  };
+
+  signBuyKRC20Token = async (arg0: {
+    txJsonString: string;
+    extraOutput?: [{ address: string; amount: number }];
+    priorityFee?: number;
+  }) => {
+    return this._request({
+      method: 'signBuyKRC20Token',
+      params: {
+        txJsonString: arg0.txJsonString,
+        extraOutput: arg0.extraOutput,
+        priorityFee: arg0.priorityFee,
+        type: 'signBuyKRC20Token'
+      }
+    });
+  };
+
+  submitCommit = async (arg0: ISubmitCommitParams) => {
+    return this._request({
+      method: 'submitCommit',
+      params: {
+        priorityEntries: arg0.priorityEntries,
+        entries: arg0.entries,
+        outputs: arg0.outputs,
+        changeAddress: arg0.changeAddress,
+        priorityFee: arg0.priorityFee,
+        networkId: arg0.networkId,
+        script: arg0.script,
+        type: 'Commit'
+      }
+    });
+  };
+
+  submitReveal = async (arg0: ISubmitRevealParams) => {
+    return this._request({
+      method: 'submitReveal',
+      params: {
+        priorityEntries: arg0.priorityEntries,
+        entries: arg0.entries,
+        outputs: arg0.outputs,
+        changeAddress: arg0.changeAddress,
+        priorityFee: arg0.priorityFee,
+        networkId: arg0.networkId,
+        script: arg0.script,
+        type: 'Reveal'
+      }
+    });
+  };
+
+  submitCommitReveal = async (
+    commit: Omit<ISubmitCommitParams, 'script' | 'networkId'>,
+    reveal: Omit<ISubmitRevealParams, 'priorityEntries' | 'entries' | 'script' | 'networkId'>,
+    script: string,
+    networkId?: string
+  ) => {
+    return this._request({
+      method: 'submitCommitReveal',
+      params: {
+        commit,
+        reveal,
+        script,
+        networkId,
+        type: 'Commit & Reveal'
+      }
+    });
+  };
+
+  signMessage = async (text: string, params?: { noAuxRand?: boolean; type?: TSignMessage } | TSignMessage) => {
+    const isStringParam = typeof params === 'string';
+    const type = isStringParam ? params : params?.type || 'auto';
+    const noAuxRand = isStringParam ? undefined : params?.noAuxRand;
+
     return this._request({
       method: 'signMessage',
       params: {
         text,
+        noAuxRand,
         type
       }
     });
   };
 
-  sendKaspa = async (toAddress: string, sompi: number, options?: { feeRate: number }) => {
+  verifyMessage = async (pubkey: string, message: string, sig: string) => {
+    return this._request({
+      method: 'verifyMessage',
+      params: {
+        pubkey,
+        message,
+        sig
+      }
+    });
+  };
+  verifyMessageECDSA = async (pubkey: string, message: string, sig: string) => {
+    return this._request({
+      method: 'verifyMessageECDSA',
+      params: {
+        pubkey,
+        message,
+        sig
+      }
+    });
+  };
+
+  buildScript = async (arg0: { type: BuildScriptType; data: string }) => {
+    return this._request({
+      method: 'buildScript',
+      params: {
+        type: arg0.type,
+        data: arg0.data
+      }
+    });
+  };
+
+  sendKaspa = async (toAddress: string, sompi: number, options?: { priorityFee: number; payload?: string }) => {
     return this._request({
       method: 'sendKaspa',
       params: {
         toAddress,
         sompi,
-        feeRate: options?.feeRate,
-        type: TxType.SEND_KASPA
+        priorityFee: Number(sompiToAmount(options?.priorityFee, 8)),
+        type: TxType.SEND_KASPA,
+        payload: options?.payload
+      }
+    });
+  };
+  signKRC20Transaction = async (inscribeJsonString: string, type: TxType, destAddr?: string, priorityFee?: number) => {
+    return this._request({
+      method: 'signKRC20Transaction',
+      params: {
+        inscribeJsonString,
+        type,
+        destAddr,
+        priorityFee
+      }
+    });
+  };
+  signKRC20BatchTransferTransaction = async (
+    inscribeJsonString: string,
+    type: TxType,
+    destAddr?: string[],
+    priorityFee?: number
+  ) => {
+    throw new Error('deprecated. please use krc20BatchTransferTransaction() instead');
+    return this._request({
+      method: 'signKRC20BatchTransferTransaction',
+      params: {
+        inscribeJsonString,
+        type,
+        destAddr,
+        priorityFee
+      }
+    });
+  };
+  krc20BatchTransferTransaction = async (
+    list: { tick: string; to: string; amount: number }[],
+    priorityFee?: number
+  ) => {
+    return this._request({
+      method: 'krc20BatchTransferTransaction',
+      params: {
+        list,
+        type: TxType.SIGN_KRC20_TRANSFER_BATCH,
+        priorityFee
       }
     });
   };
 
-  // signTx = async (rawtx: string) => {
-  //   return this._request({
-  //     method: 'signTx',
-  //     params: {
-  //       rawtx
-  //     }
-  //   });
-  // };
+  cancelKRC20BatchTransfer = async () => {
+    return this._request({
+      method: 'cancelKRC20BatchTransfer'
+    });
+  };
 
   /**
    * push transaction
@@ -251,32 +474,30 @@ export class KaswareProvider extends EventEmitter {
     });
   };
 
-  signPsbt = async (psbtHex: string, options?: any) => {
+  disconnect = async (origin: string) => {
     return this._request({
-      method: 'signPsbt',
+      method: 'disconnect',
       params: {
-        psbtHex,
-        type: TxType.SIGN_TX,
-        options
+        origin
       }
     });
   };
 
-  signPsbts = async (psbtHexs: string[], options?: any[]) => {
+  signPskt = async (param: {
+    txJsonString: string;
+    options?: {
+      signInputs: {
+        index: number;
+        sighashType: SighashBiType;
+      }[];
+    };
+  }) => {
     return this._request({
-      method: 'multiSignPsbt',
+      method: 'signPskt',
       params: {
-        psbtHexs,
-        options
-      }
-    });
-  };
-
-  pushPsbt = async (psbtHex: string) => {
-    return this._request({
-      method: 'pushPsbt',
-      params: {
-        psbtHex
+        psktJsonString: param.txJsonString,
+        psktOptions: param.options,
+        type: TxType.SIGN_TX
       }
     });
   };
@@ -290,7 +511,7 @@ export class KaswareProvider extends EventEmitter {
 
 declare global {
   interface Window {
-    kasware: KaswareProvider;
+    kasware: KaswareProvider & { ethereum?: any };
   }
 }
 
@@ -306,7 +527,8 @@ Object.defineProperty(window, 'kasware', {
   value: new Proxy(provider, {
     deleteProperty: () => true
   }),
-  writable: false
+  writable: false,
+  configurable: false
 });
 
 window.dispatchEvent(new Event('kasware#initialized'));

@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DecodedPsbt, SignPsbtOptions, ToSignInput } from '@/shared/types';
+import type { DecodedPsbt, SignPsbtOptions, ToSignInput } from '@/shared/types';
 import { Button, Card, Column, Content, Footer, Header, Icon, Layout, Row, Text, TextArea } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressText } from '@/ui/components/AddressText';
@@ -14,9 +13,10 @@ import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useAccountAddress, useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
-import { copyToClipboard, sompiToAmount, useApproval, useWallet } from '@/ui/utils';
+import { copyToClipboard, formatLocaleString, useApproval, useWallet } from '@/ui/utils';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { sompiToAmount } from '@/shared/utils/format';
 
 interface Props {
   header?: React.ReactNode;
@@ -35,13 +35,11 @@ interface Props {
   handleConfirm?: () => void;
 }
 
-
 enum TabState {
   DETAILS,
   DATA,
   HEX
 }
-
 
 function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
   const address = useAccountAddress();
@@ -58,7 +56,7 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
     return spend;
   }, [decodedPsbt]);
 
-  const spendAmount = useMemo(() => sompiToAmount(spendSompi), [spendSompi]);
+  const spendAmount = useMemo(() => sompiToAmount(spendSompi, 8), [spendSompi]);
 
   return (
     <Column gap="lg">
@@ -71,7 +69,13 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
                 <Text text={t('Spend Amount')} textCenter color="textDim" />
 
                 <Column justifyCenter>
-                  <Text text={spendAmount} color="white" preset="bold" textCenter size="xxl" />
+                  <Text
+                    text={`${formatLocaleString(spendAmount)} KAS`}
+                    color="white"
+                    preset="bold"
+                    textCenter
+                    size="xxl"
+                  />
                 </Column>
               </Column>
             </Column>
@@ -214,7 +218,7 @@ export default function MultiSignPsbt({
   const psbtHex = useMemo(() => txInfo.psbtHexs[txInfo.currentIndex], [txInfo]);
   const toSignInputs = useMemo(() => txInfo.toSignInputsArray[txInfo.currentIndex], [txInfo]);
 
-  const networkFee = useMemo(() => (decodedPsbt ? sompiToAmount(decodedPsbt.fee) : 0), [decodedPsbt]);
+  const networkFee = useMemo(() => (decodedPsbt ? sompiToAmount(decodedPsbt.fee, 8) : 0), [decodedPsbt]);
   const currentAccount = useCurrentAccount();
   const detailsComponent = useMemo(() => {
     if (decodedPsbt) {
@@ -272,7 +276,10 @@ export default function MultiSignPsbt({
           <Column>
             <Text text="Phishing Detection" preset="title-bold" textCenter mt="xxl" />
             <Text text="Malicious behavior and suspicious activity have been detected." mt="md" />
-            <Text text="Your access to this page has been restricted by KasWare Wallet as it might be unsafe." mt="md" />
+            <Text
+              text="Your access to this page has been restricted by KasWare Wallet as it might be unsafe."
+              mt="md"
+            />
           </Column>
         </Content>
 
@@ -328,7 +335,8 @@ export default function MultiSignPsbt({
                         <Row
                           key={'output_' + index}
                           style={index === 0 ? {} : { borderColor: colors.border, borderTopWidth: 1, paddingTop: 10 }}
-                          justifyBetween>
+                          justifyBetween
+                        >
                           <Column>
                             <Row>
                               <AddressText address={v.address} color={isToSign ? 'white' : 'textDim'} />
@@ -340,7 +348,7 @@ export default function MultiSignPsbt({
                             </Row>
                           </Column>
                           <Row>
-                            <Text text={`${sompiToAmount(v.value)}`} color={isToSign ? 'white' : 'textDim'} />
+                            <Text text={`${sompiToAmount(v.value, 8)}`} color={isToSign ? 'white' : 'textDim'} />
                             <Text text="KAS" color="textDim" />
                           </Row>
                         </Row>
@@ -359,12 +367,13 @@ export default function MultiSignPsbt({
                       return (
                         <Column
                           key={'output_' + index}
-                          style={index === 0 ? {} : { borderColor: colors.border, borderTopWidth: 1, paddingTop: 10 }}>
+                          style={index === 0 ? {} : { borderColor: colors.border, borderTopWidth: 1, paddingTop: 10 }}
+                        >
                           <Column>
                             <Row justifyBetween>
                               <AddressText address={v.address} color={isMyAddress ? 'white' : 'textDim'} />
                               <Row>
-                                <Text text={`${sompiToAmount(v.value)}`} color={isMyAddress ? 'white' : 'textDim'} />
+                                <Text text={`${sompiToAmount(v.value, 8)}`} color={isMyAddress ? 'white' : 'textDim'} />
                                 <Text text="KAS" color="textDim" />
                               </Row>
                             </Row>
@@ -399,7 +408,8 @@ export default function MultiSignPsbt({
                   copyToClipboard(psbtHex).then(() => {
                     tools.toastSuccess(t('Copied'));
                   });
-                }}>
+                }}
+              >
                 <Icon icon="copy" color="textDim" />
                 <Text text="Copy psbt transaction data" color="textDim" />
               </Row>
@@ -416,7 +426,7 @@ export default function MultiSignPsbt({
             items={tabItems}
             preset="number-page"
             onTabClick={(key) => {
-              updateTxInfo({ currentIndex: key });
+              updateTxInfo({ currentIndex: Number(key) });
             }}
           />
         </Row>

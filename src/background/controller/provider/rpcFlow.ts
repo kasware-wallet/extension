@@ -1,18 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ethErrors } from 'eth-rpc-errors';
 import 'reflect-metadata';
 
 import { keyringService, notificationService, permissionService } from '@/background/service';
-import { PromiseFlow, underline2Camelcase } from '@/background/utils';
-import { CHAINS_ENUM, EVENTS } from '@/shared/constant';
+import { PromiseFlow } from '@/background/utils';
+import { underline2Camelcase } from '@/shared/utils';
+import { KASPA_EVENTS, KASPA_CHAINS_ENUM } from '@/shared/constant';
 import eventBus from '@/shared/eventBus';
 
 import providerController from './controller';
 
 const isSignApproval = (type: string) => {
-  const SIGN_APPROVALS = ['SignText', 'SignPsbt', 'SignTx'];
+  const SIGN_APPROVALS = ['SignText', 'SignPsbt', 'SignTx', 'CommitReveal', 'KRC20Order'];
   return SIGN_APPROVALS.includes(type);
 };
 const windowHeight = 600;
@@ -70,7 +68,7 @@ const flowContext = flow
           },
           { height: windowHeight }
         );
-        permissionService.addConnectedSite(origin, name, icon, CHAINS_ENUM.KAS);
+        permissionService.addConnectedSite(origin, name, icon, KASPA_CHAINS_ENUM.KASPA_MAINNET);
       }
     }
 
@@ -130,8 +128,8 @@ const flowContext = flow
     requestDefer
       .then((result) => {
         if (isSignApproval(approvalType)) {
-          eventBus.emit(EVENTS.broadcastToUI, {
-            method: EVENTS.SIGN_FINISHED,
+          eventBus.emit(KASPA_EVENTS.broadcastToUI, {
+            method: KASPA_EVENTS.SIGN_FINISHED,
             params: {
               success: true,
               data: result
@@ -142,8 +140,8 @@ const flowContext = flow
       })
       .catch((e: any) => {
         if (isSignApproval(approvalType)) {
-          eventBus.emit(EVENTS.broadcastToUI, {
-            method: EVENTS.SIGN_FINISHED,
+          eventBus.emit(KASPA_EVENTS.broadcastToUI, {
+            method: KASPA_EVENTS.SIGN_FINISHED,
             params: {
               success: false,
               errorMsg: JSON.stringify(e)

@@ -1,16 +1,16 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NETWORK_TYPES } from '@/shared/constant';
-import { NetworkType } from '@/shared/types';
+import type { NetworkType } from '@/shared/types';
 import { Button, Card, Column, Content, Footer, Header, Layout, Row, Text } from '@/ui/components';
 import WebsiteBar from '@/ui/components/WebsiteBar';
-import { useNetworkType } from '@/ui/state/settings/hooks';
+import { useAppSelector } from '@/ui/state/hooks';
+import { selectNetworkId } from '@/ui/state/settings/reducer';
 import { useApproval } from '@/ui/utils';
 
 interface Props {
   params: {
     data: {
       networkType: NetworkType;
+      networkId: string;
     };
     session: {
       origin: string;
@@ -21,10 +21,11 @@ interface Props {
 }
 
 export default function SwitchNetwork({ params: { data, session } }: Props) {
-  const networkType = useNetworkType();
-  const from = NETWORK_TYPES[networkType];
-  const to = NETWORK_TYPES[data.networkType];
+  const networkId = useAppSelector(selectNetworkId);
+  const from = NETWORK_TYPES[networkId];
+  const to = NETWORK_TYPES[data.networkId];
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
   const [getApproval, resolveApproval, rejectApproval] = useApproval();
 
   const handleCancel = () => {

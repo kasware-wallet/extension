@@ -1,7 +1,9 @@
-import extension from 'extensionizer';
+import '@/shared/utils/logger';
 import { nanoid } from 'nanoid';
+import extension from 'webextension-polyfill';
 
 import { Message } from '@/shared/utils';
+import log from 'loglevel';
 
 const channelName = nanoid();
 
@@ -16,7 +18,7 @@ function injectScript() {
     const scriptTag = document.createElement('script');
     scriptTag.setAttribute('async', 'false');
     scriptTag.setAttribute('channel', channelName);
-    scriptTag.src = extension.runtime.getURL('pageProvider.js');
+    scriptTag.src = extension.runtime.getURL('extensionPageScript.js');
     container.insertBefore(scriptTag, container.children[0]);
     container.removeChild(scriptTag);
 
@@ -25,9 +27,9 @@ function injectScript() {
     const pm = new PortMessage().connect();
 
     const bcm = new BroadcastChannelMessage(channelName).listen((data) => pm.request(data));
-
     // background notification
-    pm.on('message', (data) => {
+    pm.on('kaspa_message', (data) => {
+      log.debug('background kaspa notification', data);
       bcm.send('message', data);
     });
 

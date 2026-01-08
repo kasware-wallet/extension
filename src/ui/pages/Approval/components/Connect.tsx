@@ -1,12 +1,11 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
 
-import { Account, WebsiteState } from '@/shared/types';
+import type { Account } from '@/shared/types';
+import { WebsiteState } from '@/shared/types';
 import { Button, Card, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useCurrentAccount } from '@/ui/state/accounts/hooks';
-import { accountActions } from '@/ui/state/accounts/reducer';
+import { accountsActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { useCurrentKeyring, useKeyrings } from '@/ui/state/keyrings/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
@@ -26,7 +25,7 @@ export function MyItem({ account, selected, onClick }: MyItemProps, ref) {
   }
 
   return (
-    <Card justifyBetween mt="sm" onClick={onClick}>
+    <Card justifyBetween mt="sm" onClick={onClick} classname="card-select">
       <Row>
         <Column style={{ width: 20 }} selfItemsCenter>
           {selected && (
@@ -109,9 +108,13 @@ export default function Connect({ params: { session } }: Props) {
         </Header>
         <Content>
           <Column>
-            <Text text="Phishing Detection" preset="title-bold" textCenter mt="xxl" />
-            <Text text="Malicious behavior and suspicious activity have been detected." mt="md" />
-            <Text text="Your access to this page has been restricted by KasWare Wallet as it might be unsafe." mt="md" />
+            <Text text="Phishing Detection" preset="title-bold" textCenter mt="xxl" selectText />
+            <Text text="Malicious behavior and suspicious activity have been detected." mt="md" selectText />
+            <Text
+              text="Your access to this page has been restricted by KasWare Wallet as it might be unsafe."
+              mt="md"
+              selectText
+            />
           </Column>
         </Content>
 
@@ -132,8 +135,8 @@ export default function Connect({ params: { session } }: Props) {
         </Header>
         <Content>
           <Column>
-            <Text text="Warning" preset="title-bold" textCenter mt="xxl" />
-            <Text text={warning} mt="md" />
+            <Text text="Warning" preset="title-bold" textCenter mt="xxl" selectText />
+            <Text text={warning} mt="md" selectText />
           </Column>
         </Content>
 
@@ -159,9 +162,9 @@ export default function Connect({ params: { session } }: Props) {
       </Header>
       <Content>
         <Column>
-          <Text text="Connect with Kasware Wallet" preset="title-bold" textCenter mt="lg" />
-          <Text text="Select the account to use on this site" textCenter mt="md" />
-          <Text text="Only connect with sites you trust." preset="sub" textCenter mt="md" />
+          <Text text="Connect with Kasware Wallet" preset="title-bold" textCenter mt="lg" selectText />
+          <Text text="Select the account to use on this site" textCenter mt="md" selectText />
+          <Text text="Only connect with sites you trust." preset="sub" textCenter mt="md" selectText />
 
           {keyrings.map((keyring) => (
             <Column mt="lg" key={keyring.key}>
@@ -176,7 +179,7 @@ export default function Connect({ params: { session } }: Props) {
                     await wallet.changeKeyring(keyring, accountIndex);
                     dispatch(keyringsActions.setCurrent(keyring));
                     const _currentAccount = await wallet.getCurrentAccount();
-                    dispatch(accountActions.setCurrent(_currentAccount));
+                    dispatch(accountsActions.setCurrent(_currentAccount));
                   }}
                 />
               ))}

@@ -1,6 +1,6 @@
 import { ethErrors } from 'eth-rpc-errors';
 
-import { KaswareProvider } from './index';
+import type { KaswareProvider } from './index';
 
 class PushEventHandlers {
   provider: KaswareProvider;
