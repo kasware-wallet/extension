@@ -1,18 +1,21 @@
-import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
-
-import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
-import { fontSizes } from '@/ui/theme/font';
-import { shortAddress, sompiToAmount } from '@/ui/utils';
-import { IUtxoEntry } from 'kaspa-wasm';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+
+import type { IKaspaUtxoEntryReference } from '@/shared/types';
+import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { useAppSelector } from '@/ui/state/hooks';
+import { selectBlockstreamUrl, selectKasTick } from '@/ui/state/settings/reducer';
+import { fontSizes } from '@/ui/theme/font';
+import { shortAddress } from '@/ui/utils';
+import { sompiToAmount } from '@/shared/utils/format';
 
 export default function UtxoDetailScreen() {
   const { t } = useTranslation();
   const { state } = useLocation();
   const { utxoDetail } = state as {
-    utxoDetail: IUtxoEntry;
+    utxoDetail: IKaspaUtxoEntryReference;
   };
+  const kasTick = useAppSelector(selectKasTick);
 
   return (
     <Layout>
@@ -20,66 +23,63 @@ export default function UtxoDetailScreen() {
         onBack={() => {
           window.history.go(-1);
         }}
-        title={t('History')}
+        title={t('UTXO')}
       />
       <Content>
         <Column>
           {utxoDetail &&
-            Object.entries(utxoDetail).map(([key, value]) => {
-              if (key == 'address') {
+            Object.entries(utxoDetail.entry).map(([key, value]) => {
+              if ((key as keyof typeof utxoDetail.entry) == 'address') {
                 return (
                   <div key="address">
-                    <Text text="Address" preset="sub" />
-                    <Text text={value} style={{ wordWrap: 'break-word' }} />
+                    <Text text="Address" preset="sub" selectText />
+                    <Text text={value as string} style={{ wordWrap: 'break-word' }} selectText />
                   </div>
                 );
               }
 
-              if (key == 'outpoint') {
+              if ((key as keyof typeof utxoDetail.entry) == 'outpoint') {
                 return <Outpoint key={key} outpoint={value} />;
               }
-              // if (key == 'utxoEntry') {
-              //   return <UtxoEntry key={key} utxoEntry={value} />;
-              // }
-              if (key == 'amount') {
+              if ((key as keyof typeof utxoDetail.entry) == 'amount') {
                 return (
                   <Column mt="md" key={key}>
                     <Row justifyBetween>
-                      <Text text="Amount" preset="sub" />
+                      <Text text="Amount" preset="sub" selectText />
                       <Row>
-                        <Text text={`${sompiToAmount(Number(value))} kas`} />
+                        <Text text={`${sompiToAmount(Number(value), 8)} ${kasTick}`} selectText />
                       </Row>
                     </Row>
                   </Column>
                 );
               }
-              if (key == 'scriptPublicKey') {
+              if ((key as keyof typeof utxoDetail.entry) == 'scriptPublicKey') {
                 return (
                   <Column mt="md" key={key}>
-                    <Text text="script Public Key" preset="sub" />
-                    <Text text={value.script} style={{ wordWrap: 'break-word' }} />
+                    <Text text="script Public Key" preset="sub" selectText />
+                    <Text text={value as string} style={{ wordWrap: 'break-word' }} selectText />
                   </Column>
                 );
               }
-              if (key == 'blockDaaScore') {
+              if ((key as keyof typeof utxoDetail.entry) == 'blockDaaScore') {
                 return (
                   <Column mt="md" key={key}>
                     <Row justifyBetween>
-                      <Text text="Block DAA Score" preset="sub" />
+                      <Text text="Block DAA Score" preset="sub" selectText />
                       <Row>
-                        <Text text={`${value}`} />
+                        <Text text={`${value}`} selectText />
                       </Row>
                     </Row>
                   </Column>
                 );
               }
-              if (key == 'isCoinbase') {
+              if ((key as keyof typeof utxoDetail.entry) == 'isCoinbase') {
                 return (
                   <Column mt="md" key={key}>
                     <Row justifyBetween>
-                      <Text text="is Coinbase" preset="sub" />
+                      <Text text="is Coinbase" preset="sub" selectText />
                       <Row>
-                        <Text text={`${value}`} />
+                        <Text text={`${value}`} selectText />
                       </Row>
                     </Row>
                   </Column>
@@ -87,8 +87,8 @@ export default function UtxoDetailScreen() {
               }
               return (
                 <Row key={key}>
-                  <Text text={key} preset="sub" />
-                  <Text text={value} />
+                  <Text text={key} preset="sub" selectText />
+                  <Text text={value as string} selectText />
                 </Row>
               );
             })}
@@ -98,17 +98,20 @@ export default function UtxoDetailScreen() {
   );
 }
 function Outpoint({ outpoint }) {
-  const blockstreamUrl = useBlockstreamUrl();
+  const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
   return (
     <Column>
-      <Text text="Transaction ID" preset="sub" />
+      <Text text="Transaction ID" preset="sub" selectText />
       <div>
         <Row
+          gap="xs"
+          itemsCenter
           onClick={() => {
-            window.open(`${blockstreamUrl}/transaction/${outpoint.transactionId}`);
-          }}>
-          <Text text={shortAddress(outpoint.transactionId, 15)} />
-          <Icon icon="link" size={fontSizes.xs} />
+            window.open(`${blockstreamUrl}/txs/${outpoint.transactionId}`);
+          }}
+        >
+          <Text text={shortAddress(outpoint.transactionId)} preset="link" selectText />
+          <Icon icon="link" size={fontSizes.xxs} color="blue" />
         </Row>
       </div>
     </Column>

@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { Checkbox, Radio } from 'antd';
-import { CheckboxChangeEvent } from 'antd/lib/checkbox';
-import * as bip39 from 'bip39';
-import bitcore from 'bitcore-lib';
+import type { CheckboxChangeEvent } from 'antd/lib/checkbox';
+import { validateMnemonic } from '@scure/bip39';
+import { wordlist } from '@scure/bip39/wordlists/english';
+// import bitcore from 'bitcore-lib';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
-import { ADDRESS_TYPES, OW_HD_PATH, RESTORE_WALLETS } from '@/shared/constant';
-import { AddressType, IScannedGroup, RestoreWalletType } from '@/shared/types';
+import { ADDRESS_TYPES, RESTORE_WALLETS } from '@/shared/constant';
+import type { IScannedGroup } from '@/shared/types';
+import { AddressType, RestoreWalletType } from '@/shared/types';
 import { Button, Card, Column, Content, Grid, Header, Input, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressTypeCard2 } from '@/ui/components/AddressTypeCard';
@@ -18,11 +19,13 @@ import { Icon } from '@/ui/components/Icon';
 import { TabBar } from '@/ui/components/TabBar';
 import { useCreateAccountCallback } from '@/ui/state/global/hooks';
 import { fontSizes } from '@/ui/theme/font';
-import { copyToClipboard, generateHdPath, sompiToAmount, useWallet } from '@/ui/utils';
-import { LoadingOutlined } from '@ant-design/icons';
+import { copyToClipboard, generateHdPath, useWallet } from '@/ui/utils';
+import { CopyOutlined, LoadingOutlined, ReloadOutlined } from '@ant-design/icons';
 
+import log from 'loglevel';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
+import { sompiToAmount } from '@/shared/utils/format';
 
 function Step0({
   contextData,
@@ -35,7 +38,7 @@ function Step0({
     <Column gap="lg">
       <Text text="Choose a wallet" preset="title-bold" textCenter mt="xl" />
       {RESTORE_WALLETS.map((item, index) => {
-        if (item.value == RestoreWalletType.TANGEM) return null;
+        // if (item.value == RestoreWalletType.TANGEM) return null;
         return (
           <Button
             // disabled={item.value == RestoreWalletType.CORE_GOLANG_CLI}
@@ -43,7 +46,8 @@ function Step0({
             preset="default"
             onClick={() => {
               updateContextData({ tabType: TabType.STEP2, restoreWalletType: item.value });
-            }}>
+            }}
+          >
             <Text text={item.name} />
           </Button>
         );
@@ -64,11 +68,18 @@ function Step1_Create({
 
   const wallet = useWallet();
   const tools = useTools();
-  const [words, setWords] = useState([]);
+  const [words, setWords] = useState<string[]>([]);
   const [wordCount, setWordCount] = useState(12);
 
   const init = async () => {
     const _mnemonics = (await wallet.getPreMnemonics(wordCount)) || (await wallet.generatePreMnemonic(wordCount));
+    updateContextData({
+      mnemonics: _mnemonics
+    });
+    setWords(_mnemonics.split(' '));
+  };
+  const renewSeedphrase = async () => {
+    const _mnemonics = await wallet.generatePreMnemonic(wordCount);
     updateContextData({
       mnemonics: _mnemonics
     });
@@ -115,7 +126,8 @@ function Step1_Create({
               setWordCount(wordsType === WordsType.WORDS_24 ? 24 : 12);
               // setKeys(new Array(wordsItems[wordsType].count).fill(''));
             }}
-            value={contextData.wordsType}>
+            value={contextData.wordsType}
+          >
             {wordsItems.map((v) => (
               <Radio key={v.key} value={v.key}>
                 {v.label}
@@ -125,13 +137,23 @@ function Step1_Create({
         </Row>
       ) : null}
 
-      <Row
-        justifyCenter
-        onClick={(e) => {
-          copy(contextData.mnemonics);
-        }}>
-        <Icon icon="copy" color="textDim" />
-        <Text text="Copy to clipboard" color="textDim" />
+      <Row justifyBetween itemsCenter>
+        <Row
+          justifyCenter
+          itemsCenter
+          selfItemsCenter
+          fullX
+          onClick={() => {
+            copy(contextData.mnemonics);
+          }}
+        >
+          <Text text="Copy" color="textDim" itemsCenter selfItemsCenter />
+          <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+        </Row>
+        <Row justifyCenter itemsCenter selfItemsCenter fullX onClick={renewSeedphrase}>
+          <Text text="Renew" color="textDim" itemsCenter selfItemsCenter />
+          <ReloadOutlined style={{ color: '#888', fontSize: 14 }} />
+        </Row>
       </Row>
 
       <Row justifyCenter>
@@ -182,7 +204,7 @@ function Step1_Import({
     } else if (contextData.restoreWalletType === RestoreWalletType.KASPANET_WEB) {
       return [WORDS_12_ITEM];
     } else if (contextData.restoreWalletType === RestoreWalletType.KASPIUM) {
-      return [WORDS_24_ITEM];
+      return [WORDS_12_ITEM, WORDS_24_ITEM];
     } else if (contextData.restoreWalletType === RestoreWalletType.CORE_GOLANG_CLI) {
       return [WORDS_24_ITEM];
     } else if (contextData.restoreWalletType === RestoreWalletType.OKX) {
@@ -229,7 +251,7 @@ function Step1_Import({
     }
 
     const mnemonic = keys.join(' ');
-    if (!bip39.validateMnemonic(mnemonic)) {
+    if (!validateMnemonic(mnemonic, wordlist)) {
       return;
     }
 
@@ -240,18 +262,19 @@ function Step1_Import({
     //todo
   }, [hover]);
 
-  const createAccount = useCreateAccountCallback();
-  const navigate = useNavigate();
+  // const createAccount = useCreateAccountCallback();
+  // const navigate = useNavigate();
   const tools = useTools();
   const onNext = async () => {
     try {
       const mnemonics = keys.join(' ');
-      if (contextData.restoreWalletType === RestoreWalletType.OW) {
-        await createAccount(mnemonics, OW_HD_PATH, '', AddressType.P2TR, 1);
-        navigate('MainScreen');
-      } else {
-        updateContextData({ mnemonics, tabType: TabType.STEP3 });
-      }
+      // if (contextData.restoreWalletType === RestoreWalletType.OW) {
+      //   await createAccount(mnemonics, OW_HD_PATH, '', AddressType.P2TR, 1);
+      //   navigate('WalletTabScreen');
+      // } else {
+      //   updateContextData({ mnemonics, tabType: TabType.STEP3 });
+      // }
+      updateContextData({ mnemonics, tabType: TabType.STEP3 });
     } catch (e) {
       tools.toastError((e as any).message);
     }
@@ -285,7 +308,8 @@ function Step1_Import({
               updateContextData({ wordsType });
               setKeys(new Array(wordsItems[wordsType].count).fill(''));
             }}
-            value={contextData.wordsType}>
+            value={contextData.wordsType}
+          >
             {wordsItems.map((v) => (
               <Radio key={v.key} value={v.key}>
                 {v.label}
@@ -359,6 +383,7 @@ function Step2({
 }) {
   const wallet = useWallet();
   const tools = useTools();
+  const { t } = useTranslation();
 
   const hdPathOptions = useMemo(() => {
     const restoreWallet = RESTORE_WALLETS[contextData.restoreWalletType];
@@ -417,9 +442,15 @@ function Step2({
   const [pathError, setPathError] = useState('');
   const [loading, setLoading] = useState(false);
   const [discoverLoading, setDiscoverLoading] = useState(false);
+  const [enableContinue, setEnableContinue] = useState(false);
+  const [passPhraseChecked, setPassPhraseChecked] = useState(contextData.isRestore);
 
   const createAccount = useCreateAccountCallback();
   const navigate = useNavigate();
+  const onChange = (e: CheckboxChangeEvent) => {
+    const val = e.target.checked;
+    setPassPhraseChecked(val);
+  };
 
   const [pathText, setPathText] = useState(contextData.customHdPath);
 
@@ -458,7 +489,7 @@ function Step2({
           addresses.push(v.address);
         });
       } catch (e) {
-        console.log(e);
+        log.debug(e);
         setError((e as any).message);
         return;
       }
@@ -493,7 +524,7 @@ function Step2({
       const balance = balances[i];
       const sompi = balance.totalSompi;
       addressAssets[address] = {
-        total_kas: sompiToAmount(balance.totalSompi),
+        total_kas: sompiToAmount(balance.totalSompi, 8),
         sompi
       };
       if (sompi > maxSompi) {
@@ -514,32 +545,40 @@ function Step2({
     fetchAddressesBalance();
   }, [previewAddresses]);
 
-  const submitCustomHdPath = (text: string) => {
-    setPathError('');
-    setPathText(text);
-    if (text !== '') {
-      const isValid = bitcore.HDPrivateKey.isValidPath(text);
-      if (!isValid) {
-        setPathError('Invalid derivation path.');
-        return;
-      }
-      updateContextData({
-        customHdPath: text
-      });
-    } else {
-      updateContextData({
-        customHdPath: ''
-      });
-    }
-  };
+  // const submitCustomHdPath = (text: string) => {
+  //   setPathError('');
+  //   setPathText(text);
+  //   if (text !== '') {
+  //     const isValid = bitcore.HDPrivateKey.isValidPath(text);
+  //     if (!isValid) {
+  //       setPathError('Invalid derivation path.');
+  //       return;
+  //     }
+  //     updateContextData({
+  //       customHdPath: text
+  //     });
+  //   } else {
+  //     updateContextData({
+  //       customHdPath: ''
+  //     });
+  //   }
+  // };
 
   const disabled = useMemo(() => {
-    if (!error && !pathError) {
-      return false;
-    } else {
-      return true;
-    }
-  }, [error, pathError]);
+    if (error || pathError) return true;
+    if (discoverLoading == false || enableContinue == true) return false;
+    return true;
+    // if (!error && !pathError) {
+    //   return false;
+    // } else {
+    //   return true;
+    // }
+  }, [error, pathError, discoverLoading, enableContinue]);
+  useEffect(() => {
+    setTimeout(() => {
+      setEnableContinue(true);
+    }, 4000);
+  }, []);
 
   const onNext = async () => {
     try {
@@ -579,7 +618,7 @@ function Step2({
           startIndex
         );
       }
-      navigate('MainScreen');
+      navigate('WalletTabScreen');
     } catch (e) {
       tools.toastError((e as any).message);
     }
@@ -607,8 +646,9 @@ function Step2({
             groups.push(sgroup);
           }
         } catch (e) {
-          console.log(e);
-          setError((e as any).message);
+          log.debug(e);
+          tools.toastWarning((e as any).message);
+          // setError((e as any).message);
           return;
         }
       }
@@ -639,7 +679,7 @@ function Step2({
           }
           if (newAddrNum > 0) {
             tools.toastSuccess(`Found ${newAddrNum} more addresses with balance`);
-          }else{
+          } else {
             tools.toastWarning('No new addresses with balance found');
           }
         }
@@ -654,7 +694,7 @@ function Step2({
   };
 
   useEffect(() => {
-    if (contextData.isRestore) {
+    if (contextData.isRestore && contextData.restoreWalletType !== RestoreWalletType.CHAINGE) {
       scanVaultAddress();
     }
   }, []);
@@ -680,7 +720,7 @@ function Step2({
         scannedGroups.map((item, index) => {
           // const options = allHdPathOptions[index];
           const options = hdPathOptions[index];
-          if (!item.sompi_arr.find((v) => v > 0)) {
+          if (!item.sompi_arr.find((v) => v > 0) && !item.krc20_arr.filter((v) => v == true)) {
             // skip group with no vault
             return null;
           }
@@ -691,6 +731,7 @@ function Step2({
               items={item.address_arr.map((v, index) => ({
                 address: v,
                 sompi: item.sompi_arr[index],
+                krc20: item.krc20_arr[index],
                 path: generateHdPath(
                   contextData.customHdPath || options.hdPath,
                   item.dtype_arr[index].toString(),
@@ -757,7 +798,7 @@ function Step2({
       </Column>
       {pathError && <Text text={pathError} color="error" />}
       {error && <Text text={error} color="error" />} */}
-      {!discoverLoading && contextData.isRestore && (
+      {!discoverLoading && contextData.isRestore && contextData.restoreWalletType !== RestoreWalletType.CHAINGE && (
         <Row justifyCenter>
           <Text
             text="Discover more addresses"
@@ -777,20 +818,48 @@ function Step2({
           </Icon>
         </Row>
       )}
-      <Text text="Passphrase (Optional)" preset="bold" mt="lg" />
-
-      <Input
-        placeholder={'Passphrase'}
-        defaultValue={contextData.passphrase}
-        onChange={async (e) => {
-          updateContextData({
-            passphrase: e.target.value
-          });
-        }}
-      />
+      <Row mt="lg">
+        <Checkbox onChange={onChange} checked={passPhraseChecked} style={{ fontSize: fontSizes.sm }}>
+          <Text text={`${t('Advanced Option')}`} preset="xsub" color="textDim" />
+        </Checkbox>
+      </Row>
+      {passPhraseChecked == true && (
+        <>
+          <Text text="Passphrase (Optional)" preset="bold" />
+          <Input
+            placeholder={'Passphrase'}
+            defaultValue={contextData.passphrase}
+            onChange={async (e) => {
+              updateContextData({
+                passphrase: e.target.value
+              });
+            }}
+          />
+          {contextData.isRestore == false && contextData.passphrase?.length > 0 && (
+            <Text
+              style={{ userSelect: 'text' }}
+              text="Passphrase is as important as seedphrase. Do write it down."
+              color="warning"
+              preset="sub"
+            />
+          )}
+          {contextData.isRestore == true && contextData.passphrase?.length > 0 && (
+            <Text
+              style={{ userSelect: 'text' }}
+              text="Hint: Passphrase is not a password. Only enter if you understand what a passphrase is."
+              preset="sub"
+            />
+          )}
+        </>
+      )}
 
       <FooterButtonContainer>
-        <Button text="Continue" preset="primary" onClick={onNext} disabled={disabled} />
+        <Button
+          text={disabled ? 'Scanning addresses' : 'Continue'}
+          preset="primary"
+          onClick={onNext}
+          disabled={disabled}
+        />
       </FooterButtonContainer>
 
       {/* {loading && (
@@ -888,38 +957,38 @@ export default function CreateHDWalletScreen() {
 
   const items = useMemo(() => {
     if (contextData.isRestore) {
-      if (contextData.restoreWalletType === RestoreWalletType.OW) {
-        return [
-          {
-            key: TabType.STEP1,
-            label: 'Step 1',
-            children: <Step0 contextData={contextData} updateContextData={updateContextData} />
-          },
-          {
-            key: TabType.STEP2,
-            label: 'Step 2',
-            children: <Step1_Import contextData={contextData} updateContextData={updateContextData} />
-          }
-        ];
-      } else {
-        return [
-          {
-            key: TabType.STEP1,
-            label: 'Step 1',
-            children: <Step0 contextData={contextData} updateContextData={updateContextData} />
-          },
-          {
-            key: TabType.STEP2,
-            label: 'Step 2',
-            children: <Step1_Import contextData={contextData} updateContextData={updateContextData} />
-          },
-          {
-            key: TabType.STEP3,
-            label: 'Step 3',
-            children: <Step2 contextData={contextData} updateContextData={updateContextData} />
-          }
-        ];
-      }
+      // if (contextData.restoreWalletType === RestoreWalletType.OW) {
+      //   return [
+      //     {
+      //       key: TabType.STEP1,
+      //       label: 'Step 1',
+      //       children: <Step0 contextData={contextData} updateContextData={updateContextData} />
+      //     },
+      //     {
+      //       key: TabType.STEP2,
+      //       label: 'Step 2',
+      //       children: <Step1_Import contextData={contextData} updateContextData={updateContextData} />
+      //     }
+      //   ];
+      // } else {
+      return [
+        {
+          key: TabType.STEP1,
+          label: 'Step 1',
+          children: <Step0 contextData={contextData} updateContextData={updateContextData} />
+        },
+        {
+          key: TabType.STEP2,
+          label: 'Step 2',
+          children: <Step1_Import contextData={contextData} updateContextData={updateContextData} />
+        },
+        {
+          key: TabType.STEP3,
+          label: 'Step 3',
+          children: <Step2 contextData={contextData} updateContextData={updateContextData} />
+        }
+      ];
+      // }
     } else {
       return [
         {
@@ -952,6 +1021,7 @@ export default function CreateHDWalletScreen() {
   return (
     <Layout>
       <Header
+        hideConnectingComp
         onBack={() => {
           if (fromUnlock) {
             navigate('WelcomeScreen');
@@ -992,9 +1062,8 @@ export default function CreateHDWalletScreen() {
   );
 }
 
-function checkWords(seed = '', language = 'english') {
+function checkWords(seed = '') {
   const words = seed.split(' ');
-  const wordlist = bip39.wordlists[language];
   let word: string | undefined;
   while ((word = words.pop()) != null) {
     // eslint-disable-next-line no-loop-func

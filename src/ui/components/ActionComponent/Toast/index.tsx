@@ -1,4 +1,5 @@
-import { CSSProperties, useEffect } from 'react';
+import type { CSSProperties } from 'react';
+import { useEffect } from 'react';
 
 import { colors } from '@/ui/theme/colors';
 
@@ -46,6 +47,7 @@ export function Toast(props: ToastProps) {
     setTimeout(() => {
       onClose();
     }, 5000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-unused-vars */
+
+import { t } from 'i18next';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ADDRESS_TYPES } from '@/shared/constant';
 import { AddressType } from '@/shared/types';
@@ -10,11 +11,11 @@ import { useTools } from '@/ui/components/ActionComponent';
 import { AddressTypeCard } from '@/ui/components/AddressTypeCard';
 import { FooterButtonContainer } from '@/ui/components/FooterButtonContainer';
 import { TabBar } from '@/ui/components/TabBar';
-import { sompiToAmount, useWallet } from '@/ui/utils';
+import { useWallet } from '@/ui/utils';
+import { remove0x } from '@metamask/utils';
 
-import { t } from 'i18next';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
+import { sompiToAmount } from '@/shared/utils/format';
 
 function Step1({
   contextData,
@@ -47,7 +48,7 @@ function Step1({
 
   const btnClick = async () => {
     try {
-      const _res = await wallet.createTmpKeyringWithPrivateKey(wif, AddressType.KASPA_44_111111);
+      const _res = await wallet.createTmpKeyringWithPrivateKey(remove0x(wif), AddressType.KASPA_44_111111);
       if (_res.accounts.length == 0) {
         throw new Error(t('Invalid PrivateKey'));
       }
@@ -104,7 +105,13 @@ function Step2({
       if (v.isKaswareLegacy) {
         return false;
       }
-      return true;
+      /**
+       * AddressType.KASPA_44_111111, AddressType.KASPA_44_972, AddressType.KASPA_ONEKEY_44_111111 and
+       * KASPA_CHAINGE_44_111111_0_0 generate the same address from a privatekey.
+       * only support for AddressType.KASPA_44_111111 and AddressType.KASPA_TANGEM_44_111111
+       */
+      return [AddressType.KASPA_44_111111, AddressType.KASPA_TANGEM_44_111111].includes(v.value);
+      // return true;
     })
       .sort((a, b) => a.displayIndex - b.displayIndex)
       .map((v) => {
@@ -132,10 +139,10 @@ function Step2({
   const self = selfRef.current;
   const run = async () => {
     const addresses: string[] = [];
-    // for (let i = 0; i < hdPathOptions.length; i++) {
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < hdPathOptions.length; i++) {
+      // for (let i = 0; i < 1; i++) {
       const options = hdPathOptions[i];
-      const keyring = await wallet.createTmpKeyringWithPrivateKey(contextData.wif, options.addressType);
+      const keyring = await wallet.createTmpKeyringWithPrivateKey(remove0x(contextData.wif), options.addressType);
       const address = keyring.accounts[0].address;
       addresses.push(address);
     }
@@ -146,8 +153,8 @@ function Step2({
       const balance = balances[i];
       const sompi = balance.totalSompi;
       self.addressBalances[address] = {
-        total_kas: sompiToAmount(balance.totalSompi),
-        sompi,
+        total_kas: sompiToAmount(balance.totalSompi, 8),
+        sompi
       };
       if (sompi > self.maxSompi) {
         self.maxSompi = sompi;
@@ -171,8 +178,8 @@ function Step2({
 
   const onNext = async () => {
     try {
-      await wallet.createKeyringWithPrivateKey(contextData.wif, contextData.addressType);
-      navigate('MainScreen');
+      await wallet.createKeyringWithPrivateKey(remove0x(contextData.wif), contextData.addressType);
+      navigate('WalletTabScreen');
     } catch (e) {
       tools.toastError((e as any).message);
     }
@@ -184,14 +191,13 @@ function Step2({
         const address = previewAddresses[index];
         const assets = addressAssets[address] || {
           total_kas: '--',
-          sompi: 0,
+          sompi: 0
         };
         const hasVault = assets.sompi > 0;
         if (item.isKaswareLegacy && !hasVault) {
           return null;
         }
-        // only show the first address type
-        return index == 0 ? (
+        return (
           <AddressTypeCard
             key={index}
             label={`${item.label}`}
@@ -202,7 +208,7 @@ function Step2({
               updateContextData({ addressType: item.addressType });
             }}
           />
-        ) : null;
+        );
       })}
 
       <FooterButtonContainer>
@@ -264,6 +270,7 @@ export default function CreateSimpleWalletScreen() {
   return (
     <Layout>
       <Header
+        hideConnectingComp
         onBack={() => {
           window.history.go(-1);
         }}

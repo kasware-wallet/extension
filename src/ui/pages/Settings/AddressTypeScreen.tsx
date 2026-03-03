@@ -6,10 +6,11 @@ import { useTools } from '@/ui/components/ActionComponent';
 import { AddressTypeCard } from '@/ui/components/AddressTypeCard';
 import { useCurrentAccount, useReloadAccounts } from '@/ui/state/accounts/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
-import { sompiToAmount, useWallet } from '@/ui/utils';
+import { useWallet } from '@/ui/utils';
 
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
+import { sompiToAmount } from '@/shared/utils/format';
 
 export default function AddressTypeScreen() {
   const wallet = useWallet();
@@ -21,7 +22,7 @@ export default function AddressTypeScreen() {
   const reloadAccounts = useReloadAccounts();
   const [addresses, setAddresses] = useState<string[]>([]);
   const [addressAssets, setAddressAssets] = useState<{
-    [key: string]: { total_kas: string; sompi: number};
+    [key: string]: { total_kas: string; sompi: number };
   }>({});
 
   const selfRef = useRef<{
@@ -34,26 +35,30 @@ export default function AddressTypeScreen() {
   const tools = useTools();
   const loadAddresses = async () => {
     tools.showLoading(true);
-
-    const _res = await wallet.getAllAddresses(currentKeyring, account.index || 0);
-    setAddresses(_res);
-    const balances = await wallet.getMultiAddressAssets(_res.join(','));
-    for (let i = 0; i < _res.length; i++) {
-      const address = _res[i];
-      const balance = balances[i];
-      const sompi = balance.totalSompi;
-      self.addressAssets[address] = {
-        total_kas: sompiToAmount(balance.totalSompi),
-        sompi,
-      };
+    try {
+      const _res = await wallet.getAllAddresses(currentKeyring, account.index || 0);
+      setAddresses(_res);
+      const balances = await wallet.getMultiAddressAssets(_res.join(','));
+      for (let i = 0; i < _res.length; i++) {
+        const address = _res[i];
+        const balance = balances[i];
+        const sompi = balance.totalSompi;
+        self.addressAssets[address] = {
+          total_kas: sompiToAmount(balance.totalSompi, 8),
+          sompi
+        };
+      }
+      setAddressAssets(self.addressAssets);
+    } catch (e: any) {
+      tools.toastError(e?.message ? e.message : JSON.stringify(e));
+    } finally {
+      tools.showLoading(false);
     }
-    setAddressAssets(self.addressAssets);
-
-    tools.showLoading(false);
   };
 
   useEffect(() => {
     loadAddresses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addressTypes = useMemo(() => {
@@ -91,7 +96,7 @@ export default function AddressTypeScreen() {
             const address = addresses[item.value];
             const assets = addressAssets[address] || {
               total_kas: '--',
-              sompi: 0,
+              sompi: 0
             };
             let name = `${item.name} (${item.hdPath}/${account.index})`;
             if (currentKeyring.type === KEYRING_TYPE.SimpleKeyring) {
@@ -110,7 +115,7 @@ export default function AddressTypeScreen() {
                   }
                   await wallet.changeAddressType(item.value);
                   reloadAccounts();
-                  navigate('MainScreen');
+                  navigate('WalletTabScreen');
                   tools.toastSuccess(t('Address type changed'));
                 }}
               />

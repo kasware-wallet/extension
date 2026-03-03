@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Checkbox } from 'antd';
 import { useEffect, useState } from 'react';
 
@@ -12,9 +10,9 @@ import { Popover } from '../Popover';
 import { Row } from '../Row';
 import { Text } from '../Text';
 
-export const NoticePopover = ({ onClose }: { onClose: () => void }) => {
+export const NoticePopover = ({ content, onClose }: { content: string; onClose: () => void }) => {
   const [checked1, setChecked1] = useState(false);
-  const [checked2, setChecked2] = useState(false);
+  const [checked2, setChecked2] = useState(true);
 
   const [enable, setEnable] = useState(false);
   const [coolDown, setCoolDown] = useState(3);
@@ -32,17 +30,29 @@ export const NoticePopover = ({ onClose }: { onClose: () => void }) => {
   return (
     <Popover>
       <Column justifyCenter itemsCenter>
-        <Text text="Compatibility Tips" preset="title-bold" />
+        {/* <Text text="Tips" preset="title-bold" /> */}
         <Icon icon={'info'} color={'icon_yellow'} size={57} />
 
         <Column gap="zero">
-          <Text text={'Please be aware that:'} preset={'bold'} />
+          {/* <Text text={'Please be aware that:'} preset={'bold'} /> */}
           <div style={{ marginTop: 8 }}>
             <Checkbox
               checked={checked1}
               onChange={(e) => {
                 setChecked1(e.target.checked);
-              }}>
+              }}
+            >
+              <Text
+                text={content}
+                preset={'bold'}
+                style={{
+                  userSelect: 'text',
+                  overflow: 'auto',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  flexWrap: 'wrap'
+                }}
+              />
             </Checkbox>
           </div>
           <Row style={{ borderTopWidth: 1, borderColor: colors.border }} my="md" />
@@ -54,7 +64,7 @@ export const NoticePopover = ({ onClose }: { onClose: () => void }) => {
             preset="primary"
             disabled={!checked1 || !checked2}
             full
-            onClick={(e) => {
+            onClick={() => {
               if (!enable) return;
               if (onClose) {
                 onClose();

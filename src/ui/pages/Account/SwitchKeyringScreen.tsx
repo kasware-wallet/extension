@@ -1,32 +1,32 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import VirtualList from 'rc-virtual-list';
-import { forwardRef, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { KEYRING_TYPE } from '@/shared/constant';
-import { WalletKeyring } from '@/shared/types';
+import type { WalletKeyring } from '@/shared/types';
 import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { RemoveWalletPopover } from '@/ui/components/RemoveWalletPopover';
-import { accountActions } from '@/ui/state/accounts/reducer';
+import { useKeyringsBalancesQuery } from '@/ui/state/accounts/hooks';
+import { accountsActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { useCurrentKeyring, useKeyrings } from '@/ui/state/keyrings/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
 import { colors } from '@/ui/theme/colors';
-import { shortAddress, useWallet } from '@/ui/utils';
+import { formatLocaleString, shortAddress, useWallet } from '@/ui/utils';
 import {
   CheckCircleFilled,
   DeleteOutlined,
   EditOutlined,
+  InfoCircleOutlined,
   KeyOutlined,
   LoadingOutlined,
   PlusCircleOutlined,
   SettingOutlined
 } from '@ant-design/icons';
 
-import { useFetchKeyringsBalancesCallback } from '@/ui/state/accounts/hooks';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
+import { useDisplayName } from '@/ui/hooks/useDisplayName';
 
 export interface ItemData {
   key: string;
@@ -38,7 +38,7 @@ interface MyItemProps {
   autoNav?: boolean;
 }
 
-export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
+export function MyItem({ keyring, autoNav }: MyItemProps, _ref) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const currentKeyring = useCurrentKeyring();
@@ -58,133 +58,172 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
     const address = keyring.accounts[0].address;
     return shortAddress(address, 9);
   }, []);
+  const displayName = useDisplayName(keyring.alianName);
 
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [removeVisible, setRemoveVisible] = useState(false);
 
   return (
-    <Card classname="card-select" justifyBetween mt="md">
-      <Row
+    <Row full justifyBetween selfItemsCenter style={{ gap: 2 }}>
+      <Card
+        classname="card-select"
         full
-        onClick={async (e) => {
-          if (!keyring.accounts[0]) {
-            tools.toastError('Invalid wallet, please remove it and add new one');
-            return;
-          }
-          if (currentKeyring.key !== keyring.key) {
-            await wallet.changeKeyring(keyring);
-            dispatch(keyringsActions.setCurrent(keyring));
-            const _currentAccount = await wallet.getCurrentAccount();
-            dispatch(accountActions.setCurrent(_currentAccount));
-          }
-          if (autoNav) navigate('MainScreen');
-        }}>
-        <Column style={{ width: 20 }} selfItemsCenter>
-          {selected && (
-            <Icon>
-              <CheckCircleFilled />
-            </Icon>
-          )}
-        </Column>
-
-        <Column full>
-          <Row justifyBetween>
-            <Text text={`${keyring.alianName}`} />
-            {keyring?.balanceKas && <Text text={keyring?.balanceKas} />}
-          </Row>
-          <Text text={`${displayAddress}`} preset="sub" />
-        </Column>
-      </Row>
-
-      <Column style={{ width: 20 }} selfItemsCenter>
-        {optionsVisible && (
-          <div
-            style={{
-              position: 'fixed',
-              zIndex: 10,
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0
-            }}
-            onTouchStart={(e) => {
-              setOptionsVisible(false);
-            }}
-            onMouseDown={(e) => {
-              setOptionsVisible(false);
-            }}></div>
-        )}
-
-        <Icon
+        justifyBetween
+        mt="md"
+        style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+      >
+        <Row
+          full
           onClick={async (e) => {
-            setOptionsVisible(!optionsVisible);
-          }}>
-          <SettingOutlined />
-        </Icon>
+            if (!keyring.accounts[0]) {
+              tools.toastError('Invalid wallet, please remove it and add new one');
+              return;
+            }
+            if (currentKeyring.key !== keyring.key) {
+              await wallet.changeKeyring(keyring);
+              dispatch(keyringsActions.setCurrent(keyring));
+              const _currentAccount = await wallet.getCurrentAccount();
+              dispatch(accountsActions.setCurrent(_currentAccount));
+            }
+            if (autoNav) navigate('WalletTabScreen');
+          }}
+        >
+          <Column style={{ width: 20 }} selfItemsCenter>
+            {selected && (
+              <Icon>
+                <CheckCircleFilled />
+              </Icon>
+            )}
+          </Column>
 
-        {optionsVisible && (
-          <Column
-            style={{
-              backgroundColor: colors.black,
-              width: 180,
-              position: 'absolute',
-              right: 0,
-              padding: 5,
-              zIndex: 10
-            }}>
-            <Column>
-              <Column classname="column-select">
-                <Row
-                  onClick={() => {
-                    navigate('EditWalletNameScreen', { keyring });
-                  }}>
-                  <EditOutlined />
-                  <Text text={t('Edit Name')} size="sm" />
-                </Row>
-              </Column>
-
-              {keyring.type === KEYRING_TYPE.HdKeyring ? (
-                <Column classname="column-select">
-                  <Row
-                    onClick={() => {
-                      navigate('ExportMnemonicsScreen', { keyring });
-                    }}>
-                    <KeyOutlined />
-                    <Text text={t('Show Seed Phrase')} size="sm" />
-                  </Row>
-                </Column>
-              ) : (
-                <Column classname="column-select">
-                  <Row
-                    onClick={() => {
-                      navigate('ExportPrivateKeyScreen', { account: keyring.accounts[0] });
-                    }}>
-                    <KeyOutlined />
-                    <Text text={t('Export Private Key')} size="sm" />
-                  </Row>
-                </Column>
+          <Column full>
+            <Row justifyBetween>
+              <Text text={`${displayName}`} />
+              {keyring?.balanceKas && (
+                <Text text={formatLocaleString(keyring?.balanceKas)} style={{ paddingRight: 5 }} />
               )}
-              <Column classname="column-select">
-                <Row
-                  onClick={() => {
-                    if (keyrings.length == 1) {
-                      tools.toastError('Removing the last wallet is not allowed');
-                      return;
-                    }
-                    setRemoveVisible(true);
-                    setOptionsVisible(false);
-                  }}>
-                  <Icon color="danger">
-                    <DeleteOutlined />
-                  </Icon>
+            </Row>
+            <Text text={`${displayAddress}`} preset="sub" />
+          </Column>
+        </Row>
+      </Card>
+      <Card
+        onClick={() => {
+          setOptionsVisible(!optionsVisible);
+        }}
+        classname="card-select"
+        mt="md"
+        style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+      >
+        <Column style={{ width: 20 }} selfItemsCenter>
+          {optionsVisible && (
+            <div
+              style={{
+                position: 'fixed',
+                zIndex: 10,
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0
+              }}
+              onTouchStart={() => {
+                setOptionsVisible(false);
+              }}
+              onMouseDown={() => {
+                setOptionsVisible(false);
+              }}
+            ></div>
+          )}
 
-                  <Text text={t('Remove Wallet')} size="sm" color="danger" />
-                </Row>
+          <Icon
+            onClick={() => {
+              setOptionsVisible(!optionsVisible);
+            }}
+          >
+            <SettingOutlined />
+          </Icon>
+
+          {optionsVisible && (
+            <Column
+              style={{
+                backgroundColor: colors.black,
+                width: 180,
+                position: 'absolute',
+                right: 0,
+                padding: 5,
+                zIndex: 10
+              }}
+            >
+              <Column>
+                <Column classname="column-select">
+                  <Row
+                    onClick={() => {
+                      navigate('EditWalletNameScreen', { keyring });
+                    }}
+                  >
+                    <EditOutlined />
+                    <Text text={t('Edit Name')} size="sm" />
+                  </Row>
+                </Column>
+
+                {keyring.type === KEYRING_TYPE.HdKeyring ? (
+                  <>
+                    <Column classname="column-select">
+                      <Row
+                        onClick={() => {
+                          navigate('WalletInfoScreen', { keyring });
+                        }}
+                      >
+                        <InfoCircleOutlined />
+                        <Text text={t('Advanced')} size="sm" />
+                      </Row>
+                    </Column>
+                    <Column classname="column-select">
+                      <Row
+                        onClick={() => {
+                          navigate('ExportMnemonicsScreen', { keyring });
+                        }}
+                      >
+                        <KeyOutlined />
+                        <Text text={t('Show Seed Phrase')} size="sm" />
+                      </Row>
+                    </Column>
+                  </>
+                ) : (
+                  <Column classname="column-select">
+                    <Row
+                      onClick={() => {
+                        navigate('ExportPrivateKeyScreen', { account: keyring.accounts[0] });
+                      }}
+                    >
+                      <KeyOutlined />
+                      <Text text={t('Export Private Key')} size="sm" />
+                    </Row>
+                  </Column>
+                )}
+                <Column classname="column-select">
+                  <Row
+                    onClick={() => {
+                      if (keyrings.length == 1) {
+                        tools.toastError('Removing the last wallet is not allowed');
+                        return;
+                      }
+                      setRemoveVisible(true);
+                      setOptionsVisible(false);
+                    }}
+                  >
+                    <Icon color="danger">
+                      <DeleteOutlined />
+                    </Icon>
+
+                    <Text text={t('Remove Wallet')} size="sm" color="danger" />
+                  </Row>
+                </Column>
               </Column>
             </Column>
-          </Column>
-        )}
-      </Column>
+          )}
+        </Column>
+      </Card>
 
       {removeVisible && (
         <RemoveWalletPopover
@@ -194,15 +233,14 @@ export function MyItem({ keyring, autoNav }: MyItemProps, ref) {
           }}
         />
       )}
-    </Card>
+    </Row>
   );
 }
 
 export default function SwitchKeyringScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const fetchKeyringsBalances = useFetchKeyringsBalancesCallback();
+  const { isLoading } = useKeyringsBalancesQuery();
 
   const keyrings = useKeyrings();
 
@@ -218,15 +256,16 @@ export default function SwitchKeyringScreen() {
     // });
     return _items;
   }, [keyrings]);
-  const loadBalance = () => {
-    setLoading(true);
-    fetchKeyringsBalances().finally(() => {
-      setLoading(false);
-    });
-  };
-  useEffect(() => {
-    loadBalance();
-  }, [fetchKeyringsBalances, keyrings]);
+
+  // useEffect(() => {
+  //   const loadBalance = () => {
+  //     setLoading(true);
+  //     fetchKeyringsBalances().finally(() => {
+  //       setLoading(false);
+  //     });
+  //   };
+  //   loadBalance();
+  // }, [fetchKeyringsBalances, keyrings]);
 
   const ForwardMyItem = forwardRef(MyItem);
   return (
@@ -240,12 +279,13 @@ export default function SwitchKeyringScreen() {
           <Icon
             onClick={() => {
               navigate('AddKeyringScreen');
-            }}>
+            }}
+          >
             <PlusCircleOutlined />
           </Icon>
         }
       />
-      {loading && (
+      {isLoading && (
         <Row justifyCenter>
           <Icon>
             <LoadingOutlined />
@@ -262,10 +302,10 @@ export default function SwitchKeyringScreen() {
           style={{
             boxSizing: 'border-box'
           }}
-        // onSkipRender={onAppear}
-        // onItemRemove={onAppear}
+          // onSkipRender={onAppear}
+          // onItemRemove={onAppear}
         >
-          {(item, index) => <ForwardMyItem keyring={item.keyring} autoNav={true} />}
+          {(item, index) => <ForwardMyItem keyring={item.keyring} autoNav={true} key={index} />}
         </VirtualList>
       </Content>
     </Layout>

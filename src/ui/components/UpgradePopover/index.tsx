@@ -1,12 +1,11 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
 
-import { VersionDetail } from '@/shared/types';
+import type { VersionDetail } from '@/shared/types';
 import { useVersionInfo } from '@/ui/state/settings/hooks';
 import { fontSizes } from '@/ui/theme/font';
 import { useWallet } from '@/ui/utils';
 
+import log from 'loglevel';
 import { Button } from '../Button';
 import { Column } from '../Column';
 import { Popover } from '../Popover';
@@ -26,11 +25,11 @@ export const UpgradePopover = ({ onClose }: { onClose: () => void }) => {
         setVersionDetail(res);
       })
       .catch((e) => {
-        console.log(e);
+        log.debug(e);
       });
   }, [versionInfo.newVersion]);
   return (
-    <Popover onClose={onClose}>
+    <Popover onClose={versionInfo.forceUpdate == true ? undefined : onClose}>
       <Column justifyCenter itemsCenter>
         <Column mt="lg">
           <Text preset="bold" text={versionDetail.title} textCenter />
@@ -48,7 +47,8 @@ export const UpgradePopover = ({ onClose }: { onClose: () => void }) => {
           <Button
             text="Skip"
             full
-            onClick={(e) => {
+            disabled={versionInfo.forceUpdate == true}
+            onClick={() => {
               if (onClose) {
                 onClose();
               }
@@ -60,7 +60,7 @@ export const UpgradePopover = ({ onClose }: { onClose: () => void }) => {
             full
             preset="primary"
             onClick={(e) => {
-              window.open('https://kasware.xyz/extension/update');
+              window.open('https://docs.kasware.xyz/wallet/knowledge-base/update-your-wallet');
             }}
           />
         </Row>

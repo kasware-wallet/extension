@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react';
 
 import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
@@ -25,7 +23,7 @@ export default function CreateAccountScreen() {
     tools.toastSuccess('Success');
     const currentAccount = await wallet.getCurrentAccount();
     setCurrentAccount(currentAccount);
-    navigate('MainScreen');
+    navigate('WalletTabScreen');
   };
 
   const handleOnKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {

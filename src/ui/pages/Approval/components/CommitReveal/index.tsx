@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import BigNumber from 'bignumber.js';
 import { t } from 'i18next';
 import log from 'loglevel';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import type { ISubmitCommitParams, ISubmitRevealParams } from '@/shared/types';
 import { parseScript } from '@/shared/utils';
 import { Button, Card, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
@@ -16,6 +16,7 @@ import { selectKasTick } from '@/ui/state/settings/reducer';
 import { fontSizes } from '@/ui/theme/font';
 import { formatLocaleString, useApproval, useWallet } from '@/ui/utils';
 import { LoadingOutlined } from '@ant-design/icons';
+import type { ISubmitCommitParams, ISubmitRevealParams } from '@/shared/types';
 
 interface Props {
   header?: React.ReactNode;
@@ -167,6 +168,15 @@ interface TxInfo {
   }[];
   txFee: number;
   isScammer: boolean;
+  // changedBalance: number;
+  // rawtx: string;
+  // psbtHex: string;
+  // toSignInputs: ToSignInput[];
+  // txError: string;
+  // decodedPsbt: DecodedPsbt;
+  // isScammer: boolean;
+  // inscribeJsonString: string;
+  // destAddr?: string;
 }
 
 const initTxInfo = {
@@ -184,6 +194,7 @@ export default function CommitReveal({
   handleCancel,
   handleConfirm
 }: Props) {
+  // log.debug('signpsbt', inscribeJsonString, type, destAddr);
   const [getApproval, resolveApproval, rejectApproval] = useApproval();
   log.debug('type', type);
 
@@ -195,10 +206,16 @@ export default function CommitReveal({
   const [content, setContent] = useState<string>('');
   const [unknownContent, setUnknownContent] = useState<string | undefined>('');
 
+  const kasTick = useAppSelector(selectKasTick);
+
   const wallet = useWallet();
   const [loading, setLoading] = useState(true);
   const tools = useTools();
+
   const currentAccount = useCurrentAccount();
+  const [disabled, setDisabled] = useState(false);
+
+  const [isWarningVisible, setIsWarningVisible] = useState(false);
 
   const init = async () => {
     const { XOnlyPublicKey, mime, protocol, Data, unknown } = parseScript(script);
@@ -207,6 +224,7 @@ export default function CommitReveal({
     setUnknownContent(unknown);
     setMimeType(mime);
     if (!currentAccount?.pubkey.includes(XOnlyPublicKey)) {
+      setDisabled(true);
       const txError = 'public key in script is not matching current account public key';
       setErrors((prev) => [...prev, txError]);
       tools.toastError(txError);
@@ -265,6 +283,7 @@ export default function CommitReveal({
     } catch (e) {
       log.debug(e);
       const txError = (e as any).message;
+      setDisabled(true);
       setErrors((prev) => [...prev, txError]);
       tools.toastError(txError);
     }
@@ -300,6 +319,7 @@ export default function CommitReveal({
     };
   }
 
+  const networkFee = useMemo(() => txInfo.txFee, [txInfo.txFee]);
   const detailsComponent = useMemo(() => {
     return (
       <SignTxDetails
@@ -312,6 +332,24 @@ export default function CommitReveal({
       />
     );
   }, [txInfo]);
+  const canChanged = useMemo(() => {
+    return true;
+  }, [txInfo]);
+
+  const isValid = useMemo(() => {
+    return true;
+  }, [txInfo]);
+
+  // const isValidData = useMemo(() => {
+  //   if (txInfo.psbtHex === '') {
+  //     return false;
+  //   }
+  //   return true;
+  // }, [txInfo.psbtHex]);
+  const hasHighRisk = useMemo(() => {
+    return false;
+  }, [txInfo]);
+
   if (loading) {
     return (
       <Layout>
@@ -362,6 +400,20 @@ export default function CommitReveal({
       <Content>
         <Column gap="xxs">
           {detailsComponent}
+          {canChanged == false && (
+            <Section title="Transaction Fee:">
+              <Text text={networkFee} selectText />
+              <Text text={kasTick} color="textDim" selectText />
+            </Section>
+          )}
+
+          {canChanged == false && (
+            <Section title="Network Fee Rate:">
+              {/* <Text text={txInfo.decodedPsbt.feeRate.toString()} /> */}
+              <Text text={''} selectText />
+              <Text text="sat/vB" color="textDim" selectText />
+            </Section>
+          )}
           {errors &&
             errors.map((error, index) => {
               if (errors.length == 1) {
@@ -387,8 +439,28 @@ export default function CommitReveal({
         </Column>
         <Row full>
           <Button preset="default" text="Reject" onClick={handleCancel} full />
+          {hasHighRisk == false && (
+            <Button
+              preset="primary"
+              text={'Sign & Submit'}
+              onClick={() => {
+                setLoading(true);
+                handleConfirm();
+              }}
+              disabled={disabled}
+              full
+            />
+          )}
         </Row>
       </Footer>
+      {/* {isWarningVisible && (
+        <WarningPopover
+          risks={txInfo.decodedPsbt.risks}
+          onClose={() => {
+            setIsWarningVisible(false);
+          }}
+        />
+      )} */}
     </Layout>
   );
 }

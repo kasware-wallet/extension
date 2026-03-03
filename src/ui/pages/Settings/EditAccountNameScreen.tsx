@@ -1,12 +1,10 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
-import { Account } from '@/shared/types';
+import type { Account } from '@/shared/types';
 import { Button, Content, Header, Input, Layout } from '@/ui/components';
-import { accountActions } from '@/ui/state/accounts/reducer';
+import { accountsActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
 import { useWallet } from '@/ui/utils';
@@ -25,7 +23,7 @@ export default function EditAccountNameScreen() {
   const handleOnClick = async () => {
     const newAccount = await wallet.setAccountAlianName(account, alianName);
     dispatch(keyringsActions.updateAccountName(newAccount));
-    dispatch(accountActions.updateAccountName(newAccount));
+    dispatch(accountsActions.updateAccountName(newAccount));
     window.history.go(-1);
   };
 
@@ -62,7 +60,7 @@ export default function EditAccountNameScreen() {
           disabled={!validName}
           text={t('Change Account Name')}
           preset="primary"
-          onClick={(e) => {
+          onClick={() => {
             handleOnClick();
           }}
         />

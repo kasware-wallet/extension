@@ -1,9 +1,7 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
-import { WalletKeyring } from '@/shared/types';
+import type { WalletKeyring } from '@/shared/types';
 import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
@@ -61,7 +59,7 @@ export default function EditWalletNameScreen() {
             disabled={!isValidName}
             text={t('Change Wallet Name')}
             preset="primary"
-            onClick={(e) => {
+            onClick={() => {
               handleOnClick();
             }}
           />

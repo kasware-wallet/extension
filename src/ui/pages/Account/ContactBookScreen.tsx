@@ -1,15 +1,13 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import VirtualList from 'rc-virtual-list';
 import { forwardRef, useEffect, useState } from 'react';
 
-import { Account } from '@/shared/types';
+import type { Account } from '@/shared/types';
 import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { copyToClipboard, shortAddress, useWallet } from '@/ui/utils';
 import { EllipsisOutlined, PlusCircleOutlined } from '@ant-design/icons';
 
-import { ContactBookItem } from '@/background/service/contactBook';
+import type { ContactBookItem } from '@/shared/types/contact-book';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
 
@@ -20,34 +18,34 @@ export interface ItemData {
 
 interface MyItemProps {
   account?: ContactBookItem;
-  autoNav?: boolean;
 }
 
-export function MyItem({ account, autoNav }: MyItemProps, ref) {
+export function MyItem({ account }: MyItemProps, _ref) {
   const navigate = useNavigate();
+  const tools = useTools();
+  const { t } = useTranslation();
   if (!account?.address) {
     return <div />;
   }
-  const tools = useTools();
-  const { t } = useTranslation();
-
   return (
     <Card justifyBetween mt="md">
       <Row>
         <Column
-          onClick={async (e) => {
+          onClick={async () => {
             copyToClipboard(account.address);
             tools.toastSuccess(t('Copied address'));
-          }}>
+          }}
+        >
           <Text text={account.name} />
           <Text text={`${shortAddress(account.address, 15)}`} preset="sub" />
         </Column>
       </Row>
       <Column relative>
         <Icon
-          onClick={async (e) => {
+          onClick={async () => {
             navigate('EditContactNameScreen', { account });
-          }}>
+          }}
+        >
           <EllipsisOutlined />
         </Icon>
       </Column>
@@ -55,7 +53,7 @@ export function MyItem({ account, autoNav }: MyItemProps, ref) {
   );
 }
 
-export default function ContackBookScreen() {
+export default function ContactBookScreen() {
   const { t } = useTranslation();
   const wallet = useWallet();
   const navigate = useNavigate();
@@ -70,12 +68,17 @@ export default function ContackBookScreen() {
   //   return _items;
   // }, []);
   const ForwardMyItem = forwardRef(MyItem);
-  const getList = async () => {
-    const list = await wallet.listContact();
-    // const list2 = await wallet.getContactsByMap()
-    setItems(list);
-  };
+  // const getList = async () => {
+  //   const list = await wallet.listContact();
+  //   // const list2 = await wallet.getContactsByMap()
+  //   setItems(list);
+  // };
   useEffect(() => {
+    const getList = async () => {
+      const list = await wallet.listContact();
+      // const list2 = await wallet.getContactsByMap()
+      setItems(list);
+    };
     getList();
   }, [wallet]);
 
@@ -90,15 +93,16 @@ export default function ContackBookScreen() {
           <Icon
             onClick={() => {
               navigate('CreateContactScreen');
-            }}>
+            }}
+          >
             <PlusCircleOutlined />
           </Icon>
         }
       />
-      {(items && items.length > 0) ? (
+      {items && items.length > 0 ? (
         <Content>
           <VirtualList data={items} data-id="list" itemHeight={20} itemKey={(item) => item.address}>
-            {(item, index) => <ForwardMyItem account={item} autoNav={true} />}
+            {(item, index) => <ForwardMyItem account={item} key={index} />}
           </VirtualList>
         </Content>
       ) : (

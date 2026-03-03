@@ -1,6 +1,8 @@
-import React, { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
+import React from 'react';
 
-import { BaseView, BaseViewProps } from '../BaseView';
+import type { BaseViewProps } from '../BaseView';
+import { BaseView } from '../BaseView';
 
 export type FooterProps = BaseViewProps;
 

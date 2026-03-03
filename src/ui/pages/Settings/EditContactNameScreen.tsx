@@ -1,10 +1,8 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
-import { ContactBookItem } from '@/background/service/contactBook';
+import type { ContactBookItem } from '@/shared/types/contact-book';
 import { Button, Content, Header, Input, Layout } from '@/ui/components';
 import { RemoveContactPopover } from '@/ui/components/RemoveContactPopover';
 import { shortAddress, useWallet } from '@/ui/utils';
@@ -28,7 +26,7 @@ export default function EditContactNameScreen() {
     };
     await wallet.updateContact(newContact);
     // dispatch(keyringsActions.updateAccountName(newAccount));
-    // dispatch(accountActions.updateAccountName(newAccount));
+    // dispatch(accountsActions.updateAccountName(newAccount));
     window.history.go(-1);
   };
 
@@ -61,18 +59,11 @@ export default function EditContactNameScreen() {
           onKeyUp={(e) => handleOnKeyUp(e)}
           autoFocus={true}
         />
-        <Button
-          disabled={!validName}
-          text={t('Change Contact Name')}
-          preset="primary"
-          onClick={(e) => {
-            handleOnClick();
-          }}
-        />
+        <Button disabled={!validName} text={t('Change Contact Name')} preset="primary" onClick={handleOnClick} />
         <Button
           text={t('Remove Contact')}
           preset="danger"
-          onClick={(e) => {
+          onClick={() => {
             setRemoveVisible(true);
           }}
         />

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApproval, useWallet } from '@/ui/utils';
 
 import * as ApprovalComponent from './components';
+import { PATH_BOOST_SCREEN } from '@/shared/constant/route-path';
 
 export default function ApprovalScreen() {
   const wallet = useWallet();
@@ -18,7 +19,7 @@ export default function ApprovalScreen() {
   const init = async () => {
     const approval = await getApproval();
     if (!approval) {
-      navigate('/');
+      navigate(PATH_BOOST_SCREEN);
       return null;
     }
     setApproval(approval);

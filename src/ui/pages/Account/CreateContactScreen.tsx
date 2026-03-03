@@ -1,10 +1,10 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
-import { isValidAddress, useWallet } from '@/ui/utils';
-import { useTranslation } from 'react-i18next';
+import { useWallet } from '@/ui/utils';
+import { isValidAddress } from '@ethereumjs/util';
+import { useAsync } from 'react-use';
 
 export default function CreateContactScreen() {
   const { t } = useTranslation();
@@ -17,8 +17,12 @@ export default function CreateContactScreen() {
     domain: string;
   }>({
     address: '',
-    domain: '',
+    domain: ''
   });
+
+  const handleAddressChange = useCallback((val: { address: string; domain: string }) => {
+    setToInfo(val);
+  }, []);
   const handleOnClick = async () => {
     const newContact = {
       name: alianName || defaultName,
@@ -32,7 +36,7 @@ export default function CreateContactScreen() {
     // tools.toastSuccess('Success');
     // const currentAccount = await wallet.getCurrentAccount();
     // setCurrentAccount(currentAccount);
-    // navigate('MainScreen');
+    // navigate('WalletTabScreen');
   };
 
   const handleOnKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -50,10 +54,10 @@ export default function CreateContactScreen() {
   useEffect(() => {
     init();
   }, []);
-  useEffect(() => {
+  useAsync(async () => {
     setDisabled(true);
 
-    if (!isValidAddress(toInfo.address)) {
+    if (!(await wallet.isValidKaspaAddr(toInfo.address)) && !isValidAddress(toInfo.address)) {
       return;
     }
     setDisabled(false);
@@ -81,16 +85,14 @@ export default function CreateContactScreen() {
             preset="address"
             defaultValue={toInfo.address}
             addressInputData={toInfo}
-            onAddressInputChange={(val) => {
-              setToInfo(val);
-            }}
+            onAddressInputChange={handleAddressChange}
             autoFocus={true}
           />
           <Button
             disabled={disabled}
             text="Confirm"
             preset="primary"
-            onClick={(e) => {
+            onClick={() => {
               handleOnClick();
             }}
           />

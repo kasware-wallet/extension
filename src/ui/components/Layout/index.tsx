@@ -1,4 +1,5 @@
-import React, { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
+import React from 'react';
 
 import './index.less';
 
@@ -16,12 +17,15 @@ export function Layout(props: LayoutProps) {
           display: 'flex',
           flexDirection: 'column',
           width: '100vw',
+          maxWidth: '800px',
           height: '100vh',
           overflowY: 'auto',
-          overflowX: 'hidden'
+          overflowX: 'hidden',
+          margin: '0 auto'
         },
         $styleBase
-      )}>
+      )}
+    >
       {children}
     </div>
   );

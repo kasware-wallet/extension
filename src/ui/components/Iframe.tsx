@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CSSProperties, memo, useMemo } from 'react';
+import type { CSSProperties } from 'react';
+import { memo, useMemo } from 'react';
 
 export type IframeProps = { preview: string; style?: CSSProperties; ref: any };
 
@@ -13,7 +14,8 @@ const Iframe = ({ preview, style, ref }: IframeProps) => {
         src={preview}
         sandbox="allow-scripts"
         scrolling="no"
-        loading="lazy"></iframe>
+        loading="lazy"
+      ></iframe>
     ),
     [preview]
   );

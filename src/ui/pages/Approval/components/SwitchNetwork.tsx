@@ -38,14 +38,14 @@ export default function SwitchNetwork({ params: { data, session } }: Props) {
 
   return (
     <Layout>
-      <Header>
+      <Header hideConnectingComp>
         <WebsiteBar session={session} />
       </Header>
       <Content>
         <Column mt="lg">
           <Text text="Allow this site to switch the network?" textCenter preset="title-bold" mt="lg" />
 
-          <Row justifyBetween itemsCenter mt="lg">
+          <Row justifyAround itemsCenter mt="lg">
             <Card preset="style2" px="lg">
               <Text text={from.label} preset="title-bold" />
             </Card>

@@ -6,13 +6,8 @@ import browser, {
   browserTabsGetCurrent,
   browserTabsQuery,
   browserTabsUpdate
-} from '@/background/webapi/browser';
-
-export const openExtensionInTab = async () => {
-  const url = browser.runtime.getURL('index.html');
-  const tab = await browserTabsCreate({ url });
-  return tab;
-};
+} from '@/shared/webapi/browser';
+import { openExtensionInTab } from '@/shared/browser';
 
 export const extensionIsInTab = async () => {
   return Boolean(await browserTabsGetCurrent());
@@ -20,7 +15,7 @@ export const extensionIsInTab = async () => {
 
 export const focusExtensionTab = async () => {
   const tab = await browserTabsGetCurrent();
-  if (tab && isNumber(tab?.id) && tab?.id !== browser.tabs.TAB_ID_NONE) {
+  if (tab && tab.id && isNumber(tab.id) && tab.id !== browser.tabs.TAB_ID_NONE) {
     browserTabsUpdate(tab.id, { active: true });
   }
 };
@@ -38,8 +33,8 @@ export const useExtensionIsInTab = () => {
 };
 
 export const useOpenExtensionInTab = () => {
-  return useCallback(async () => {
-    await openExtensionInTab();
+  return useCallback(async (route?: string) => {
+    await openExtensionInTab(route);
     window.close();
   }, []);
 };

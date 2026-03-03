@@ -1,6 +1,5 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { ColorTypes, colors } from '@/ui/theme/colors';
+import type { ColorTypes } from '@/ui/theme/colors';
+import { colors } from '@/ui/theme/colors';
 
 import { Button } from '../Button';
 import { Card } from '../Card';

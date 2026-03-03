@@ -1,12 +1,10 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useMemo } from 'react';
 
 import { shortAddress, useWallet } from '@/ui/utils';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { ContactBookItem } from '@/background/service/contactBook';
+import type { ContactBookItem } from '@/shared/types/contact-book';
 import { Button } from '../Button';
 import { Card } from '../Card';
 import { Column } from '../Column';
@@ -36,7 +34,8 @@ export const RemoveContactPopover = ({ keyring, onClose }: { keyring: ContactBoo
             flexDirection: 'row',
             backgroundColor: '#CC3333',
             justifyContent: 'center'
-          }}>
+          }}
+        >
           <FontAwesomeIcon icon={faTrashCan} style={{ height: '1rem' }} />
         </div>
 
@@ -61,7 +60,7 @@ export const RemoveContactPopover = ({ keyring, onClose }: { keyring: ContactBoo
             preset="danger"
             full
             onClick={async () => {
-              await wallet.removeContact(keyring.address)
+              await wallet.removeContact(keyring.address);
               window.history.go(-1);
             }}
           />

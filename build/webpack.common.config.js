@@ -96,7 +96,6 @@ const config = (env) => {
       if (preProcessor === 'less-loader') {
         preProcessorOptions = {
           sourceMap: true,
-          // 自定义主题
           lessOptions: {
             modifyVars: {
               'primary-color': '#339999',
@@ -386,7 +385,6 @@ const config = (env) => {
                 'less-loader'
               )
             },
-            // 支持 stylus
             {
               test: stylusRegex,
               exclude: stylusModuleRegex,

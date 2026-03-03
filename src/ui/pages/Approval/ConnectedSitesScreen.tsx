@@ -52,6 +52,7 @@ export default function ConnectedSitesScreen() {
   return (
     <Layout>
       <Header
+        hideConnectingComp
         onBack={() => {
           window.history.go(-1);
         }}

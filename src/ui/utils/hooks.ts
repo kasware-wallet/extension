@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-unused-vars */
-import React, { useEffect, useRef, useState } from 'react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { getUiType } from '.';
 import { useWallet } from './WalletContext';
+import { PATH_BOOST_SCREEN } from '@/shared/constant/route-path';
 
 export const useApproval = () => {
   const wallet = useWallet();
   const navigate = useNavigate();
   const getApproval = wallet.getApproval;
+  const removeNotifiWindow = wallet.removeNotifiWindow;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const resolveApproval = async (data?: any, stay = false, forceReject = false) => {
@@ -23,7 +25,7 @@ export const useApproval = () => {
       return;
     }
     setTimeout(() => {
-      navigate('/');
+      navigate(PATH_BOOST_SCREEN);
     });
   };
 
@@ -33,7 +35,7 @@ export const useApproval = () => {
       await wallet.rejectApproval(err, stay, isInternal);
     }
     if (!stay) {
-      navigate('/');
+      navigate(PATH_BOOST_SCREEN);
     }
   };
 
@@ -46,67 +48,7 @@ export const useApproval = () => {
     return () => window.removeEventListener('beforeunload', rejectApproval);
   }, []);
 
-  return [getApproval, resolveApproval, rejectApproval] as const;
-};
-
-export const useSelectOption = <T>({
-  options,
-  defaultValue = [],
-  onChange,
-  value
-}: {
-  options: T[];
-  defaultValue?: T[];
-  onChange?: (arg: T[]) => void;
-  value?: T[];
-}) => {
-  const isControlled = useRef(typeof value !== 'undefined').current;
-  const [idxs, setChoosedIdxs] = useState((isControlled ? value! : defaultValue).map((x) => options.indexOf(x)));
-
-  useEffect(() => {
-    if (!isControlled) {
-      return;
-    }
-
-    // shallow compare
-    if (value && idxs.some((x, i) => options[x] != value[i])) {
-      setChoosedIdxs(value.map((x) => options.indexOf(x)));
-    }
-  }, [value]);
-
-  const changeValue = (idxs: number[]) => {
-    setChoosedIdxs([...idxs]);
-    onChange && onChange(idxs.map((o) => options[o]));
-  };
-
-  const handleRemove = (i: number) => {
-    idxs.splice(i, 1);
-    changeValue(idxs);
-  };
-
-  const handleChoose = (i: number) => {
-    if (idxs.includes(i)) {
-      return;
-    }
-
-    idxs.push(i);
-    changeValue(idxs);
-  };
-
-  const handleToggle = (i: number) => {
-    const inIdxs = idxs.indexOf(i);
-    if (inIdxs !== -1) {
-      handleRemove(inIdxs);
-    } else {
-      handleChoose(i);
-    }
-  };
-
-  const handleClear = () => {
-    changeValue([]);
-  };
-
-  return [idxs.map((o) => options[o]), handleRemove, handleChoose, handleToggle, handleClear, idxs] as const;
+  return [getApproval, resolveApproval, rejectApproval, removeNotifiWindow] as const;
 };
 
 export const useWalletRequest = (
@@ -139,13 +81,17 @@ export const useWalletRequest = (
         return;
       }
       setRes(_res);
-      onSuccess && onSuccess(_res);
+      if (onSuccess) {
+        onSuccess(_res);
+      }
     } catch (err) {
       if (!mounted.current) {
         return;
       }
       setErr(err);
-      onError && onError(err);
+      if (onError) {
+        onError(err);
+      }
     } finally {
       if (mounted.current) {
         setLoading(false);
@@ -164,22 +110,32 @@ export type HoverProps = Pick<React.HTMLAttributes<HTMLElement>, 'onMouseEnter' 
 
 export const useHover = ({ mouseEnterDelayMS = 0, mouseLeaveDelayMS = 0 }: UseHoverOptions = {}): [
   boolean,
-  HoverProps
+  HoverProps,
+  () => void
 ] => {
   const [isHovering, setIsHovering] = useState(false);
-  let mouseEnterTimer: number | undefined;
-  let mouseOutTimer: number | undefined;
+  const mouseEnterTimer = useRef<number | undefined>(undefined);
+  const mouseOutTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(mouseEnterTimer.current);
+      clearTimeout(mouseOutTimer.current);
+    };
+  }, []);
+
   return [
     isHovering,
     {
       onMouseEnter: () => {
-        clearTimeout(mouseOutTimer);
-        mouseEnterTimer = window.setTimeout(() => setIsHovering(true), mouseEnterDelayMS);
+        clearTimeout(mouseOutTimer.current);
+        mouseEnterTimer.current = window.setTimeout(() => setIsHovering(true), mouseEnterDelayMS);
       },
       onMouseLeave: () => {
-        clearTimeout(mouseEnterTimer);
-        mouseOutTimer = window.setTimeout(() => setIsHovering(false), mouseLeaveDelayMS);
+        clearTimeout(mouseEnterTimer.current);
+        mouseOutTimer.current = window.setTimeout(() => setIsHovering(false), mouseLeaveDelayMS);
       }
-    }
+    },
+    () => setIsHovering(false)
   ];
 };

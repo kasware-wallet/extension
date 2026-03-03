@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-unused-vars */
 /* eslint-disable indent */
 import { useEffect, useState } from 'react';
 
@@ -69,7 +67,8 @@ export function TabBar(props: TabBarProps) {
               itemsCenter
               onClick={() => {
                 setTabKey(v.key);
-              }}>
+              }}
+            >
               <Text text={v.label} color={'white'} />
             </Column>
           );
@@ -93,12 +92,18 @@ export function TabBar(props: TabBarProps) {
             return (
               <Column
                 key={v.key}
-                style={{padding:'8px'}}
+                style={{ padding: '8px' }}
                 classname={isSelected ? 'selected-tab' : ''}
                 onClick={() => {
                   setTabKey(v.key);
-                }}>
-                <Text text={v.label} size={'md'} preset={isSelected ? 'bold' : 'regular'} color={isSelected ? 'gold' : 'white'} />
+                }}
+              >
+                <Text
+                  text={v.label}
+                  size={'md'}
+                  preset={isSelected ? 'bold' : 'regular'}
+                  color={isSelected ? 'gold' : 'white'}
+                />
               </Column>
             );
           }
@@ -128,7 +133,8 @@ export function TabBar(props: TabBarProps) {
                 color={isSelected ? 'gold' : 'white_muted'}
                 onClick={() => {
                   setTabKey(v.key);
-                }}>
+                }}
+              >
                 <Text text={v.label} size="xs" color={isSelected ? 'gold' : 'white_muted'} mx="md" my="sm" />
               </Column>
             );
@@ -154,7 +160,8 @@ export function TabBar(props: TabBarProps) {
               classname={isSelected ? 'selected-tab' : ''}
               onClick={() => {
                 setTabKey(v.key);
-              }}>
+              }}
+            >
               <Text text={v.label} color={isSelected ? 'gold' : 'white'} />
             </Column>
           );

@@ -157,7 +157,7 @@ export default function Connect({ params: { session } }: Props) {
   }
   return (
     <Layout>
-      <Header>
+      <Header hideConnectingComp>
         <WebsiteBar session={session} />
       </Header>
       <Content>

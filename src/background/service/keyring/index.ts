@@ -178,7 +178,7 @@ class KeyringService extends EventEmitter {
 
   hasVault = () => {
     return !!this.store.getState().vault;
-    // vault是ObservableStore对象
+    // vault is an ObservableStore object
   };
 
   /**

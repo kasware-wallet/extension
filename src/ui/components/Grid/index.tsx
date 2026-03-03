@@ -1,6 +1,8 @@
-import React, { CSSProperties, ReactEventHandler } from 'react';
+import type { CSSProperties, ReactEventHandler } from 'react';
+import React from 'react';
 
-import { Gap, spacingGap } from '@/ui/theme/spacing';
+import type { Gap } from '@/ui/theme/spacing';
+import { spacingGap } from '@/ui/theme/spacing';
 
 export interface GridProps {
   style?: CSSProperties;

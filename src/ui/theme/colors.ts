@@ -35,9 +35,9 @@ const palette = {
 
   gold: '#eac249',
 
-  aqua_dark:'#339999',
-  aqua:'#48e3c5',
-  aqua_light:'#adfff3',
+  aqua_dark: '#339999',
+  aqua: '#48e3c5',
+  aqua_light: '#adfff3'
 };
 
 export const colors = Object.assign({}, palette, {
@@ -60,10 +60,11 @@ export const colors = Object.assign({}, palette, {
   bg2: '#2a2a2a',
   bg3: '#434242',
   bg4: '#383535',
+  bg5: '#1C1919',
 
   border: 'rgba(255,255,255,0.1)',
 
-  icon_yellow:'#FFBA33'
+  icon_yellow: '#FFBA33'
 });
 
 export type ColorTypes = keyof typeof colors;

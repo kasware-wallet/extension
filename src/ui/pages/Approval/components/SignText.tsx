@@ -27,7 +27,7 @@ export default function SignText({ params: { data, session } }: Props) {
   return (
     <Layout>
       <Content>
-        <Header>
+        <Header hideConnectingComp>
           <WebsiteBar session={session} />
         </Header>
         <Column>

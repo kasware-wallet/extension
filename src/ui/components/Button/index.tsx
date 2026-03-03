@@ -1,12 +1,12 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { CSSProperties, useState } from 'react';
+import type { CSSProperties } from 'react';
+import React, { useState } from 'react';
 
 import { colors } from '@/ui/theme/colors';
 import { spacing } from '@/ui/theme/spacing';
 
 import { Column } from '../Column';
-import { Icon, IconTypes } from '../Icon';
+import type { IconTypes } from '../Icon';
+import { Icon } from '../Icon';
 import { Row } from '../Row';
 import { Text } from '../Text';
 
@@ -17,6 +17,7 @@ export interface ButtonProps {
    */
   text?: string;
   subText?: string;
+  title?: string;
   /**
    * An optional style override useful for padding & margin.
    */
@@ -158,6 +159,7 @@ export function Button(props: ButtonProps) {
     icon,
     disabled,
     full,
+    title,
     ...rest
   } = props;
 
@@ -184,7 +186,9 @@ export function Button(props: ButtonProps) {
         style={$viewStyle}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        onClick={disabled ? undefined : onClick}>
+        onClick={disabled ? undefined : onClick}
+        title={title}
+      >
         <Row>
           {LeftAccessory && <div style={$leftAccessoryStyle}>{LeftAccessory}</div>}
           {icon && <Icon icon={icon} color={'white'} style={{ marginRight: spacing.tiny }} />}
@@ -206,12 +210,60 @@ export function Button(props: ButtonProps) {
       style={$viewStyle}
       onClick={disabled ? undefined : onClick}
       onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}>
+      onMouseLeave={() => setHover(false)}
+      title={title}
+    >
       {LeftAccessory && <div style={$leftAccessoryStyle}>{LeftAccessory}</div>}
-      {icon && <Icon icon={icon} style={{ marginRight: spacing.tiny, backgroundColor: $textStyle.color }} />}
+      {icon && <Icon icon={icon} style={{ marginRight: spacing.tiny }} />}
       {text && <Text style={$textStyle} text={text} preset="regular-bold" />}
       {children}
       {RightAccessory && <div style={$rightAccessoryStyle}>{RightAccessory}</div>}
+    </div>
+  );
+}
+
+export function ButtonColumn(props: ButtonProps) {
+  const {
+    text,
+    style: $viewStyleOverride,
+    textStyle: $textStyleOverride,
+    children,
+    LeftAccessory,
+    onClick,
+    icon,
+    disabled,
+    full,
+    title
+  } = props;
+
+  const preset: Presets = props.preset || 'default';
+  const [hover, setHover] = useState(false);
+  const $viewStyle = Object.assign(
+    {},
+    $viewPresets[preset],
+    $viewStyleOverride,
+    hover && !disabled ? $hoverViewPresets[preset] : {},
+    disabled ? $baseDisabledViewStyle : {},
+    full ? { flex: 1 } : {},
+    { padding: '10px 0px' },
+    { flexDirection: 'column' },
+    { gap: 5 },
+    { borderRadius: 8 }
+  );
+  const $textStyle = Object.assign({}, $textPresets[preset], $textStyleOverride);
+
+  return (
+    <div
+      style={$viewStyle}
+      onClick={disabled ? undefined : onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      title={title}
+    >
+      {LeftAccessory && <div>{LeftAccessory}</div>}
+      {icon && <Icon icon={icon} />}
+      {text && <Text style={$textStyle} text={text} preset="regular-bold" />}
+      {children}
     </div>
   );
 }

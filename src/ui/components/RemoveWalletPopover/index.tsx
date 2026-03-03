@@ -1,16 +1,14 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useMemo } from 'react';
 
-import { WalletKeyring } from '@/shared/types';
+import type { WalletKeyring } from '@/shared/types';
 import { useNavigate } from '@/ui/pages/MainRoute';
-import { accountActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
 import { shortAddress, useWallet } from '@/ui/utils';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { accountsActions } from '@/ui/state/accounts/reducer';
 import { Button } from '../Button';
 import { Card } from '../Card';
 import { Column } from '../Column';
@@ -42,7 +40,8 @@ export const RemoveWalletPopover = ({ keyring, onClose }: { keyring: WalletKeyri
             flexDirection: 'row',
             backgroundColor: '#CC3333',
             justifyContent: 'center'
-          }}>
+          }}
+        >
           <FontAwesomeIcon icon={faTrashCan} style={{ height: '1rem' }} />
         </div>
 
@@ -78,7 +77,7 @@ export const RemoveWalletPopover = ({ keyring, onClose }: { keyring: WalletKeyri
               dispatch(keyringsActions.setKeyrings(keyrings));
 
               if (nextKeyring) {
-                dispatch(accountActions.setCurrent(nextKeyring.accounts[0]));
+                dispatch(accountsActions.setCurrent(nextKeyring.accounts[0]));
                 return;
               }
 

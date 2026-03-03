@@ -11,9 +11,10 @@ export function Empty(props: EmptyProps) {
   return (
     <div
       style={{
-        alignSelf: 'center'
+        alignSelf: 'center',
+        marginTop: '20px'
       }}>
-      <Text text={content} preset="sub" textCenter />
+      <Text text={content} preset="sub" textCenter selectText/>
     </div>
   );
 }

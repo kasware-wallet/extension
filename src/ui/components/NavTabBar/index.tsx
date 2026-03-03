@@ -1,21 +1,19 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useReadTab, useUnreadAppSummary } from '@/ui/state/accounts/hooks';
-import { TabOption } from '@/ui/state/global/reducer';
+import type { TabOption } from '@/ui/state/global/reducer';
 import { colors } from '@/ui/theme/colors';
 
 import { BaseView } from '../BaseView';
 import { Column } from '../Column';
 import { Grid } from '../Grid';
-import { Icon, IconTypes } from '../Icon';
+import type { IconTypes } from '../Icon';
+import { Icon } from '../Icon';
 
 export function NavTabBar({ tab }: { tab: TabOption }) {
   return (
-    <Grid columns={4} style={{ width: '100%', height: '67.5px', backgroundColor: colors.bg2 }}>
+    <Grid columns={3} style={{ width: '100%', height: '67.5px', backgroundColor: colors.bg2 }}>
       <TabButton tabName="home" icon="wallet" isActive={tab === 'home'} />
-      {/* <TabButton tabName="mint" icon="compass" isActive={tab === 'mint'} />
-      <TabButton tabName="app" icon="grid" isActive={tab === 'app'} /> */}
+      <TabButton tabName="app" icon="grid" isActive={tab === 'app'} />
       <TabButton tabName="settings" icon="settings" isActive={tab === 'settings'} />
     </Grid>
   );
@@ -29,19 +27,18 @@ function TabButton({ tabName, icon, isActive }: { tabName: TabOption; icon: Icon
     <Column
       justifyCenter
       itemsCenter
-      onClick={(e) => {
+      onClick={() => {
         if (tabName === 'home') {
-          navigate('MainScreen');
-        } else if (tabName === 'mint') {
-          navigate('DiscoverTabScreen');
+          navigate('WalletTabScreen');
         } else if (tabName === 'app') {
-          navigate('AppTabScrren');
+          navigate('AppTabScreen');
           readTab('app');
         } else if (tabName === 'settings') {
           navigate('SettingsTabScreen');
         }
-      }}>
-      <Icon icon={icon} color={isActive ? 'white' : 'white_muted'} size={20}/>
+      }}
+    >
+      <Icon icon={icon} color={isActive ? 'white' : 'white_muted'} size={20} />
       <BaseView style={{ position: 'relative' }}>
         {tabName === 'app' && unreadApp && (
           <BaseView
@@ -53,7 +50,8 @@ function TabButton({ tabName, icon, isActive }: { tabName: TabOption; icon: Icon
               height: 5,
               backgroundColor: 'red',
               borderRadius: '50%'
-            }}></BaseView>
+            }}
+          ></BaseView>
         )}
       </BaseView>
     </Column>

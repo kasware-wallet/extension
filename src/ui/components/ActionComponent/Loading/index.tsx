@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 
 import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';

@@ -1,5 +1,3 @@
-import React, { useEffect, useState } from 'react';
-
 import { Column, Content, Layout, Row } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { Button } from '@/ui/components/Button';
@@ -8,21 +6,30 @@ import { Logo } from '@/ui/components/Logo';
 import { Text } from '@/ui/components/Text';
 import { useUnlockCallback } from '@/ui/state/global/hooks';
 import { getUiType, useWallet } from '@/ui/utils';
-
 import { t } from 'i18next';
-import { useNavigate } from '../../MainRoute';
+import log from 'loglevel';
+import qs from 'qs';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useApproval as useApprovalEVM } from '@/evm/ui/utils';
+import { useNavigate, useNavigateOrigin } from '../../MainRoute';
 
 export default function UnlockScreen() {
   const wallet = useWallet();
   const navigate = useNavigate();
+  const navigateOrigin = useNavigateOrigin();
+  const [, resolveApproval] = useApprovalEVM();
   const [password, setPassword] = useState('');
   const [disabled, setDisabled] = useState(true);
   const UIType = getUiType();
   const isInNotification = UIType.isNotification;
   const unlock = useUnlockCallback();
   const tools = useTools();
+  const query = useMemo(() => {
+    return qs.parse(location.search, {
+      ignoreQueryPrefix: true
+    });
+  }, [location.search]);
   const btnClick = async () => {
-    // run(password);
     try {
       await unlock(password);
       if (!isInNotification) {
@@ -31,11 +38,19 @@ export default function UnlockScreen() {
           navigate('WelcomeScreen');
           return;
         } else {
-          navigate('MainScreen');
+          navigate('WalletTabScreen');
           return;
         }
       }
+      if (UIType.isNotification) {
+        if (query.from === '/connect-approval') {
+          navigateOrigin('/approval-evm?ignoreOtherWallet=1', { replace: true });
+        } else {
+          resolveApproval();
+        }
+      }
     } catch (e) {
+      log.debug(e);
       tools.toastError('PASSWORD ERROR');
     }
   };
@@ -71,6 +86,13 @@ export default function UnlockScreen() {
               autoFocus={true}
             />
             <Button disabled={disabled} text={t('Unlock')} preset="primary" onClick={btnClick} />
+            <Text
+              preset="link"
+              color="textDim"
+              text={'Forgot password?'}
+              onClick={() => navigate('ForgotPasswordScreen')}
+              textCenter
+            />
           </Column>
         </Column>
       </Content>

@@ -1,8 +1,8 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Account, AddressType, WalletKeyring } from '@/shared/types';
-import { createSlice } from '@reduxjs/toolkit';
+import { AddressType } from '@/shared/types';
+import type { Account, WalletKeyring } from '@/shared/types';
+import { createSelector, createSlice } from '@reduxjs/toolkit';
 
+import type { AppState } from '..';
 import { updateVersion } from '../global/actions';
 
 export interface KeyringsState {
@@ -15,11 +15,14 @@ const initialKeyring: WalletKeyring = {
   index: 0,
   type: '',
   addressType: AddressType.KASPA_44_111111,
+  // addressTypeMap: new Map([[KASPA_CHAINS_ENUM.KASPA_MAINNET, AddressType.KASPA_44_111111]]),
   accounts: [],
   alianName: '',
   hdPath: '',
+  // hdPathMap: {},
   // kaspa amount
   balanceKas: 0
+  // balanceMap: {}
 };
 
 export const initialState: KeyringsState = {
@@ -94,3 +97,7 @@ const slice = createSlice({
 
 export const keyringsActions = slice.actions;
 export default slice.reducer;
+
+export const selectKeyringsState = (state: AppState) => state.keyrings;
+export const selectWalletKeyrings = createSelector([selectKeyringsState], (state) => state.keyrings);
+export const selectCurrentKeyring = createSelector([selectKeyringsState], (state) => state.current);

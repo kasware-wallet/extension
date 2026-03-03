@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { SignPsbtOptions } from '@/shared/types';
 import { TxType } from '@/shared/types';
@@ -28,25 +27,58 @@ interface Props {
   handleConfirm?: () => void;
 }
 
+interface TxInfo {
+  psbtHex: string;
+  isScammer: boolean;
+  inscribeJsonString: string;
+  destAddr?: string;
+}
+
+const initTxInfo: TxInfo = {
+  psbtHex: '',
+  isScammer: false,
+  inscribeJsonString: '',
+  destAddr: ''
+};
+
+function isKRC20Transaction(type: TxType): boolean {
+  return (
+    type === TxType.SIGN_KRC20_TRANSFER ||
+    type === TxType.SIGN_KRC20_MINT ||
+    type === TxType.SIGN_KRC20_MINT_BATCH ||
+    type === TxType.SIGN_KRC20_DEPLOY
+  );
+}
+
+function shouldReturnInscribeData(type: TxType): boolean {
+  return type === TxType.SIGN_KRC20_DEPLOY || type === TxType.SIGN_KRC20_MINT || type === TxType.SIGN_KRC20_TRANSFER;
+}
+
 function SignTxDetails({ txInfo, type }: { txInfo: TxInfo; type: TxType }) {
   const title = useMemo(() => {
-    if (type == TxType.SIGN_KRC20_MINT_BATCH) {
-      return t('Batch Mint KRC20 Token') as string;
+    if (type === TxType.SIGN_KRC20_MINT_BATCH) {
+      return t('Batch Mint KRC20 Token');
     }
-    if (type == TxType.SIGN_KRC20_TRANSFER_BATCH) {
-      return t('Transfer KRC20 Token') as string;
+    if (type === TxType.SIGN_KRC20_TRANSFER_BATCH) {
+      return t('Transfer KRC20 Token');
     }
+    return '';
   }, [type]);
 
   const prettyInscribeJsonString = useMemo(() => {
     if (txInfo?.inscribeJsonString) {
-      const json = JSON.parse(txInfo.inscribeJsonString);
-      return JSON.stringify(json, null, 2);
+      try {
+        const json = JSON.parse(txInfo.inscribeJsonString);
+        return JSON.stringify(json, null, 2);
+      } catch (error) {
+        console.error('Failed to parse inscribeJsonString:', error);
+        return txInfo.inscribeJsonString;
+      }
     }
     return '';
   }, [txInfo?.inscribeJsonString]);
 
-  if (type == TxType.SIGN_KRC20_MINT_BATCH || type == TxType.SIGN_KRC20_TRANSFER_BATCH) {
+  if (type === TxType.SIGN_KRC20_MINT_BATCH || type === TxType.SIGN_KRC20_TRANSFER_BATCH) {
     return (
       <Column gap="lg">
         <Text text={title} preset="title-bold" textCenter mt="lg" mb={'md'} />
@@ -70,21 +102,9 @@ function SignTxDetails({ txInfo, type }: { txInfo: TxInfo; type: TxType }) {
       </Column>
     );
   }
-}
 
-interface TxInfo {
-  psbtHex: string;
-  isScammer: boolean;
-  inscribeJsonString: string;
-  destAddr?: string;
+  return null;
 }
-
-const initTxInfo: TxInfo = {
-  psbtHex: '',
-  isScammer: false,
-  inscribeJsonString: '',
-  destAddr: ''
-};
 
 export default function BatchSignPsbt({
   params: {
@@ -97,71 +117,75 @@ export default function BatchSignPsbt({
 }: Props) {
   const [, resolveApproval, rejectApproval] = useApproval();
   const [txInfo, setTxInfo] = useState<TxInfo>(initTxInfo);
+  const mountedRef = useRef(true);
+
   const wallet = useWallet();
 
-  const init = async () => {
-    if (!psbtHex) {
-      if (
-        type == TxType.SIGN_KRC20_TRANSFER ||
-        type == TxType.SIGN_KRC20_MINT ||
-        type == TxType.SIGN_KRC20_MINT_BATCH ||
-        type == TxType.SIGN_KRC20_DEPLOY
-      ) {
-        setTxInfo(Object.assign({}, initTxInfo, { inscribeJsonString, destAddr }));
-      } else {
-        setTxInfo(Object.assign({}, initTxInfo));
-      }
-      return;
-    }
-
-    const { isScammer } = await wallet.checkWebsite(session?.origin || '');
-
-    setTxInfo({
-      psbtHex,
-      isScammer,
-      inscribeJsonString,
-      destAddr
-    });
-  };
-
   useEffect(() => {
-    init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const init = async () => {
+      if (!psbtHex) {
+        if (mountedRef.current) {
+          if (isKRC20Transaction(type)) {
+            setTxInfo({ ...initTxInfo, inscribeJsonString, destAddr });
+          } else {
+            setTxInfo({ ...initTxInfo });
+          }
+        }
+        return;
+      }
 
-  if (!handleCancel) {
-    handleCancel = () => {
-      rejectApproval();
-    };
-  }
+      const { isScammer } = await wallet.checkWebsite(session?.origin || '');
 
-  if (!handleConfirm) {
-    handleConfirm = () => {
-      if (type === TxType.SIGN_KRC20_DEPLOY || type === TxType.SIGN_KRC20_MINT || type === TxType.SIGN_KRC20_TRANSFER) {
-        resolveApproval({
-          inscribeJsonString: txInfo.inscribeJsonString,
-          type,
-          destAddr: txInfo.destAddr
-        });
-      } else {
-        resolveApproval({
-          psbtHex: txInfo.psbtHex
+      if (mountedRef.current) {
+        setTxInfo({
+          psbtHex,
+          isScammer,
+          inscribeJsonString,
+          destAddr
         });
       }
     };
-  }
+
+    init();
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [psbtHex, type, inscribeJsonString, destAddr, session?.origin, wallet]);
+
+  const defaultHandleCancel = useCallback(() => {
+    rejectApproval();
+  }, [rejectApproval]);
+
+  const defaultHandleConfirm = useCallback(() => {
+    if (shouldReturnInscribeData(type)) {
+      resolveApproval({
+        inscribeJsonString: txInfo.inscribeJsonString,
+        type,
+        destAddr: txInfo.destAddr
+      });
+    } else {
+      resolveApproval({
+        psbtHex: txInfo.psbtHex
+      });
+    }
+  }, [type, txInfo.inscribeJsonString, txInfo.destAddr, txInfo.psbtHex, resolveApproval]);
 
   const detailsComponent = useMemo(() => {
     return <SignTxDetails txInfo={txInfo} type={type} />;
   }, [txInfo, type]);
 
-  if (!header && session) {
-    header = (
-      <Header>
-        <WebsiteBar session={session} />
-      </Header>
-    );
-  }
+  const headerElement = useMemo(() => {
+    if (header) return header;
+    if (session) {
+      return (
+        <Header>
+          <WebsiteBar session={session} />
+        </Header>
+      );
+    }
+    return null;
+  }, [header, session]);
 
   if (txInfo.isScammer) {
     return (
@@ -179,7 +203,12 @@ export default function BatchSignPsbt({
 
         <Footer>
           <Row full>
-            <Button text="Reject (blocked by KasWare Wallet)" preset="danger" onClick={handleCancel} full />
+            <Button
+              text={t('Reject (blocked by KasWare Wallet)')}
+              preset="danger"
+              onClick={handleCancel || defaultHandleCancel}
+              full
+            />
           </Row>
         </Footer>
       </Layout>
@@ -188,22 +217,18 @@ export default function BatchSignPsbt({
 
   return (
     <Layout>
-      {header}
+      {headerElement}
       <Content>
-        <Column gap="xxs">
-          {detailsComponent}
-        </Column>
+        <Column gap="xxs">{detailsComponent}</Column>
       </Content>
 
       <Footer>
         <Row full>
-          <Button preset="default" text="Reject" onClick={handleCancel} full />
+          <Button preset="default" text={t('Reject')} onClick={handleCancel || defaultHandleCancel} full />
           <Button
             preset="primary"
-            text={type == TxType.SIGN_TX ? 'Sign' : 'Sign & Pay'}
-            onClick={() => {
-              handleConfirm();
-            }}
+            text={type === TxType.SIGN_TX ? t('Sign') : t('Sign & Pay')}
+            onClick={handleConfirm || defaultHandleConfirm}
             full
           />
         </Row>

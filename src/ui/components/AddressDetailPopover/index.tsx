@@ -1,9 +1,9 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { useBlockstreamUrl } from '@/ui/state/settings/hooks';
+import { useTranslation } from 'react-i18next';
+
+import { useAppSelector } from '@/ui/state/hooks';
+import { selectBlockstreamUrl } from '@/ui/state/settings/reducer';
 import { copyToClipboard, shortAddress } from '@/ui/utils';
 
-import { useTranslation } from 'react-i18next';
 import { useTools } from '../ActionComponent';
 import { Card } from '../Card';
 import { Column } from '../Column';
@@ -15,14 +15,14 @@ import { Text } from '../Text';
 export const AddressDetailPopover = ({ address, onClose }: { address: string; onClose: () => void }) => {
   const { t } = useTranslation();
   const tools = useTools();
-  const blockstreamUrl = useBlockstreamUrl();
+  const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
   return (
     <Popover onClose={onClose}>
       <Column>
         <Text text={shortAddress(address)} textCenter />
         <Card
           preset="style2"
-          onClick={(e) => {
+          onClick={() => {
             copyToClipboard(address).then(() => {
               tools.toastSuccess(t('Copied'));
             });
@@ -41,7 +41,7 @@ export const AddressDetailPopover = ({ address, onClose }: { address: string; on
         <Row
           justifyCenter
           onClick={() => {
-            window.open(`${blockstreamUrl}/address/${address}`);
+            window.open(`${blockstreamUrl}/addresses/${address}`);
           }}>
           <Icon icon="eye" color="textDim" />
           <Text preset="regular-bold" text={t('View on Block Explorer')} color="textDim" />

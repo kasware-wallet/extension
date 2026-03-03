@@ -1,9 +1,11 @@
-import React, { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
+import React from 'react';
 
 import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
 
-import { BaseView, BaseViewProps } from '../BaseView';
+import type { BaseViewProps } from '../BaseView';
+import { BaseView } from '../BaseView';
 
 export interface TextAreaProps extends BaseViewProps {
   text: string;

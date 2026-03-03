@@ -1,9 +1,10 @@
-import React, { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 import { colors } from '@/ui/theme/colors';
 import { spacingGap } from '@/ui/theme/spacing';
 
-import { BaseView, BaseViewProps } from '../BaseView';
+import type { BaseViewProps } from '../BaseView';
+import { BaseView } from '../BaseView';
 
 export interface CardProps extends BaseViewProps {
   preset?: Presets;
@@ -54,4 +55,57 @@ export function Card(props: CardProps) {
   const { style: $styleOverride, preset, ...rest } = props;
   const $style = Object.assign({}, $viewPresets[preset || 'auto'], $styleOverride);
   return <BaseView style={$style} {...rest} />;
+}
+
+export function StartCard({ children }: { children?: ReactNode }) {
+  return (
+    <Card
+      classname="card-select"
+      full
+      justifyBetween
+      py="xs"
+      mt="xxs"
+      mb="zero"
+      style={{ minHeight: 40, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
+    >
+      {children}
+    </Card>
+  );
+}
+
+export function MiddleCard({ children }: { children?: ReactNode }) {
+  return (
+    <Card
+      py="sm"
+      mt="xxs"
+      mb="zero"
+      classname="card-select"
+      full
+      justifyBetween
+      style={{
+        minHeight: 40,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0
+      }}
+    >
+      {children}
+    </Card>
+  );
+}
+export function EndCard({ children }: { children?: ReactNode }) {
+  return (
+    <Card
+      classname="card-select"
+      full
+      justifyBetween
+      py="xs"
+      mt="xxs"
+      mb="zero"
+      style={{ minHeight: 40, borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+    >
+      {children}
+    </Card>
+  );
 }

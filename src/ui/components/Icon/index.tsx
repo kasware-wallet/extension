@@ -1,52 +1,94 @@
-import React, { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
+import React from 'react';
 
-import { ColorTypes, colors } from '@/ui/theme/colors';
+import type { ColorTypes } from '@/ui/theme/colors';
+import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
 
+// Import all assets using import statements
+import historyIcon from '@/assets/icons/clock-solid.svg';
+import swapIcon from '@/assets/icons/arrow-left-right.svg';
+import bridgeIcon from '@/assets/icons/bridge.svg';
+import receiveIcon from '@/assets/icons/qrcode.svg';
+import sendIcon from '@/assets/icons/sendtoken.svg';
+import rightIcon from '@/assets/icons/arrow-right.svg';
+import leftIcon from '@/assets/icons/arrow-left.svg';
+import downIcon from '@/assets/icons/down.svg';
+import linkIcon from '@/assets/icons/arrow-up-right.svg';
+import discordIcon from '@/assets/icons/discord.svg';
+import dropletHalfIcon from '@/assets/icons/droplet-half.svg';
+import telegramIcon from '@/assets/icons/telegram.svg';
+import twitterIcon from '@/assets/icons/twitter.svg';
+import githubIcon from '@/assets/icons/github.svg';
+import kasIcon from '@/assets/icons/kaspa.svg';
+import kaspaWhiteIcon from '@/assets/icons/kaspa-black.svg';
+import qrcodeIcon from '@/assets/icons/qrcode.svg';
+import compassIcon from '@/assets/icons/compass-solid.svg';
+import settingsIcon from '@/assets/icons/gear-solid.svg';
+import gridIcon from '@/assets/icons/grid-solid.svg';
+import copyIcon from '@/assets/icons/copy-solid.svg';
+import closeIcon from '@/assets/icons/xmark.svg';
+import userIcon from '@/assets/icons/user-solid.svg';
+import walletIcon from '@/assets/icons/wallet-solid.svg';
+import deleteIcon from '@/assets/icons/delete.svg';
+import successIcon from '@/assets/icons/success.svg';
+import checkIcon from '@/assets/icons/check.svg';
+import eyeIcon from '@/assets/icons/eye.svg';
+import eyeSlashIcon from '@/assets/icons/eye-slash.svg';
+import circleCheckIcon from '@/assets/icons/circle-check.svg';
+import pencilIcon from '@/assets/icons/pencil.svg';
+import circleInfoIcon from '@/assets/icons/circle-info.svg';
+import circleQuestionIcon from '@/assets/icons/circle-question.svg';
+import splitIcon from '@/assets/icons/scissors.svg';
+import infoIcon from '@/assets/icons/info.svg';
+import warningIcon from '@/assets/icons/warning.svg';
+
 export const svgRegistry = {
-  history: './images/icons/clock-solid.svg',
-  send: './images/icons/arrow-left-right.svg',
-  receive: './images/icons/qrcode.svg',
+  history: historyIcon,
+  swap: swapIcon,
+  bridge: bridgeIcon,
+  receive: receiveIcon,
+  send: sendIcon,
 
-  right: './images/icons/arrow-right.svg',
-  left: './images/icons/arrow-left.svg',
-  down: './images/icons/down.svg',
-  link: './images/icons/arrow-up-right.svg',
+  right: rightIcon,
+  left: leftIcon,
+  down: downIcon,
+  link: linkIcon,
 
-  discord: './images/icons/discord.svg',
-  telegram: './images/icons/telegram.svg',
-  twitter: './images/icons/twitter.svg',
-  github: './images/icons/github.svg',
+  discord: discordIcon,
+  'droplet-half': dropletHalfIcon,
+  telegram: telegramIcon,
+  twitter: twitterIcon,
+  github: githubIcon,
 
-  kas: './images/icons/kaspa.svg',
-  'kaspa-white': './images/icons/kaspa-black.svg',
-  qrcode: './images/icons/qrcode.svg',
+  kas: kasIcon,
+  'kaspa-white': kaspaWhiteIcon,
+  qrcode: qrcodeIcon,
 
-  user: '/images/icons/user-solid.svg',
-  wallet: '/images/icons/wallet-solid.svg',
-  compass: './images/icons/compass-solid.svg',
-  settings: './images/icons/gear-solid.svg',
-  grid: './images/icons/grid-solid.svg',
+  user: userIcon,
+  wallet: walletIcon,
+  compass: compassIcon,
+  settings: settingsIcon,
+  grid: gridIcon,
 
-  delete: '/images/icons/delete.svg',
-  success: '/images/icons/success.svg',
-  check: '/images/icons/check.svg',
-  eye: '/images/icons/eye.svg',
-  'eye-slash': '/images/icons/eye-slash.svg',
-  copy: './images/icons/copy-solid.svg',
-  close: './images/icons/xmark.svg',
+  delete: deleteIcon,
+  success: successIcon,
+  check: checkIcon,
+  eye: eyeIcon,
+  'eye-slash': eyeSlashIcon,
+  copy: copyIcon,
+  close: closeIcon,
 
-  'circle-check': '/images/icons/circle-check.svg',
-  pencil: '/images/icons/pencil.svg',
-  'circle-info': '/images/icons/circle-info.svg',
-  'circle-question': '/images/icons/circle-question.svg',
-  split: '/images/icons/scissors.svg',
-  info: '/images/icons/info.svg',
-  warning: '/images/icons/warning.svg',
-
+  'circle-check': circleCheckIcon,
+  pencil: pencilIcon,
+  'circle-info': circleInfoIcon,
+  'circle-question': circleQuestionIcon,
+  split: splitIcon,
+  info: infoIcon,
+  warning: warningIcon
 };
 
-const iconImgList: Array<IconTypes> = ['success', 'delete','kas'];
+const iconImgList: Array<IconTypes> = ['success', 'delete', 'kas'];
 
 export type IconTypes = keyof typeof svgRegistry;
 interface IconProps {
@@ -106,7 +148,8 @@ export function Icon(props: IconProps) {
           $containerStyleOverride,
           $imageStyleOverride || {},
           onClick ? { cursor: 'pointer' } : {}
-        )}>
+        )}
+      >
         {children}
       </div>
     );

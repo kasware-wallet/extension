@@ -1,18 +1,27 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { isNull } from 'lodash';
-import React, { CSSProperties, useEffect, useState } from 'react';
+import { debounce, isNull } from 'lodash-es';
+import type { CSSProperties } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { NETWORK_ID, SUPPORTED_DOMAINS } from '@/shared/constant';
+import { getSatsName } from '@/shared/lib/satsname-utils';
+import type { IKNSDomain } from '@/shared/types';
 import { colors } from '@/ui/theme/colors';
 import { spacing } from '@/ui/theme/spacing';
 import { useWallet } from '@/ui/utils';
+import { isValidAddress } from '@ethereumjs/util';
 
-import { useTranslation } from 'react-i18next';
+import { AccordingInscription } from '../AccordingInscription';
 import { useTools } from '../ActionComponent';
+import { Button } from '../Button';
+import { Column } from '../Column';
+import { CopyableAddress } from '../CopyableAddress';
 import { Icon } from '../Icon';
 import { Row } from '../Row';
 import { $textPresets, Text } from '../Text';
-import './index.less';
+import { useAppSelector } from '@/ui/state/hooks';
+import { selectNetworkId } from '@/ui/state/settings/reducer';
+// import './index.less';
 
 export interface InputProps {
   preset?: Presets;
@@ -29,12 +38,15 @@ export interface InputProps {
   style?: CSSProperties;
   containerStyle?: CSSProperties;
   addressInputData?: { address: string; domain: string };
-  onAddressInputChange?: (params: { address: string; domain: string }) => void;
+  onAddressInputChange?: (params: { address: string; domain: string; knsDomain?: IKNSDomain }) => void;
   onAmountInputChange?: (amount: string) => void;
   disabled?: boolean;
   disableDecimal?: boolean;
   id?: string;
   inputAmountType?: 'kas' | 'usd';
+  tokenTick?: string;
+  decimalPlaces?: number;
+  showContactClick?: () => void;
 }
 
 type Presets = keyof typeof $inputPresets;
@@ -88,34 +100,96 @@ function PasswordInput(props: InputProps) {
 }
 
 function AmountInput(props: InputProps) {
-  const { placeholder, onAmountInputChange, disabled, style: $inputStyleOverride, disableDecimal, ...rest } = props;
+  const {
+    placeholder,
+    onAmountInputChange,
+    disabled,
+    style: $inputStyleOverride,
+    disableDecimal,
+    defaultValue,
+    ...rest
+  } = props;
   const $style = Object.assign({}, $baseInputStyle, $inputStyleOverride, disabled ? { color: colors.textDim } : {});
-
+  const [inputValue, setInputValue] = useState(defaultValue ? defaultValue : '');
   if (!onAmountInputChange) {
     return <div />;
   }
-  const [inputValue, setInputValue] = useState('');
-  const [validAmount, setValidAmount] = useState('');
-  useEffect(() => {
-    onAmountInputChange(validAmount);
-  }, [validAmount]);
+  // const [validAmount, setValidAmount] = useState(defaultValue ? defaultValue : '');
+  // useEffect(() => {
+  //   onAmountInputChange(validAmount);
+  // }, [validAmount]);
 
   const handleInputAmount = (e) => {
     const value = e.target.value;
     if (disableDecimal) {
       if (/^[1-9]\d*$/.test(value) || value === '') {
-        setValidAmount(value);
+        // setValidAmount(value);
         setInputValue(value);
+        onAmountInputChange(value);
       }
     } else {
       if (/^\d*\.?\d{0,8}$/.test(value) || value === '') {
-        setValidAmount(value);
+        // setValidAmount(value);
         setInputValue(value);
+        onAmountInputChange(value);
       }
     }
   };
   return (
     <div style={$baseContainerStyle}>
+      <input
+        placeholder={placeholder || 'Amount'}
+        type={'text'}
+        value={inputValue}
+        onChange={handleInputAmount}
+        style={$style}
+        disabled={disabled}
+        {...rest}
+      />
+    </div>
+  );
+}
+
+export function AmountInputOneLine(props: InputProps) {
+  const {
+    placeholder,
+    onAmountInputChange,
+    disabled,
+    style: $inputStyleOverride,
+    disableDecimal,
+    defaultValue,
+    containerStyle,
+    ...rest
+  } = props;
+  const $style = Object.assign({}, $baseInputStyle, $inputStyleOverride, disabled ? { color: colors.textDim } : {});
+  const [inputValue, setInputValue] = useState(defaultValue ? defaultValue : '');
+  if (!onAmountInputChange) {
+    return <div />;
+  }
+  // const [validAmount, setValidAmount] = useState('');
+  // useEffect(() => {
+  //   onAmountInputChange(validAmount);
+  // }, [validAmount]);
+
+  const handleInputAmount = (e) => {
+    const value = e.target.value;
+    if (disableDecimal) {
+      if (/^[1-9]\d*$/.test(value) || value === '') {
+        // setValidAmount(value);
+        setInputValue(value);
+        onAmountInputChange(value);
+      }
+    } else {
+      if (/^\d*\.?\d{0,8}$/.test(value) || value === '') {
+        // setValidAmount(value);
+        setInputValue(value);
+        onAmountInputChange(value);
+      }
+    }
+  };
+  return (
+    <div style={Object.assign({}, $baseContainerStyle, containerStyle)}>
+      <Text text={'text'} preset="regular" style={{ marginLeft: spacing.tiny }} />
       <input
         placeholder={placeholder || 'Amount'}
         type={'text'}
@@ -137,36 +211,42 @@ export function KasAmountInput(props: InputProps) {
     disabled,
     style: $inputStyleOverride,
     disableDecimal,
+    tokenTick,
+    decimalPlaces,
     ...rest
   } = props;
   const $style = Object.assign({}, $baseInputStyle, $inputStyleOverride, disabled ? { color: colors.textDim } : {});
-
+  const [inputValue, setInputValue] = useState('');
   if (!onAmountInputChange) {
     return <div />;
   }
-  const [inputValue, setInputValue] = useState('');
-  const [validAmount, setValidAmount] = useState('');
-  useEffect(() => {
-    onAmountInputChange(validAmount);
-  }, [validAmount]);
+  // const [validAmount, setValidAmount] = useState('');
+  // useEffect(() => {
+  //   onAmountInputChange(validAmount);
+  // }, [validAmount]);
 
   const handleInputAmount = (e) => {
     const value = e.target.value;
     if (disableDecimal) {
       if (/^[1-9]\d*$/.test(value) || value === '') {
-        setValidAmount(value);
+        // setValidAmount(value);
         setInputValue(value);
+        onAmountInputChange(value);
       }
     } else {
-      if (/^\d*\.?\d{0,8}$/.test(value) || value === '') {
-        setValidAmount(value);
+      // if (/^\d*\.?\d{0,8}$/.test(value) || value === '') {
+      if (isValidNumber(value, decimalPlaces ?? 8) || value === '') {
+        // setValidAmount(value);
         setInputValue(value);
+        onAmountInputChange(value);
       }
     }
   };
   return (
     <div style={$baseContainerStyle}>
-      {inputAmountType && inputAmountType == 'usd' && Number(inputValue) > 0 && <Text text="$" color="textDim" style={{ marginRight: spacing.tiny }} />}
+      {inputAmountType && inputAmountType == 'usd' && Number(inputValue) > 0 && (
+        <Text text="$" color="textDim" style={{ marginRight: spacing.tiny }} />
+      )}
       <input
         placeholder={placeholder || 'Amount'}
         type={'text'}
@@ -176,33 +256,44 @@ export function KasAmountInput(props: InputProps) {
         disabled={disabled}
         {...rest}
       />
-      {inputAmountType && inputAmountType == 'kas' && Number(inputValue) > 0 && <Text text="KAS" color="textDim" />}
+      {inputAmountType && inputAmountType == 'kas' && Number(inputValue) > 0 && (
+        <Text text={tokenTick ? tokenTick : 'KAS'} color="textDim" />
+      )}
     </div>
   );
 }
+function isValidNumber(input: string, decimalPlaces: number): boolean {
+  const regex = new RegExp(`^\\d*\\.?\\d{0,${decimalPlaces}}$`);
+  return regex.test(input);
+}
 
-export const AddressInput = (props: InputProps) => {
-  const { placeholder, onAddressInputChange, addressInputData, style: $inputStyleOverride, ...rest } = props;
+const AddressInput = (props: InputProps) => {
+  const {
+    showContactClick,
+    placeholder,
+    onAddressInputChange,
+    addressInputData,
+    style: $inputStyleOverride,
+    ...rest
+  } = props;
   const { t } = useTranslation();
-  if (!addressInputData || !onAddressInputChange) {
-    return <div />;
-  }
-  const [validAddress, setValidAddress] = useState(addressInputData.address);
-  const [parseAddress, setParseAddress] = useState(addressInputData.domain ? addressInputData.address : '');
+  const [validAddress, setValidAddress] = useState(addressInputData?.address);
+  const [parseAddress, setParseAddress] = useState(addressInputData?.domain ? addressInputData?.address : '');
   const [parseError, setParseError] = useState('');
   const [formatError, setFormatError] = useState('');
-
-  const [inputVal, setInputVal] = useState(addressInputData.domain || addressInputData.address);
-
+  const networkId = useAppSelector(selectNetworkId);
+  const [inputVal, setInputVal] = useState(addressInputData?.domain || addressInputData?.address);
+  const [inscription, setInscription] = useState<IKNSDomain>();
   const [parseName, setParseName] = useState('');
   const wallet = useWallet();
-  const tools = useTools();
+  // const tools = useTools();
   useEffect(() => {
-    onAddressInputChange({
-      address: validAddress,
-      domain: parseAddress ? inputVal : '',
+    onAddressInputChange?.({
+      address: validAddress || '',
+      domain: parseAddress ? inputVal || '' : '',
+      knsDomain: inscription
     });
-  }, [validAddress]);
+  }, [inputVal, inscription, onAddressInputChange, parseAddress, validAddress]);
 
   const [searching, setSearching] = useState(false);
 
@@ -221,60 +312,163 @@ export const AddressInput = (props: InputProps) => {
       setValidAddress('');
     }
 
+    if (inscription) {
+      setInscription(undefined);
+    }
+
     setParseName('');
   };
 
-  const handleInputAddress = async (e) => {
+  const elementRef = useRef<HTMLDivElement | null>(null);
+
+  const handleInputAddress = debounce(async (e) => {
     const inputAddress = e.target.value.trim();
     setInputVal(inputAddress);
 
     resetState();
-    const isValid = await wallet.isValidKaspaAddr(inputAddress);
-    if (!isValid) {
-      setFormatError('Recipient address is invalid');
-      return;
+
+    const teststr = inputAddress.toLowerCase();
+    const satsname = getSatsName(teststr);
+    if (satsname) {
+      if (SUPPORTED_DOMAINS.includes(satsname.suffix)) {
+        setSearching(true);
+        wallet
+          .queryDomainInfo(encodeURIComponent(inputAddress))
+          .then((inscription) => {
+            resetState();
+            if (!inscription) {
+              setParseError(`${inputAddress} does not exist`);
+              return;
+            }
+            setInscription(inscription);
+            // if (inscription.utxoConfirmation < SAFE_DOMAIN_CONFIRMATION) {
+            //   setParseError(
+            //     `This domain has been transferred or inscribed recently. Please wait for block confirmations (${inscription.utxoConfirmation}/3).`
+            //   );
+            //   return;
+            // }
+
+            const address = inscription.owner || '';
+            setParseAddress(address);
+            setValidAddress(address);
+            setParseName(satsname.suffix);
+          })
+          .catch((err: Error) => {
+            const errMsg = err.message + ' for ' + inputAddress;
+            setFormatError(errMsg);
+          })
+          .finally(() => {
+            setSearching(false);
+          });
+      } else {
+        const names = SUPPORTED_DOMAINS.map((v) => `.${v}`);
+        let str = '';
+        for (let i = 0; i < names.length; i++) {
+          if (i == 0) {
+            // empty
+          } else if (i < names.length - 1) {
+            str += ', ';
+          } else {
+            str += ' and ';
+          }
+          str += `${names[i]}`;
+        }
+        setFormatError(`Currently only ${str} are supported.`);
+        return;
+      }
+    } else {
+      const isValid =
+        ((networkId === NETWORK_ID.mainnet
+          ? inputAddress.toLowerCase().startsWith('kaspa')
+          : inputAddress.toLowerCase().startsWith('kaspatest')) &&
+          (await wallet.isValidKaspaAddr(inputAddress))) ||
+        isValidAddress(inputAddress);
+      if (!isValid) {
+        setFormatError('Recipient address is invalid');
+        return;
+      }
+      setValidAddress(inputAddress);
     }
-    setValidAddress(inputAddress);
-  };
-
+  }, 800);
+  if (!addressInputData || !onAddressInputChange) {
+    return <div />;
+  }
   return (
-    <div style={{ alignSelf: 'stretch' }}>
-      <div style={Object.assign({}, $baseContainerStyle, { flexDirection: 'column', minHeight: '56.5px' })}>
-        <input
-          placeholder={t('Address')}
-          type={'text'}
-          style={Object.assign({}, $baseInputStyle, $inputStyleOverride)}
-          onChange={async (e) => {
-            await handleInputAddress(e);
-          }}
-          defaultValue={inputVal}
-          {...rest}
-        />
+    <>
+      <Row justifyBetween style={{ gap: 2 }}>
+        <Column full>
+          <div style={{ alignSelf: 'stretch' }}>
+            <div
+              ref={elementRef}
+              style={Object.assign({}, $baseContainerStyle, { flexDirection: 'column', minHeight: '56.5px' })}
+            >
+              <input
+                placeholder={placeholder || t('Address')}
+                type={'text'}
+                style={Object.assign({}, $baseInputStyle, $inputStyleOverride)}
+                onChange={handleInputAddress}
+                defaultValue={inputVal}
+                autoComplete="off"
+                {...rest}
+              />
 
-        {searching && (
-          <Row full mt="sm">
-            <Text preset="sub" text={'Loading...'} />
-          </Row>
-        )}
-      </div>
+              {searching && (
+                <Row full mt="sm">
+                  <Text preset="sub" text={'Loading...'} />
+                </Row>
+              )}
+              {inscription && (
+                <Column full mt="sm" gap="xs">
+                  <CopyableAddress address={parseAddress} />
+                  <AccordingInscription knsDomain={inscription} />
+                </Column>
+              )}
+            </div>
 
-      {parseName ? (
+            {/* {parseName ? (
         <Row mt="sm" gap="zero" itemsCenter>
-          <Text preset="sub" size="sm" text={'Name recognized and resolved. ('} />
+          <Text preset="sub" size="xs" text={'Name recognized and resolved. ('} />
           <Text
             preset="link"
-            color="yellow"
+            // color="yellow"
+            size="xxs"
             text={'More details'}
             onClick={() => {
-              window.open('https://docs.kasware.xyz/kasware-wallet/name-recognized-and-resolved');
+              window.open('https://docs.kasware.xyz/wallet/knowledge-base/name-recognized-and-resolved');
             }}
           />
-          <Text preset="sub" size="sm" text={')'} />
+          <Text preset="sub" size="xs" text={')'} />
+        </Row>
+      ) : null} */}
+
+            {parseError && <Text text={parseError} preset="regular" color="error" selectText />}
+            <Text text={formatError} preset="regular" color="error" selectText />
+          </div>
+        </Column>
+        {showContactClick ? (
+          <Button
+            style={{
+              height: elementRef.current ? elementRef.current?.offsetHeight : '56px'
+            }}
+            onClick={showContactClick}
+          >
+            <Icon icon={'user'} />
+          </Button>
+        ) : null}
+      </Row>
+      {parseName ? (
+        <Row mt="sm" gap="zero" itemsCenter>
+          <Text
+            // preset="sub"
+            size="xs"
+            text={
+              '⚠️ Before sending a transaction, please ensure that the resolved address is correct. Once a transfer is sent, it cannot be reversed. Any input errors may result in the loss of assets. Please verify carefully.'
+            }
+            selectText
+          />
         </Row>
       ) : null}
-      {parseError && <Text text={parseError} preset="regular" color="error" />}
-      <Text text={formatError} preset="regular" color="error" />
-    </div>
+    </>
   );
 };
 

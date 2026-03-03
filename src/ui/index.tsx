@@ -1,22 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import en from 'antd/es/locale/en_US';
 import message from 'antd/lib/message';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 
-import browser from '@/background/webapi/browser';
-import { EVENTS } from '@/shared/constant';
+import browser from '@/shared/webapi/browser';
+import '@/evm/ui/style/index.less';
+import { updateChainStore } from '@/utils/chain';
+import { KASPA_EVENTS } from '@/shared/constant';
 import eventBus from '@/shared/eventBus';
 import { Message } from '@/shared/utils';
+import '@/shared/utils/logger';
 import AccountUpdater from '@/ui/state/accounts/updater';
 import '@/ui/styles/global.less';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 
 import { ActionComponentProvider } from './components/ActionComponent';
-import { AppDimensions } from './components/Responsive';
 import AsyncMainRoute from './pages/MainRoute';
 import store from './state';
-import { WalletProvider } from './utils';
-import i18n, { addResourceBundle } from './utils/i18n';
+import { initBizStore, initWallet } from './state/models/app';
+import { chainsActions, chainsInit } from './state/models/chains';
+import { getUITypeName, WalletProvider } from './utils';
+import i18n from './utils/i18n';
+import type { WalletController } from '@/ui/utils';
 
 // disabled sentry
 // Sentry.init({
@@ -36,9 +43,6 @@ import i18n, { addResourceBundle } from './utils/i18n';
 message.config({
   maxCount: 1
 });
-const antdConfig = {
-  locale: en
-};
 
 // For fix chrome extension render problem in external screen
 if (
@@ -48,7 +52,7 @@ if (
   window.screenLeft > window.screen.width ||
   window.screenTop > window.screen.height
 ) {
-  browser.runtime.getPlatformInfo(function (info) {
+  browser.runtime.getPlatformInfo().then(function (info) {
     if (info.os === 'mac') {
       const fontFaceSheet = new CSSStyleSheet();
       fontFaceSheet.insertRule(`
@@ -75,9 +79,10 @@ const { PortMessage } = Message;
 
 const portMessageChannel = new PortMessage();
 
-portMessageChannel.connect('popup');
+// portMessageChannel.connect('popup');
+portMessageChannel.connect(getUITypeName());
 
-const wallet: Record<string, any> = new Proxy(
+const wallet = new Proxy(
   {},
   {
     get(obj, key) {
@@ -98,6 +103,71 @@ const wallet: Record<string, any> = new Proxy(
             }
           );
           break;
+        case 'openapiEVM':
+          return new Proxy(
+            {},
+            {
+              get(obj, key) {
+                return function (...params: any) {
+                  return portMessageChannel.request({
+                    type: 'openapiEVM',
+                    method: key,
+                    params
+                  });
+                };
+              }
+            }
+          );
+          break;
+        case 'walletEVM':
+          return new Proxy(
+            {},
+            {
+              get(obj, key) {
+                return function (...params: any) {
+                  return portMessageChannel.request({
+                    type: 'walletEVM',
+                    method: key,
+                    params
+                  });
+                };
+              }
+            }
+          );
+          break;
+          break;
+        case 'testnetOpenapiEVM':
+          return new Proxy(
+            {},
+            {
+              get(obj, key) {
+                return function (...params: any) {
+                  return portMessageChannel.request({
+                    type: 'testnetOpenapiEVM',
+                    method: key,
+                    params
+                  });
+                };
+              }
+            }
+          );
+          break;
+        case 'fakeTestnetOpenapiEVM':
+          return new Proxy(
+            {},
+            {
+              get(obj, key) {
+                return function (...params: any) {
+                  return portMessageChannel.request({
+                    type: 'fakeTestnetOpenapiEVM',
+                    method: key,
+                    params
+                  });
+                };
+              }
+            }
+          );
+          break;
         default:
           return function (...params: any) {
             return portMessageChannel.request({
@@ -109,15 +179,18 @@ const wallet: Record<string, any> = new Proxy(
       }
     }
   }
-);
+) as WalletController;
 
 portMessageChannel.listen((data) => {
   if (data.type === 'broadcast') {
     eventBus.emit(data.method, data.params);
   }
+  if (data.type === 'sendToUI') {
+    eventBus.emit(data.method, data.params);
+  }
 });
 
-eventBus.addEventListener(EVENTS.broadcastToBackground, (data) => {
+eventBus.addEventListener(KASPA_EVENTS.broadcastToBackground, (data) => {
   portMessageChannel.request({
     type: 'broadcast',
     method: data.method,
@@ -125,44 +198,41 @@ eventBus.addEventListener(EVENTS.broadcastToBackground, (data) => {
   });
 });
 
-function Updaters() {
-  return (
-    <>
-      <AccountUpdater />
-    </>
-  );
-}
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24 // 24 hours
+    }
+  }
+});
 
-wallet.getLocale().then((locale) => {
-  addResourceBundle(locale).then(() => {
-    i18n.changeLanguage(locale);
-    // ReactDOM.render(<Views wallet={wallet} />, document.getElementById('root'));
-    const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
-    root.render(
+const persister = createSyncStoragePersister({
+  storage: window.localStorage
+});
+
+store.dispatch(initWallet({ wallet }));
+eventBus.addEventListener('syncChainList', (params) => {
+  store.dispatch(chainsActions.setField(params));
+  updateChainStore(params);
+});
+
+store.dispatch(initBizStore());
+
+store.dispatch(chainsInit());
+
+await wallet.getLocale().then(async (locale: string | undefined) => {
+  await i18n.changeLanguage(locale);
+  const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+  root.render(
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
       <Provider store={store}>
-        <WalletProvider {...antdConfig} wallet={wallet as any}>
+        <WalletProvider wallet={wallet}>
           <ActionComponentProvider>
-            <AppDimensions>
-              <Updaters />
-              <AsyncMainRoute />
-            </AppDimensions>
+            <AccountUpdater />
+            <AsyncMainRoute />
           </ActionComponentProvider>
         </WalletProvider>
       </Provider>
-    );
-  });
+    </PersistQueryClientProvider>
+  );
 });
-
-// const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
-// root.render(
-//   <Provider store={store}>
-//     <WalletProvider {...antdConfig} wallet={wallet as any}>
-//       <ActionComponentProvider>
-//         <AppDimensions>
-//           <Updaters />
-//           <AsyncMainRoute />
-//         </AppDimensions>
-//       </ActionComponentProvider>
-//     </WalletProvider>
-//   </Provider>
-// );

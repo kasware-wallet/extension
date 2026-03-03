@@ -1,7 +1,10 @@
-import React, { CSSProperties, ReactEventHandler } from 'react';
+import type { CSSProperties, ReactEventHandler } from 'react';
+import React from 'react';
 
-import { ColorTypes, colors } from '@/ui/theme/colors';
-import { Gap, spacingGap } from '@/ui/theme/spacing';
+import type { ColorTypes } from '@/ui/theme/colors';
+import { colors } from '@/ui/theme/colors';
+import type { Gap } from '@/ui/theme/spacing';
+import { spacingGap } from '@/ui/theme/spacing';
 
 import './index.less';
 
@@ -10,6 +13,7 @@ export interface BaseViewProps {
   children?: React.ReactNode;
   justifyCenter?: boolean;
   justifyBetween?: boolean;
+  justifyAround?: boolean;
   justifyEnd?: boolean;
   itemsCenter?: boolean;
   selfItemsCenter?: boolean;
@@ -44,6 +48,7 @@ export function BaseView(props: BaseViewProps) {
     style: $styleBase,
     justifyCenter,
     justifyBetween,
+    justifyAround,
     justifyEnd,
     itemsCenter,
     selfItemsCenter,
@@ -75,6 +80,7 @@ export function BaseView(props: BaseViewProps) {
     {},
     justifyCenter ? { justifyContent: 'center' } : {},
     justifyBetween ? { justifyContent: 'space-between' } : {},
+    justifyAround ? { justifyContent: 'space-around' } : {},
     justifyEnd ? { justifyContent: 'end' } : {},
     itemsCenter ? { alignItems: 'center' } : {},
     selfItemsCenter ? { alignSelf: 'center' } : {},

@@ -1,8 +1,10 @@
-import React, { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
+import React from 'react';
 
 import { spacingGap } from '@/ui/theme/spacing';
 
-import { BaseView, BaseViewProps } from '../BaseView';
+import type { BaseViewProps } from '../BaseView';
+import { BaseView } from '../BaseView';
 
 export type ColumnProps = BaseViewProps;
 const $columnStyle = {

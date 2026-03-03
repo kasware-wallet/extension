@@ -1,11 +1,9 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { copyToClipboard, shortAddress } from '@/ui/utils';
+import { useTranslation } from 'react-i18next';
 import { useTools } from '../ActionComponent';
 import { Icon } from '../Icon';
 import { Row } from '../Row';
 import { Text } from '../Text';
-import { useTranslation } from 'react-i18next';
 
 export function CopyableAddress({ address }: { address: string }) {
   const { t } = useTranslation();
@@ -14,7 +12,7 @@ export function CopyableAddress({ address }: { address: string }) {
     <Row
       itemsCenter
       gap="sm"
-      onClick={(e) => {
+      onClick={() => {
         copyToClipboard(address).then(() => {
           tools.toastSuccess(t('Copied'));
         });

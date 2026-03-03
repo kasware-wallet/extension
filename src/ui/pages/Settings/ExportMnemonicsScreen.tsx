@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ADDRESS_TYPES } from '@/shared/constant';
-import { WalletKeyring } from '@/shared/types';
-import { Button, Card, Column, Content, Grid, Header, Icon, Input, Layout, Row, Text } from '@/ui/components';
+import type { WalletKeyring } from '@/shared/types';
+import { AddressType } from '@/shared/types';
+import { Button, Card, Column, Content, Grid, Header, Input, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { colors } from '@/ui/theme/colors';
 import { copyToClipboard, useLocationState, useWallet } from '@/ui/utils';
-import { WarningOutlined } from '@ant-design/icons';
+import { CopyOutlined, WarningOutlined } from '@ant-design/icons';
 
 type Status = '' | 'error' | 'warning' | undefined;
 
@@ -29,12 +29,30 @@ export default function ExportMnemonicsScreen() {
   const tools = useTools();
 
   const [passphrase, setPassphrase] = useState('');
+  const [addressTypeStr, setAddressTypeStr] = useState('');
 
   const btnClick = async () => {
     try {
-      const { mnemonic, hdPath, passphrase } = await wallet.getMnemonics(password, keyring);
+      const { mnemonic, passphrase, addressType } = await wallet.getMnemonics(password, keyring);
       setMnemonic(mnemonic);
       setPassphrase(passphrase);
+      switch (addressType) {
+        case AddressType.KASPA_44_972:
+          setAddressTypeStr('legacy');
+          break;
+        case AddressType.KASPA_ONEKEY_44_111111:
+          setAddressTypeStr('OneKey');
+          break;
+        case AddressType.KASPA_TANGEM_44_111111:
+          setAddressTypeStr('Tangem(ECDSA)');
+          break;
+        case AddressType.KASPA_CHAINGE_44_111111_0_0:
+          setAddressTypeStr('Chainge');
+          break;
+        default:
+          setAddressTypeStr('standard');
+          break;
+      }
     } catch (e) {
       setStatus('error');
       setError((e as any).message);
@@ -66,6 +84,7 @@ export default function ExportMnemonicsScreen() {
   return (
     <Layout>
       <Header
+        hideConnectingComp
         onBack={() => {
           window.history.go(-1);
         }}
@@ -87,7 +106,7 @@ export default function ExportMnemonicsScreen() {
                 color="red"
               />
 
-              <Text text="2. Never sharer it with anyone." preset="regular"color="red" />
+              <Text text="2. Never share it with anyone." preset="regular" color="red" />
 
               <Text text="3. Seed phrase is only stored in your browser." preset="regular" color="red" />
               <Text text="4. KasWare will never ask for your seed phrase." preset="regular" color="red" />
@@ -102,7 +121,7 @@ export default function ExportMnemonicsScreen() {
               onKeyUp={(e) => handleOnKeyUp(e)}
               autoFocus={true}
             />
-            {error && <Text text={error} preset="regular" color="error" />}
+            {error && <Text text={error} preset="regular" color="error" selectText />}
 
             <Button
               disabled={disabled}
@@ -116,7 +135,9 @@ export default function ExportMnemonicsScreen() {
           <Column>
             <Card style={{ backgroundColor: '#2c2323' }}>
               <Text
-                text="This phrase is the ONLY way to recover your wallet. Do NOT share it with anyone! (click to copy)"
+                text={`The seedphrase ${
+                  passphrase ? 'and passphrase are' : 'is'
+                } the ONLY way to recover your wallet. Do NOT share it with anyone!`}
                 color="red"
                 textCenter
                 mt="xl"
@@ -124,13 +145,33 @@ export default function ExportMnemonicsScreen() {
               />
             </Card>
 
+            {passphrase && (
+              <Card
+                onClick={() => {
+                  copy(passphrase);
+                }}
+              >
+                <Row fullX justifyBetween>
+                  <Row selfItemsCenter>
+                    <Text text={'Passphrase: '} disableTranslate color="textDim" />
+                    <Text text={`${passphrase}`} disableTranslate />
+                  </Row>
+                  <Row itemsCenter>
+                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                  </Row>
+                </Row>
+              </Card>
+            )}
+
             <Row
               justifyCenter
-              onClick={(e) => {
+              itemsCenter
+              onClick={() => {
                 copy(mnemonic);
-              }}>
-              <Icon icon="copy" color="textDim" />
-              <Text text="Copy to clipboard" color="textDim" />
+              }}
+            >
+              <Text text="Copy Seedphrase" color="textDim" />
+              <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
             </Row>
 
             <Row justifyCenter>
@@ -149,18 +190,24 @@ export default function ExportMnemonicsScreen() {
                 })}
               </Grid>
             </Row>
-            <Card mt="lg">
+            <Card justifyBetween>
               <Column>
-                <Text text="Advance Options" />
-                <Text
-                  text={`Derivation Path: ${keyring.hdPath} (${pathName})`}
-                  preset="sub"
+                <Row
+                  fullX
+                  selfItemsCenter
                   onClick={() => {
                     copy(keyring.hdPath);
                   }}
-                  disableTranslate
-                />
-                {passphrase && <Text text={`Passphrase: ${passphrase}`} preset="sub" disableTranslate />}
+                >
+                  <Text text={'Derivation Path: '} disableTranslate color="textDim" />
+                  <Text text={`${keyring.hdPath} (${pathName})`} disableTranslate />
+                </Row>
+                {addressTypeStr && (
+                  <Row fullX selfItemsCenter>
+                    <Text text={'Address Type: '} disableTranslate color="textDim" />
+                    <Text text={`${addressTypeStr}`} disableTranslate />
+                  </Row>
+                )}
               </Column>
             </Card>
           </Column>

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,7 +9,7 @@ import { useWallet } from '@/ui/utils';
 
 import { useNavigate } from '../MainRoute';
 
-type Status = '' | 'error' | 'warning' | undefined;
+// type Status = '' | 'error' | 'warning' | undefined;
 
 export default function ChangePasswordScreen() {
   const { t } = useTranslation();
@@ -34,7 +33,7 @@ export default function ChangePasswordScreen() {
     try {
       await wallet.changePassword(originPassword, newPassword);
       tools.toastSuccess(t('Success'));
-      navigate('MainScreen');
+      navigate('WalletTabScreen');
     } catch (err) {
       tools.toastError((err as any).message);
     }
@@ -60,7 +59,7 @@ export default function ChangePasswordScreen() {
           <Input
             preset="password"
             placeholder={t('New Password')}
-            onBlur={(e) => {
+            onBlur={() => {
               if (newPassword.length < 5) {
                 tools.toastWarning(t('at least five characters'));
                 return;
@@ -76,7 +75,7 @@ export default function ChangePasswordScreen() {
           <Input
             preset="password"
             placeholder={t('Confirm New Password')}
-            onBlur={(e) => {
+            onBlur={() => {
               if (newPassword.length > 0 && confirmPassword.length > 0 && newPassword !== confirmPassword) {
                 tools.toastWarning('Entered passwords differ');
               }

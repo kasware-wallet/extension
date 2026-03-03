@@ -1,24 +1,26 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
+import log from 'loglevel';
 import { useCallback, useEffect, useRef } from 'react';
 
 import eventBus from '@/shared/eventBus';
-import { Account } from '@/shared/types';
-import { sompiToKas, useWallet } from '@/ui/utils';
-import { IBalanceEvent } from 'kaspa-wasm';
+import type { Account } from '@/shared/types';
+import { useWallet } from '@/ui/utils';
 
-import { useIsUnlocked } from '../global/hooks';
-import { useAppDispatch } from '../hooks';
-import { useFetchTxActivitiesCallback } from '../transactions/hooks';
+import { useIsUnlocked, useRpcStatus } from '../global/hooks';
+import { globalActions } from '../global/reducer';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { useAutoLockMinutes } from '../settings/hooks';
 import { transactionsActions } from '../transactions/reducer';
-import { useAccountBalance, useCurrentAccount, useFetchBalanceCallback, useReloadAccounts } from './hooks';
-import { accountActions } from './reducer';
+import { useCurrentAccount, useFetchBalanceCallback, useReloadAccounts } from './hooks';
+import { accountsActions, selectAccountBalance } from './reducer';
+import { sompiToAmount } from '@/shared/utils/format';
 
 export default function AccountUpdater() {
   const dispatch = useAppDispatch();
   const wallet = useWallet();
   const currentAccount = useCurrentAccount();
   const isUnlocked = useIsUnlocked();
-  const balance = useAccountBalance();
+  const balance = useAppSelector((s) => selectAccountBalance(s, undefined));
+  const autoLockMinutes = useAutoLockMinutes();
   const selfRef = useRef({
     preAccountKey: '',
     loadingBalance: false,
@@ -42,9 +44,8 @@ export default function AccountUpdater() {
   useEffect(() => {
     onCurrentChange();
   }, [currentAccount && currentAccount.key, isUnlocked]);
-
+  const rpcStatus = useRpcStatus();
   const fetchBalance = useFetchBalanceCallback();
-  const fetchTxActivities = useFetchTxActivitiesCallback();
   useEffect(() => {
     if (self.loadingBalance) {
       return;
@@ -59,31 +60,46 @@ export default function AccountUpdater() {
     fetchBalance().finally(() => {
       self.loadingBalance = false;
     });
-  }, [fetchBalance, wallet, isUnlocked, self]);
+  }, [fetchBalance, wallet, isUnlocked, self, rpcStatus]);
+
+  useEffect(() => {
+    log.debug('from updater');
+    wallet.handleRpcConnect().catch((e) => {
+      log.debug(e.message);
+    });
+    const handleRpcStatus = (e: string) => {
+      if (e === 'connected') {
+        dispatch(globalActions.updateRpcStatus({ rpcStatus: true }));
+      } else {
+        dispatch(globalActions.updateRpcStatus({ rpcStatus: false }));
+        if (isUnlocked) {
+          log.debug('start to connect from updater');
+          wallet.handleRpcConnect().catch((e) => {
+            log.debug(e);
+          });
+        }
+      }
+    };
+    eventBus.addEventListener('rpcstatus', handleRpcStatus);
+    return () => {
+      eventBus.removeEventListener('rpcstatus', handleRpcStatus);
+    };
+  }, [dispatch, isUnlocked, wallet]);
 
   useEffect(() => {
     const accountChangeHandler = (account: Account) => {
       if (account && account.address) {
-        dispatch(accountActions.setCurrent(account));
+        dispatch(accountsActions.setCurrent(account));
       }
     };
-    eventBus.addEventListener('accountsChanged', accountChangeHandler);
-    eventBus.addEventListener('utxosChangedNotification', () => {
-      dispatch(accountActions.expireBalance());
-      dispatch(transactionsActions.setIncomingTx(true));
-      setTimeout(() => {
-        fetchTxActivities()
-        console.log('utxosChangedNotification true')
-      }, 15000);
-    });
-
-    eventBus.addEventListener('processor-balance-event', (event: IBalanceEvent) => {
-      const amount = sompiToKas(event.balance?.mature);
-      const pending = sompiToKas(event.balance?.pending);
-      const outgoing = sompiToKas(event.balance?.outgoing);
+    const processorBalanceHandler = (event) => {
+      const amount = sompiToAmount(event.balance?.mature, 8);
+      const pending = sompiToAmount(event.balance?.pending, 8);
+      const outgoing = sompiToAmount(event.balance?.outgoing, 8);
+      const address = event.address;
       dispatch(
-        accountActions.setBalance({
-          address: currentAccount.address,
+        accountsActions.setBalance({
+          address,
           amount: amount,
           kas_amount: amount,
           confirm_kas_amount: '0',
@@ -91,22 +107,70 @@ export default function AccountUpdater() {
           outgoing
         })
       );
-      wallet.expireUICachedData(currentAccount.address);
-      dispatch(accountActions.expireHistory());
-    });
-    eventBus.addEventListener('eventbus-sink-blue-score-changed', (event: number) => {
-      dispatch(accountActions.setBlueScore(event));
-    });
+      // wallet.expireUICachedData(currentAccount.address);
+      dispatch(accountsActions.expireHistory());
+    };
+    const blueScoreHandler = (event) => {
+      dispatch(accountsActions.setBlueScore(event));
+    };
+    const utxosChangedHandler = () => {
+      dispatch(accountsActions.expireBalance());
+      dispatch(transactionsActions.setIncomingTx(true));
+      // setTimeout(() => {
+      //   fetchTxActivities();
+      // }, 15000);
+    };
+    eventBus.addEventListener('accountsChanged', accountChangeHandler);
+    eventBus.addEventListener('utxosChangedNotification', utxosChangedHandler);
+    eventBus.addEventListener('processor-balance-event', processorBalanceHandler);
+    eventBus.addEventListener('eventbus-sink-blue-score-changed', blueScoreHandler);
     return () => {
       eventBus.removeEventListener('accountsChanged', accountChangeHandler);
-      eventBus.removeEventListener('utxosChangedNotification', () => {
-        // console.log('removed utxo changed');
-      });
-      eventBus.removeEventListener('processor-balance-event', () => {});
-      eventBus.removeEventListener('eventbus-sink-blue-score-changed', () => {});
-      wallet.disconnectRpc();
+      eventBus.removeEventListener('utxosChangedNotification', utxosChangedHandler);
+      eventBus.removeEventListener('processor-balance-event', processorBalanceHandler);
+      eventBus.removeEventListener('eventbus-sink-blue-score-changed', blueScoreHandler);
     };
   }, [dispatch]);
 
+  const extHandleSystemIdle = useCallback(
+    (state: 'idle' | 'locked' | 'active') => {
+      if (state === 'idle' || state === 'locked') {
+        wallet.getBatchMintStatus().then((status) => {
+          if (status == false) {
+            wallet.lockWallet().then(() => {
+              window.location.reload();
+            });
+          }
+        });
+      }
+    },
+    [wallet]
+  );
+  useEffect(() => {
+    if (isUnlocked) {
+      log.debug('unlocked');
+      if (chrome?.idle?.setDetectionInterval) chrome.idle.setDetectionInterval(60 * autoLockMinutes);
+      if (chrome?.idle?.onStateChanged) chrome.idle.onStateChanged.addListener(extHandleSystemIdle);
+    } else {
+      log.debug('locked');
+      if (chrome?.idle?.onStateChanged) {
+        chrome.idle.onStateChanged.removeListener(extHandleSystemIdle);
+      } else {
+        log.debug('chrome idle is not ready');
+      }
+    }
+    return () => {
+      if (chrome?.idle?.onStateChanged) chrome.idle.onStateChanged.removeListener(extHandleSystemIdle);
+    };
+  }, [extHandleSystemIdle, isUnlocked, autoLockMinutes]);
+  useEffect(() => {
+    const lockHandler = () => {
+      dispatch(globalActions.update({ isUnlocked: false }));
+    };
+    eventBus.addEventListener('lock', lockHandler);
+    return () => {
+      eventBus.removeEventListener('lock', lockHandler);
+    };
+  }, [dispatch]);
   return null;
 }

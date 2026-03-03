@@ -1,4 +1,10 @@
 @import url('./font.css');
+@import '../../evm/ui/style/index.less';
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
 .popover-container {
   position: fixed;
   top: 0;
@@ -36,7 +42,7 @@ iframe {
 }
 
 .ant-checkbox-checked {
-  background-color: #ffde04 !important;
+  background-color: #48e3c5 !important;
 }
 
 div {
@@ -89,7 +95,7 @@ div {
   &:hover {
     background: #383535 !important;
     border: none !important;
-    border-radius: 0.3rem !important;
+    // border-radius: 0.3rem !important;
   }
 }
 
@@ -106,4 +112,52 @@ div {
   &:hover {
     text-decoration: underline;
   }
+}
+
+.custom-steps .ant-steps-item-wait .ant-steps-item-icon {
+  background-color: #383535;
+  border-color: rgba(254, 252, 252, 0.879);
+  .ant-steps-icon {
+    color: rgba(255, 255, 255);
+  }
+}
+
+.ant-tabs-top > .ant-tabs-nav {
+  margin: 0 0 5px 0 !important;
+}
+
+.ant-input-number {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.ant-segmented-item-selected {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: #339999 !important;
+}
+.ant-segmented {
+  color: #ffffff !important;
+}
+
+.ant-tabs-small > .ant-tabs-nav .ant-tabs-tab {
+  font-size: 1rem !important;
+}
+
+.select-checkbox-wrapper {
+  align-items: stretch !important;
+}
+
+.ant-tabs-tab + .ant-tabs-tab {
+  margin: 0 0 0 16px !important;
+}
+
+.ant-collapse > .ant-collapse-item > .ant-collapse-header {
+  align-items: center !important;
+}
+
+.ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow {
+  display: flex !important;
+}
+
+.ant-drawer .ant-drawer-body {
+  padding: 10px 20px 24px !important;
 }

@@ -2,8 +2,8 @@
 import { Button, Column, Content, Layout, Logo, Row, Text } from '@/ui/components';
 import { useWallet } from '@/ui/utils';
 
-import { useNavigate } from '../MainRoute';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from '../MainRoute';
 
 export default function WelcomeScreen() {
   const navigate = useNavigate();
@@ -18,14 +18,10 @@ export default function WelcomeScreen() {
             <Logo preset="large" />
           </Row>
           <Column gap="xl" mt="xxl">
-            <Text
-              text={t("First Open Source Chrome wallet for Kaspa in the world! Simple and reliable.")}
-              preset="sub"
-              textCenter
-            />
+            <Text text={t('Accelerating Kaspa adoption')} preset="sub" textCenter />
 
             <Button
-              text={t("Create a new wallet")}
+              text={t('Create a new wallet')}
               preset="primary"
               onClick={async () => {
                 const isBooted = await wallet.isBooted();
@@ -37,7 +33,7 @@ export default function WelcomeScreen() {
               }}
             />
             <Button
-              text={t("I already have a wallet")}
+              text={t('I already have a wallet')}
               preset="default"
               onClick={async () => {
                 const isBooted = await wallet.isBooted();

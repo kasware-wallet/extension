@@ -1,11 +1,13 @@
-import { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 
-import { colors, ColorTypes } from '@/ui/theme/colors';
+import type { ColorTypes } from '@/ui/theme/colors';
+import { colors } from '@/ui/theme/colors';
 import { typography } from '@/ui/theme/typography';
 
-import { BaseView, BaseViewProps } from '../BaseView';
+import type { BaseViewProps } from '../BaseView';
+import { BaseView } from '../BaseView';
 
-type Sizes = keyof typeof $sizeStyles;
+export type Sizes = keyof typeof $sizeStyles;
 type Presets = keyof typeof $presets;
 
 export const $sizeStyles = {
@@ -45,6 +47,9 @@ const $presets = {
   }),
 
   sub: Object.assign({}, $baseStyle, $sizeStyles.xs, {
+    color: colors.white_muted
+  }),
+  xsub: Object.assign({}, $baseStyle, $sizeStyles.xxs, {
     color: colors.white_muted
   }),
   'sub-bold': Object.assign({}, $baseStyle, $sizeStyles.xs, {

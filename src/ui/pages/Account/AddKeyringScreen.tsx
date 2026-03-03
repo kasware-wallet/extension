@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 
 import { ImportOutlined, KeyOutlined, PlusCircleOutlined } from '@ant-design/icons';
@@ -12,6 +10,7 @@ export default function AddKeyringScreen() {
   return (
     <Layout>
       <Header
+        hideConnectingComp
         onBack={() => {
           window.history.go(-1);
         }}
@@ -25,7 +24,8 @@ export default function AddKeyringScreen() {
             mt="md"
             onClick={(e) => {
               navigate('CreateHDWalletScreen', { isImport: false });
-            }}>
+            }}
+          >
             <Row>
               <Column style={{ width: 20 }} selfItemsCenter>
                 <Icon>
@@ -44,7 +44,8 @@ export default function AddKeyringScreen() {
             mt="sm"
             onClick={(e) => {
               navigate('CreateHDWalletScreen', { isImport: true });
-            }}>
+            }}
+          >
             <Row>
               <Column style={{ width: 20 }} selfItemsCenter>
                 <Icon>
@@ -63,7 +64,8 @@ export default function AddKeyringScreen() {
             mt="sm"
             onClick={(e) => {
               navigate('CreateSimpleWalletScreen');
-            }}>
+            }}
+          >
             <Row>
               <Column style={{ width: 20 }} selfItemsCenter>
                 <Icon>

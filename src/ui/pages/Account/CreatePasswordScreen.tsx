@@ -7,6 +7,8 @@ import { useWallet, useWalletRequest } from '@/ui/utils';
 
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
+import { globalActions } from '@/ui/state/global/reducer';
+import { useAppDispatch } from '@/ui/state/hooks';
 
 // type Status = '' | 'error' | 'warning' | undefined;
 
@@ -22,10 +24,12 @@ export default function CreatePasswordScreen() {
 
   const [disabled, setDisabled] = useState(true);
 
-  const tools = useTools();
+  const { toastError, toastWarning } = useTools();
+  const dispatch = useAppDispatch();
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   const [run, loading] = useWalletRequest(wallet.boot, {
     onSuccess() {
+      dispatch(globalActions.update({ isBooted: true, isUnlocked: true }));
       if (isNewAccount) {
         navigate('CreateHDWalletScreen', { isImport: false, fromUnlock: true });
       } else {
@@ -33,7 +37,7 @@ export default function CreatePasswordScreen() {
       }
     },
     onError(err) {
-      tools.toastError(err);
+      toastError(err);
     }
   });
 
@@ -43,7 +47,7 @@ export default function CreatePasswordScreen() {
 
   const verify = (pwd2: string) => {
     if (pwd2 && pwd2 !== password) {
-      tools.toastWarning(t('Entered passwords differ'));
+      toastWarning(t('Entered passwords differ'));
     }
   };
 
@@ -52,7 +56,7 @@ export default function CreatePasswordScreen() {
 
     if (password) {
       if (password.length < 5) {
-        tools.toastWarning(t('Password must contain at least 5 characters'));
+        toastWarning(t('Password must contain at least 5 characters'));
         return;
       }
 
@@ -63,7 +67,7 @@ export default function CreatePasswordScreen() {
         }
       }
     }
-  }, [password, password2]);
+  }, [password, password2, t, toastWarning]);
 
   const handleOnKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!disabled && 'Enter' == e.key) {
