@@ -129,7 +129,7 @@ export function TabBar(props: TabBarProps) {
             return (
               <Column
                 key={v.key}
-                style={{ borderWidth: 1, borderRadius: 20, backgroundColor: '#322D1F' }}
+                style={{ borderWidth: 1, borderRadius: 20, backgroundColor: colors.bg_warm }}
                 color={isSelected ? 'gold' : 'white_muted'}
                 onClick={() => {
                   setTabKey(v.key);

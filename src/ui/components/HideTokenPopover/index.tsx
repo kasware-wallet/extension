@@ -1,15 +1,11 @@
 import { useTranslation } from 'react-i18next';
 
 import type { CustomTestnetToken } from '@/shared/types/token';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { colors } from '@/ui/theme/colors';
+import { shortAddress } from '@/ui/utils';
 
-import { Button } from '../Button';
-import { Card } from '../Card';
-import { Column } from '../Column';
-import { Popover } from '../Popover';
-import { Row } from '../Row';
-import { Text } from '../Text';
+import { Column, Icon, Row, Text } from '..';
+import { ConfirmationPopover } from '../ConfirmationPopover';
 
 export const HideTokenPopover = ({
   token,
@@ -21,58 +17,62 @@ export const HideTokenPopover = ({
   onConfirm: () => void;
 }) => {
   const { t } = useTranslation();
+
+  const eyeIcon = (
+    <div
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: '50%',
+        alignItems: 'center',
+        display: 'flex',
+        flexDirection: 'row',
+        backgroundColor: colors.orange,
+        justifyContent: 'center'
+      }}
+    >
+      <Icon icon="eye-slash" size={20} color="white" />
+    </div>
+  );
+
   return (
-    <Popover onClose={onClose}>
-      <Column justifyCenter itemsCenter>
-        <div
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: '1.5rem',
-            alignItems: 'center',
-            display: 'flex',
-            flexDirection: 'row',
-            backgroundColor: '#CC3333',
-            justifyContent: 'center'
-          }}
-        >
-          <FontAwesomeIcon icon={faTrashCan} style={{ height: '1rem' }} />
-        </div>
-        <Row justifyCenter>
-          <Text text={token?.symbol} />
-        </Row>
-        <Card preset="style2" style={{ width: 300 }}>
-          <Column my="xl">
-            <Row>
-              <Text
-                text={t(`You can add this token back in the future by going to 'Add token' in default page.`)}
-                textCenter
-                wrap
-                selectText
-              />
-            </Row>
-          </Column>
-        </Card>
-        <Row full>
-          <Button
-            text="Cancel"
-            full
-            onClick={() => {
-              if (onClose) {
-                onClose();
-              }
-            }}
-          />
-          <Button
-            text="Hide"
-            preset="primary"
-            full
-            onClick={() => {
-              onConfirm();
-            }}
+    <ConfirmationPopover
+      onClose={onClose}
+      confirmText={t('Hide')}
+      confirmPreset="primary"
+      onConfirm={onConfirm}
+      icon={eyeIcon}
+      cardWidth={300}
+    >
+      <Column gap="lg">
+        <Text text={t('Hide Token')} preset="title-bold" textCenter />
+
+        <Column gap="sm" style={{ backgroundColor: colors.bg5, borderRadius: 8, padding: '12px 16px' }}>
+          <Row justifyBetween>
+            <Text text={t('Token')} preset="sub" />
+            <Text text={token?.symbol || '-'} preset="regular-bold" />
+          </Row>
+
+          <Row justifyBetween>
+            <Text text={t('Contract Address')} preset="sub" />
+            <Text text={shortAddress(token?.id)} preset="regular-bold" />
+          </Row>
+
+          <Row justifyBetween>
+            <Text text={t('Chain')} preset="sub" />
+            <Text text={token?.chainId || '-'} preset="regular-bold" />
+          </Row>
+        </Column>
+
+        <Row itemsCenter gap="sm" style={{ backgroundColor: 'rgba(74, 222, 197, 0.1)', borderRadius: 8, padding: 10 }}>
+          <Icon icon="info" size={14} color="green" />
+          <Text
+            text={t("You can add this token back in the future by going to 'Add token' in default page.")}
+            preset="xsub"
+            wrap
           />
         </Row>
       </Column>
-    </Popover>
+    </ConfirmationPopover>
   );
 };

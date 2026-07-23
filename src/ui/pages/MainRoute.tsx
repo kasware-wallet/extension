@@ -1,35 +1,8 @@
 import log from 'loglevel';
-import { useCallback, useEffect, useRef } from 'react';
-import { HashRouter, Route, Routes, useNavigate as useNavigateOrigin, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { HashRouter, Route, Routes, useLocation, useNavigate as useNavigateOrigin } from 'react-router-dom';
 
-import Activities from '@/evm/ui/views/Activities';
-import AddAddress from '@/evm/ui/views/AddAddress';
-import AddressManagement from '@/evm/ui/views/AddressManagement';
-import ApprovalEvm from '@/evm/ui/views/Approval';
-import { ConnectApproval } from '@/evm/ui/views/Approval/components/Connect/SelectWalletApproval';
-import ApprovalManagePage from '@/evm/ui/views/ApprovalManagePage';
-import { CommonPopup } from '@/evm/ui/views/CommonPopup';
-import { CustomTestnetTokenDetailScreen } from '@/evm/ui/views/CommonPopup/AssetList/CustomTestnetTokenDetailScreen';
-import CreateMnemonics from '@/evm/ui/views/CreateMnemonics';
-import CustomRPC from '@/evm/ui/views/CustomRPC';
-import { CustomTestnet } from '@/evm/ui/views/CustomTestnet';
-import { DappSearchPage } from '@/evm/ui/views/DappSearch';
-import { GnosisQueue } from '@/evm/ui/views/GnosisQueue';
-import { HistoryPage } from '@/evm/ui/views/History';
-import { ImportMyMetaMaskAccount } from '@/evm/ui/views/ImportMyMetaMaskAccount';
-import ImportSuccess from '@/evm/ui/views/ImportSuccess';
-import NFTApproval from '@/evm/ui/views/NFTApproval';
-import NoAddress from '@/evm/ui/views/NoAddress';
-import Receive from '@/evm/ui/views/Receive';
-import RequestPermission from '@/evm/ui/views/RequestPermission';
-import SendNFT from '@/evm/ui/views/SendNFT';
-import SendEvmToken from '@/evm/ui/views/SendToken';
-import { Bridge, BridgeComponent } from '@/evm/ui/views/Bridge';
-import { Swap } from '@/evm/ui/views/Swap';
-import TokenApproval from '@/evm/ui/views/TokenApproval';
-import { LoadingOutlined } from '@ant-design/icons';
-
-import { Content, Icon, Layout } from '../components';
+import { Content, Layout, LoadingSpinner } from '../components';
 import { accountsActions } from '../state/accounts/reducer';
 import { useIsReady, useIsUnlocked } from '../state/global/hooks';
 import { globalActions } from '../state/global/reducer';
@@ -54,15 +27,13 @@ import KRC20BatchTxConfirmScreen from './KRC20/KRC20BatchTxConfirmScreen';
 import KRC20DeployScreen from './KRC20/KRC20DeployScreen';
 import KRC20HistoryScreen from './KRC20/KRC20HistoryScreen';
 import KRC20MintDeployScreen from './KRC20/KRC20MintDeployScreen';
-import KRC20SwapScreen from './KRC20/KRC20SwapScreen';
 import KRC20TokenScreen from './KRC20/KRC20TokenScreen';
 import KRC20TxConfirmScreen from './KRC20/KRC20TxConfirmScreen';
 import KRC20TxDetailScreen from './KRC20/KRC20TxDetailScreen';
 import KSPR721TxDetailScreen from './KRC20/KSPR721TxDetailScreen';
 import P2SHUTXODetailScreen from './KRC20/P2SHUTXODetailScreen';
 import RetrieveP2SHUTXOScreen from './KRC20/RetrieveP2SHUTXOScreen';
-import SwapConfirmed from './KRC20/SwapChainge/SwapConfirmed';
-import SwapHistoryScreen from './KRC20/SwapChainge/SwapHistoryScreen';
+import UnlockKRC20TokenScreen from './KRC20/UnlockKRC20TokenScreen';
 import KaspaTokenScreen from './KaspaTokenScreen';
 import AppTabScreen from './Main/AppTabScreen';
 import BoostScreen from './Main/BoostScreen';
@@ -88,6 +59,7 @@ import LanguageTypeScreen from './Settings/LanguageTypeScreen';
 import MoreOptionsScreen from './Settings/MoreOptionsScreen';
 import NetworkTypeScreen from './Settings/NetworkTypeScreen';
 import UpgradeNoticeScreen from './Settings/UpgradeNoticeScreen';
+import WalletInfoScreen from './Settings/WalletInfoScreen';
 import ChooseTokenScreen from './Wallet/ChooseTokenScreen';
 import EVMReceiveScreen from './Wallet/EVMReceiveScreen';
 import ReceiveScreen from './Wallet/ReceiveScreen';
@@ -98,34 +70,8 @@ import TxFailScreen from './Wallet/TxFailScreen';
 import TxSuccessScreen from './Wallet/TxSuccessScreen';
 import UtxoDetailScreen from './Wallet/UtxoDetailScreen';
 import './index.module.less';
-import UnlockKRC20TokenScreen from './KRC20/UnlockKRC20TokenScreen';
-import BridgeScreen from '@/evm/ui/views/Bridge/BridgeScreen';
-import WalletInfoScreen from './Settings/WalletInfoScreen';
 
 // Import types from shared
-import type {
-  RawTxInfo,
-  TTokenType,
-  TxType,
-  IKNSAsset,
-  IKRC20TokenInfo,
-  IP2shOutput,
-  WalletKeyring,
-  Inscription,
-  TProtocol,
-  Account,
-  IToken,
-  TKRC20History,
-  TKRC20HistoryIssue,
-  IKaspaUtxoEntryReference,
-  INetworkType,
-  TNetworkId,
-  TKasplexOp,
-  TChaingeOrderResponse,
-  IChaingeToken
-} from '@/shared/types';
-import type { ConnectedSite } from '@/shared/types/permission';
-import type { ContactBookItem } from '@/shared/types/contact-book';
 import {
   PATH_ADD_KEYRING_SCREEN,
   PATH_APP_TAB_SCREEN,
@@ -134,7 +80,6 @@ import {
   PATH_APPS_OPTION_SCREEN,
   PATH_AUTO_LOCK_OPTION_SCREEN,
   PATH_BOOST_SCREEN,
-  PATH_BRIDGE_SCREEN,
   PATH_CHANGE_PASSWORD_SCREEN,
   PATH_CHOOSE_TOKEN_SCREEN,
   PATH_CONNECTED_SITES_SCREEN,
@@ -145,15 +90,12 @@ import {
   PATH_CREATE_PASSWORD_SCREEN,
   PATH_CREATE_SIMPLE_WALLET_SCREEN,
   PATH_CURRENCY_TYPE_SCREEN,
-  PATH_CUSTOM_TESTNET,
-  PATH_CUSTOM_TESTNET_TOKEN_DETAIL_SCREEN,
   PATH_DONATION_TYPE_SCREEN,
   PATH_EDIT_ACCOUNT_NAME_SCREEN,
   PATH_EDIT_CONTACT_NAME_SCREEN,
   PATH_EDIT_NETWORK_URL_SCREEN,
   PATH_EDIT_WALLET_NAME_SCREEN,
   PATH_EVM_RECEIVE_SCREEN,
-  PATH_EVM_SWAP,
   PATH_EXPORT_MNEMONICS_SCREEN,
   PATH_EXPORT_PRIVATE_KEY_SCREEN,
   PATH_FORGOT_PASSWORD_SCREEN,
@@ -164,7 +106,6 @@ import {
   PATH_KRC20_DEPLOY_SCREEN,
   PATH_KRC20_HISTORY_SCREEN,
   PATH_KRC20_MINT_DEPLOY_SCREEN,
-  PATH_KRC20_SWAP_SCREEN,
   PATH_KRC20_TOKEN_SCREEN,
   PATH_KRC20_TX_CONFIRM_SCREEN,
   PATH_KRC20_TX_DETAIL_SCREEN,
@@ -179,8 +120,6 @@ import {
   PATH_RETRIEVE_P2SH_UTXO_SCREEN,
   PATH_SEND_KNS_KSPR_SCREEN,
   PATH_SETTINGS_TAB_SCREEN,
-  PATH_SWAP_CONFIRMED,
-  PATH_SWAP_HISTORY_SCREEN,
   PATH_SWITCH_ACCOUNT_SCREEN,
   PATH_SWITCH_KEYRING_SCREEN,
   PATH_TX_CONFIRM_SCREEN,
@@ -195,7 +134,26 @@ import {
   PATH_WALLET_INFO_SCREEN,
   PATH_WELCOME_SCREEN
 } from '@/shared/constant/route-path';
-import { PrivateRoute } from '@/evm/ui/component';
+import type {
+  Account,
+  IKaspaUtxoEntryReference,
+  IKNSAsset,
+  INetworkType,
+  Inscription,
+  IP2shOutput,
+  IToken,
+  RawTxInfo,
+  TKasplexOp,
+  TKRC20History,
+  TKRC20HistoryIssue,
+  TNetworkId,
+  TProtocol,
+  TTokenType,
+  TxType,
+  WalletKeyring
+} from '@/shared/types';
+import type { ContactBookItem } from '@/shared/types/contact-book';
+import type { ConnectedSite } from '@/shared/types/permission';
 import { AppDimensions } from '../components/Responsive';
 
 // Define navigation state types for each route
@@ -250,9 +208,6 @@ type NavigationStateMap = {
   CustomTestnetTokenDetailScreen: { token?: any };
   KRC20MintDeployScreen: { tick?: string };
   KRC20DeployScreen: { rawTxInfo: RawTxInfo };
-  KRC20SwapScreen: { token: Inscription };
-  SwapHistoryScreen?: never;
-  SwapConfirmed: { order: TChaingeOrderResponse; receiveToken: IChaingeToken };
   RetrieveP2SHUTXOScreen: { outputs: IP2shOutput[] | undefined };
   P2SHUTXODetailScreen: { p2shOutput: IP2shOutput };
   KRC20HistoryScreen?: never;
@@ -260,16 +215,15 @@ type NavigationStateMap = {
     inscribeJsonString: string;
     type: TxType;
     tokenType: TTokenType;
-    priorityFee: number;
-    isRBF: boolean;
+    // isRBF: boolean;
     protocol: TProtocol;
+    feeRate?: number;
     destAddr?: string;
   };
   KRC20BatchTxConfirmScreen: {
     inscribeJsonString: string;
     type: TxType;
     times: number;
-    priorityFee: number;
   };
   KRC20BatchMintProcessScreen?: never;
   KRC20TxDetailScreen: { txDetail: TKRC20History | TKRC20HistoryIssue; op: string; token: IToken };
@@ -449,11 +403,6 @@ export const routes = {
     path: PATH_UNLOCK_KRC20_TOKEN_SCREEN,
     element: <UnlockKRC20TokenScreen />
   },
-  CustomTestnetTokenDetailScreen: {
-    path: PATH_CUSTOM_TESTNET_TOKEN_DETAIL_SCREEN,
-    element: <CustomTestnetTokenDetailScreen />
-  },
-
   KRC20MintDeployScreen: {
     path: PATH_KRC20_MINT_DEPLOY_SCREEN,
     element: <KRC20MintDeployScreen />
@@ -461,18 +410,6 @@ export const routes = {
   KRC20DeployScreen: {
     path: PATH_KRC20_DEPLOY_SCREEN,
     element: <KRC20DeployScreen />
-  },
-  KRC20SwapScreen: {
-    path: PATH_KRC20_SWAP_SCREEN,
-    element: <KRC20SwapScreen />
-  },
-  SwapHistoryScreen: {
-    path: PATH_SWAP_HISTORY_SCREEN,
-    element: <SwapHistoryScreen />
-  },
-  SwapConfirmed: {
-    path: PATH_SWAP_CONFIRMED,
-    element: <SwapConfirmed />
   },
   RetrieveP2SHUTXOScreen: {
     path: PATH_RETRIEVE_P2SH_UTXO_SCREEN,
@@ -550,30 +487,6 @@ export const routes = {
     path: PATH_EDIT_CONTACT_NAME_SCREEN,
     element: <EditContactNameScreen />
   },
-  // TestScreen: {
-  //   path: '/test',
-  //   element: <TestScreen />
-  // },
-  // FiatPayScreen: {
-  //   path: '/moonpay',
-  //   element: <FiatPayScreen />
-  // },
-  // Dashboard: {
-  //   path: '/dashboard',
-  //   element: <Dashboard />
-  // },
-  CustomTestnet: {
-    path: PATH_CUSTOM_TESTNET,
-    element: <CustomTestnet />
-  },
-  EvmSwap: {
-    path: PATH_EVM_SWAP,
-    element: <Swap />
-  },
-  BridgeScreen: {
-    path: PATH_BRIDGE_SCREEN,
-    element: <BridgeScreen />
-  }
 };
 
 type RouteTypes = keyof typeof routes;
@@ -659,16 +572,9 @@ const Main = () => {
       }
 
       if (!self.summaryLoaded) {
-        // wallet.getInscriptionSummary().then((data) => {
-        //   dispatch(accountsActions.setInscriptionSummary(data));
-        // });
-
         wallet.getAppSummary().then((data) => {
           dispatch(accountsActions.setAppSummary(data));
         });
-        // wallet.getKRC20LaunchStatus().then((data) => {
-        //   dispatch(accountsActions.setKRC20LaunchStatus(data));
-        // });
         self.summaryLoaded = true;
       }
 
@@ -679,31 +585,54 @@ const Main = () => {
       }
 
       dispatch(globalActions.update({ isReady: true }));
-    } catch (e) {
+    } catch (e: any) {
       log.debug('init error', e);
+      // Retry when background is not ready yet (disconnected error)
+      if (e?.code === 4900) {
+        setTimeout(() => {
+          dispatch(globalActions.update({ isReady: false }));
+          init();
+        }, 1000);
+      } else {
+        // For other errors, still mark as ready so UI can render
+        // and user is not stuck on a black/loading screen
+        log.error('init failed with non-connection error', e);
+        dispatch(globalActions.update({ isReady: true }));
+      }
     }
   }, [wallet, dispatch, isReady, isUnlocked]);
 
   useEffect(() => {
-    wallet.hasVault().then((val) => {
-      if (val) {
-        wallet.isUnlocked().then((isUnlocked) => {
-          dispatch(globalActions.update({ isUnlocked }));
-          if (!isUnlocked && location.href.includes(routes.UnlockScreen.path) === false) {
-            const basePath = location.href.split('#')[0];
-            location.href = `${basePath}#${routes.UnlockScreen.path}`;
-          }
-        });
-      }
-    });
+    wallet
+      .hasVault()
+      .then((val) => {
+        if (val) {
+          wallet.isUnlocked().then((isUnlocked) => {
+            dispatch(globalActions.update({ isUnlocked }));
+            if (!isUnlocked && location.href.includes(routes.UnlockScreen.path) === false) {
+              const basePath = location.href.split('#')[0];
+              location.href = `${basePath}#${routes.UnlockScreen.path}`;
+            }
+          });
+        }
+      })
+      .catch((e) => {
+        log.error('hasVault/isUnlocked check failed', e);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     init();
-  }, [init]);
+    // Safety timeout: if init takes too long (e.g. background unresponsive),
+    // force isReady to true so the UI is not stuck on a black/loading screen
+    const timeout = setTimeout(() => {
+      dispatch(globalActions.update({ isReady: true }));
+    }, 10000);
+    return () => clearTimeout(timeout);
+  }, [init, dispatch]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add('dark');
@@ -714,9 +643,7 @@ const Main = () => {
       <AppDimensions>
         <Layout>
           <Content justifyCenter itemsCenter>
-            <Icon>
-              <LoadingOutlined />
-            </Icon>
+            <LoadingSpinner size="medium" />
           </Content>
         </Layout>
       </AppDimensions>
@@ -728,204 +655,10 @@ const Main = () => {
         <Routes>
           {Object.keys(routes)
             .map((v) => routes[v])
-            .map((v) => {
-              if (
-                [
-                  PATH_BOOST_SCREEN,
-                  PATH_UNLOCK_SCREEN,
-                  PATH_FORGOT_PASSWORD_SCREEN,
-                  PATH_WELCOME_SCREEN,
-                  PATH_CREATE_PASSWORD_SCREEN
-                ].includes(v.path)
-              ) {
-                return <Route key={v.path} path={v.path} element={v.element} />;
-              } else {
-                return <Route key={v.path} path={v.path} element={<PrivateRoute>{v.element}</PrivateRoute>} />;
-              }
-            })}
-
-          <Route path="/no-address" element={<NoAddress />} />
-          <Route path="/connect-approval" element={<ConnectApproval />} />
-          <Route
-            path="/mnemonics/create"
-            element={
-              <PrivateRoute>
-                <CreateMnemonics />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/bridge"
-            element={
-              <PrivateRoute>
-                <BridgeComponent />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dex-swap"
-            element={
-              <PrivateRoute>
-                <Swap />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/popup/import/success"
-            element={
-              <PrivateRoute>
-                <ImportSuccess isPopup />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/history"
-            element={
-              <PrivateRoute>
-                <HistoryPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/history/filter-scam"
-            element={
-              <PrivateRoute>
-                <HistoryPage isFitlerScam={true} />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/activities"
-            element={
-              <PrivateRoute>
-                <Activities />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/gnosis-queue"
-            element={
-              <PrivateRoute>
-                <GnosisQueue />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/add-address"
-            element={
-              <PrivateRoute>
-                <AddAddress />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/approval-evm"
-            element={
-              <PrivateRoute>
-                <ApprovalEvm />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/token-approval"
-            element={
-              <PrivateRoute>
-                <TokenApproval />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/nft-approval"
-            element={
-              <PrivateRoute>
-                <NFTApproval />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/request-permission"
-            element={
-              <PrivateRoute>
-                <RequestPermission />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/send-token"
-            element={
-              <PrivateRoute>
-                <SendEvmToken />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/send-nft"
-            element={
-              <PrivateRoute>
-                <SendNFT />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/receive"
-            element={
-              <PrivateRoute>
-                <Receive />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/approval-manage"
-            element={
-              <PrivateRoute>
-                <ApprovalManagePage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dapp-search"
-            element={
-              <PrivateRoute>
-                <DappSearchPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/import/metamask"
-            element={
-              <PrivateRoute>
-                <ImportMyMetaMaskAccount />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/switch-address"
-            element={
-              <PrivateRoute>
-                <AddressManagement />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/custom-rpc"
-            element={
-              <PrivateRoute>
-                <CustomRPC />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/custom-testnet"
-            element={
-              <PrivateRoute>
-                <CustomTestnet />
-              </PrivateRoute>
-            }
-          />
+            .map((v) => (
+              <Route key={v.path} path={v.path} element={v.element} />
+            ))}
         </Routes>
-        <CommonPopup />
       </HashRouter>
     </AppDimensions>
   );

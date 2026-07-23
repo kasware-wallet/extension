@@ -4,13 +4,12 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { TKRC20History, TKRC20HistoryIssue } from '@/shared/types';
-import { Card, Column, Icon, Row, Text } from '@/ui/components';
+import { Card, Column, LoadingSpinner, Row, Text } from '@/ui/components';
 import { selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
 import { shortAddress } from '@/ui/utils';
 import { useKrc721ActivitiesQuery } from '@/ui/utils/hooks/krc721';
-import { LoadingOutlined } from '@ant-design/icons';
 
 import { useNavigate } from '../../MainRoute';
 
@@ -26,29 +25,11 @@ export function KRC721Histories() {
         {activities.map((e, index) => (
           <KRC721HistoryCard history={e} key={e?.txAccept ? e?.hashRev : index} />
         ))}
-
-        {/* {networkId == 'mainnet' && (
-          <Card
-            key={'more-tx'}
-            classname="card-select"
-            mt="sm"
-            onClick={() => {
-              //   window.open(`https://kas.fyi/addresses/${address}?view=token_transfer`);
-              log.debug('to do');
-            }}>
-            <Row full justifyCenter itemsCenter>
-              <Text preset="link" text={t('More')} size="md" />
-              <Icon icon="link" size={fontSizes.xs} color="blue" />
-            </Row>
-          </Card>
-        )} */}
       </div>
     );
   } else if (isLoading) {
     <Row justifyCenter mt="sm">
-      <Icon>
-        <LoadingOutlined />
-      </Icon>
+      <LoadingSpinner size="medium" />
     </Row>;
   } else if (isError) {
     <Column justifyCenter>
@@ -79,12 +60,6 @@ function KRC721HistoryCard({ history }: { history: any }) {
             <KRC721OpAmount history={history} />
             <Text text={new Date(Number(history?.mtsAdd)).toLocaleString()} preset="sub" />
           </Row>
-          {/* {history?.op == 'deploy' && (history as IKRC20Deploy)?.pre && Number((history as IKRC20Deploy)?.pre) > 0 && (
-            <Row justifyBetween>
-              <KRC20OpAmountPreAllocation history={history as IKRC20Deploy} token={token} />
-              <Text text={new Date(Number(history.mtsAdd)).toLocaleString()} preset="sub" />
-            </Row>
-          )} */}
         </Column>
       </Row>
     </Card>

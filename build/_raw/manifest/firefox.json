@@ -1,1 +1,17 @@
-{}
+{
+  "externally_connectable": {
+    "matches": ["https://*.kasware.xyz/*", "https://*.kasware.io/*"],
+    "ids": ["*"]
+  },
+  "minimum_chrome_version": "110",
+  "background": {
+    "page": "background.html",
+    "persistent": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "contact@kasware.xyz",
+      "strict_min_version": "110.0"
+    }
+  }
+}

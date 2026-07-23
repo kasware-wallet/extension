@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { KEYRING_TYPE } from '@/shared/constant';
 import type { WalletKeyring } from '@/shared/types';
-import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { Card, Column, Content, Header, Icon, Layout, LoadingSpinner, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { RemoveWalletPopover } from '@/ui/components/RemoveWalletPopover';
 import { useKeyringsBalancesQuery } from '@/ui/state/accounts/hooks';
@@ -20,7 +20,6 @@ import {
   EditOutlined,
   InfoCircleOutlined,
   KeyOutlined,
-  LoadingOutlined,
   PlusCircleOutlined,
   SettingOutlined
 } from '@ant-design/icons';
@@ -287,9 +286,7 @@ export default function SwitchKeyringScreen() {
       />
       {isLoading && (
         <Row justifyCenter>
-          <Icon>
-            <LoadingOutlined />
-          </Icon>
+          <LoadingSpinner size="medium" />
         </Row>
       )}
       <Content>

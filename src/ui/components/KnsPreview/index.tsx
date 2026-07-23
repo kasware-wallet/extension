@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { CSSProperties } from 'react';
 
 import type { IKNSAsset } from '@/shared/types';
+import type { Sizes } from '@/ui/components/Text';
 import { colors } from '@/ui/theme/colors';
 
 import { formatDate, shortAddress } from '../../utils';
@@ -71,13 +71,13 @@ const $iframePresets: Record<Presets, CSSProperties> = {
   }
 };
 
-const $timePresets: Record<Presets, string> = {
+const $timePresets: Record<Presets, Sizes> = {
   large: 'sm',
   medium: 'sm',
   small: 'xxs'
 };
 
-const $numberPresets: Record<Presets, string> = {
+const $numberPresets: Record<Presets, Sizes> = {
   large: 'md',
   medium: 'sm',
   small: 'xxs'
@@ -85,21 +85,26 @@ const $numberPresets: Record<Presets, string> = {
 
 type Presets = keyof typeof $viewPresets;
 
-export interface InscriptionProps {
+export interface AssetPreviewProps {
   data: IKNSAsset;
   onClick?: () => void;
   preset: Presets;
   asLogo?: boolean;
+  /** Whether to show "List" status for listed assets */
+  showListStatus?: boolean;
 }
 
-export default function KnsPreview({ data, onClick, preset, asLogo }: InscriptionProps) {
+/**
+ * Unified asset preview component for KNS domains and inscriptions.
+ * Previously split into InscriptionPreview and KnsPreview.
+ */
+export default function AssetPreview({ data, onClick, preset, asLogo, showListStatus = true }: AssetPreviewProps) {
   const date = new Date(data.creationBlockTime);
   const time = getDateShowdate(date);
   const isUnconfirmed = date.getTime() < 100;
   const numberStr = isUnconfirmed ? 'unconfirmed' : `# ${data.id}`;
 
   const url = '';
-  // let preview = data.preview;
   let preview = '';
   if (!preview) {
     preview = url + '/preview/' + data.assetId;
@@ -117,13 +122,13 @@ export default function KnsPreview({ data, onClick, preset, asLogo }: Inscriptio
       </div>
 
       <Column px="md" py="sm" gap="zero" full classname="bg-teal-500">
-        <Text text={numberStr} color="white" size={$numberPresets[preset] as any} />
-        <Text text={shortAddress(data.assetId, 4)} color="white" size={$numberPresets[preset] as any} />
+        <Text text={numberStr} color="white" size={$numberPresets[preset]} />
+        <Text text={shortAddress(data.assetId, 4)} color="white" size={$numberPresets[preset]} />
         {isUnconfirmed == false && data?.creationBlockTime && (
           <Row justifyBetween itemsCenter>
-            <Text text={time} preset="sub" size={$timePresets[preset] as any} />
-            {data?.status == 'listed' && (
-              <Text text="List" color="yellow" preset="xsub" size={$timePresets[preset] as any} />
+            <Text text={time} preset="sub" size={$timePresets[preset]} />
+            {showListStatus && data?.status == 'listed' && (
+              <Text text="List" color="yellow" preset="xsub" size={$timePresets[preset]} />
             )}
           </Row>
         )}
@@ -131,3 +136,10 @@ export default function KnsPreview({ data, onClick, preset, asLogo }: Inscriptio
     </Column>
   );
 }
+
+// Backward compatible aliases
+export const KnsPreview = AssetPreview;
+export const InscriptionPreview = AssetPreview;
+
+// Re-export type for backward compatibility
+export type { AssetPreviewProps as InscriptionProps };

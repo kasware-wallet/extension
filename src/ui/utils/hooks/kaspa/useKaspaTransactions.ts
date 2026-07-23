@@ -1,5 +1,5 @@
 // import { useCurrentAccount } from '@/ui/state/accounts/hooks';
-// import { KaspaTransactionList } from '@/ui/utils2/interfaces';
+// import { KaspaTransactionList } from '@/ui/utils/types';
 // import { InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
 
 // import { fetchKaspaTransactionHistory } from './fetchKaspaTransactionHistory';

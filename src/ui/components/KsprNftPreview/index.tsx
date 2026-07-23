@@ -65,31 +65,49 @@ export default function CAT721Preview({ tick, id, onClick, preset }: Inscription
   }, [tick, id, cacheKrc721StreamUrl]);
 
   return (
-    <Column gap="zero" onClick={onClick} style={{}} justifyCenter itemsCenter>
+    <Column
+      gap="zero"
+      onClick={onClick}
+      justifyCenter
+      itemsCenter
+      style={{
+        cursor: 'pointer',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        borderRadius: style.borderRadius,
+        overflow: 'hidden'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
       <Image
         src={imageUrl}
         width={style.width}
         height={style.height}
         style={{
           borderTopLeftRadius: style.borderRadius,
-          borderTopRightRadius: style.borderRadius
+          borderTopRightRadius: style.borderRadius,
+          objectFit: 'cover'
         }}
       />
       <Row
-        px="lg"
+        px="sm"
         py="sm"
         gap="zero"
         bg="bg4"
+        justifyCenter
         style={{
           borderBottomLeftRadius: style.borderRadius,
-          borderBottomRightRadius: style.borderRadius
+          borderBottomRightRadius: style.borderRadius,
+          width: style.width
         }}
       >
-        <Row my="sm">
-          {/* <Text text={'Id:'} color="textDim" size={style.textSize} /> */}
-
-          <Text text={id ? `${tick}#${id}` : tick} color="white" size={style.textSize} />
-        </Row>
+        <Text text={id ? `${tick}#${id}` : tick} color="white" size={style.textSize} textCenter ellipsis />
       </Row>
     </Column>
   );

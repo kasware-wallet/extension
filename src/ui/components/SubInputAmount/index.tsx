@@ -20,7 +20,7 @@ export function SubInputAmount({
   const displayedUsd = useMemo(() => {
     if (Number(inputAmountUsd) >= 0.01) return `$${Number(inputAmountUsd).toLocaleString()}`;
     return `< $0.01`;
-  }, [inputAmountUsd, tokenTick, kasTick]);
+  }, [inputAmountUsd]);
   if (tokenPrice > 0 && Number(inputAmount) > 0) {
     return (
       <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
@@ -32,7 +32,8 @@ export function SubInputAmount({
             } else {
               setInputAmountType('kas');
             }
-          }}>
+          }}
+        >
           <Icon icon="swap" color={hover ? 'text' : 'textDim'} size={12} />
           {inputAmountType == 'kas' && tokenPrice > 0 && (
             <Text text={displayedUsd} color={hover ? 'text' : 'textDim'} />

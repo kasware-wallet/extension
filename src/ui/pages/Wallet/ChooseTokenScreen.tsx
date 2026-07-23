@@ -4,18 +4,17 @@ import { useTranslation } from 'react-i18next';
 
 import type { Inscription } from '@/shared/types';
 import { TxType } from '@/shared/types';
-import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { Card, Column, Content, Header, Layout, LoadingSpinner, Row, Text } from '@/ui/components';
 import { ProfileImage } from '@/ui/components/CryptoImage';
 import SearchBar from '@/ui/components/search/SearchBar';
 import { useFetchInscriptionsQuery } from '@/ui/state/accounts/hooks';
 import { selectAccountBalance, selectAccountInscriptions } from '@/ui/state/accounts/reducer';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectKasTick, selectNetworkId } from '@/ui/state/settings/reducer';
-import { useUpdateUiTxCreateScreen } from '@/ui/state/ui/hooks';
+import { useUpdateUiTxCreateScreenCallback } from '@/ui/state/temp-ui/hooks';
 import { formatLocaleString, getUsdValueStr, shortAddress, useLocationState } from '@/ui/utils';
 import { useKrc20DecName } from '@/ui/utils/hooks/kasplex/fetchKrc20AddressTokenList';
 import { useKaspaPrice } from '@/ui/utils/hooks/price/usePrice';
-import { LoadingOutlined } from '@ant-design/icons';
 
 import { useNavigate } from '../MainRoute';
 import { amountToSompi, sompiToAmount } from '@/shared/utils/format';
@@ -36,7 +35,7 @@ interface MyItemProps {
 
 export function MyItem({ item, autoNav, source }: MyItemProps, ref) {
   const kasTick = useAppSelector(selectKasTick);
-  const setUiState = useUpdateUiTxCreateScreen();
+  const setUiState = useUpdateUiTxCreateScreenCallback();
   const kasNetworkId = useAppSelector(selectNetworkId);
   const navigate = useNavigate();
   const kasPrice = useKaspaPrice();
@@ -138,12 +137,6 @@ export default function ChooseTokenScreen() {
     setDisplayedItems(tempItems);
   }, [inputText, items]);
 
-  // const handleOnKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  //   if ('Enter' == e.key) {
-  //     setInputText;
-  //   }
-  // };
-
   return (
     <Layout>
       <Header
@@ -156,9 +149,7 @@ export default function ChooseTokenScreen() {
         <SearchBar onSearch={setInputText} autoFocus={true} />
         {isLoading && (
           <Row justifyCenter>
-            <Icon>
-              <LoadingOutlined />
-            </Icon>
+            <LoadingSpinner size="medium" />
           </Row>
         )}
         <VirtualList

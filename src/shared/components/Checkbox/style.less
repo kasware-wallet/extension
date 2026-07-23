@@ -1,0 +1,37 @@
+.kasware-checkbox__wrapper {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 8px;
+
+  &.checked {
+    .kasware-checkbox {
+      .icon {
+        color: var(--r-neutral-foot, #ffffff);
+      }
+    }
+  }
+}
+
+.kasware-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+
+  &.square {
+    border-radius: 4px;
+  }
+
+  .icon {
+    color: transparent;
+    transition: color 0.2s ease;
+  }
+}
+
+.kasware-checkbox__label {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--r-neutral-body, #eef0f3);
+}

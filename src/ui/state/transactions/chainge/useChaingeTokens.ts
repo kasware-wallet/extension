@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import type { IChaingeToken, IKnotMemeToken } from '@/shared/types';
-import { sortChaingeTokens } from '@/ui/utils2/sorting';
+import { sortChaingeTokens } from '@/ui/utils/sorting';
 import { useQuery } from '@tanstack/react-query';
 
 export interface IChaingeTokenWithBalance extends IChaingeToken {

@@ -1,21 +1,24 @@
-import KeyringService, { Keyring } from './index';
+import type { Keyring } from './index';
+import KeyringService from './index';
 
 class DisplayKeyring {
   accounts: string[] = [];
   type = '';
   hdPath = '';
+  // hdPathMap = {};
 
   constructor(keyring: Keyring) {
     this.accounts = keyring.accounts || [];
     this.type = keyring.type;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.hdPath = (keyring as any).hdPath;
+    this.hdPath = keyring.hdPath;
+    // this.hdPathMap = keyring.hdPathMap;
   }
 
-  unlock = async (): Promise<void> => {
-    const keyring = await KeyringService.getKeyringForAccount(this.accounts[0], this.type);
-    if (keyring.unlock) await keyring.unlock();
-  };
+  // unlock = async (): Promise<void> => {
+  //   const keyring = await KeyringService.getKeyringForAccount(this.accounts[0], this.type);
+  //   if (keyring.unlock) await keyring.unlock();
+  // };
 
   getFirstPage = async () => {
     const keyring = await KeyringService.getKeyringForAccount(this.accounts[0], this.type);

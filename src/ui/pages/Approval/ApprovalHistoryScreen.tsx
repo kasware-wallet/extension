@@ -30,7 +30,7 @@ export default function ApprovalHistoryScreen() {
       .catch((err) => {
         console.error(err?.message);
       });
-  }, [networkId, address]);
+  }, [networkId, address, wallet]);
 
   return (
     <Layout>

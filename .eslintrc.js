@@ -13,12 +13,12 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module'
   },
-  plugins: ['react', 'react-hooks', '@typescript-eslint', 'import', 'simple-import-sort', 'unused-imports'],
+  plugins: ['react', 'react-hooks', '@typescript-eslint', 'import'],
   rules: {
     /**
-     * off or 0：Indicates that the rule is not validated.
-     * warn or 1：Indicates the validation rule, when not satisfied, give a warning
-     * error or 2 ：Indicates that the validation rules are not met, and an error is reported if they are not satisfied.
+     * off or 0:Indicates that the rule is not validated.
+     * warn or 1:Indicates the validation rule, when not satisfied, give a warning
+     * error or 2:Indicates that the validation rules are not met, and an error is reported if they are not satisfied.
      */
     quotes: [1, 'single'],
     // "no-console": process.env.NODE_ENV === 'production' ? 2 : 0, // do not disable the console
@@ -26,7 +26,7 @@ module.exports = {
     semi: 0,
     'no-control-regex': 2,
     'linebreak-style': [0, 'error', 'windows'],
-    indent: ['error', 2, { SwitchCase: 1 }],
+    indent: ['warn', 2, { SwitchCase: 1 }],
     'array-bracket-spacing': [2, 'never'],
     'no-irregular-whitespace': 0,
     'no-trailing-spaces': 1,
@@ -54,14 +54,15 @@ module.exports = {
     'react/display-name': 0,
     'react/react-in-jsx-scope': 0,
     'react/no-unescaped-entities': 0,
-    'unused-imports/no-unused-imports': 'warn',
     '@typescript-eslint/no-unused-vars': [
       'warn',
       {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_'
       }
-    ]
+    ],
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'react-hooks/exhaustive-deps': 'warn'
   },
   settings: {
     'import/resolver': {

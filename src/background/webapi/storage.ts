@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { browserStorageLocalGet, browserStorageLocalSet } from './browser';
+import { browserStorageLocalGet, browserStorageLocalRemove, browserStorageLocalSet } from '../../shared/webapi/browser';
 
 let cacheMap;
 
@@ -12,6 +12,11 @@ const get = async (prop?) => {
   cacheMap = new Map(Object.entries(result).map(([k, v]) => [k, v]));
 
   return prop ? result[prop] : result;
+};
+
+const remove = async (prop?) => {
+  const result = await browserStorageLocalRemove(prop);
+  return result;
 };
 
 const set = async (prop, value): Promise<void> => {
@@ -34,5 +39,6 @@ const byteInUse = async (): Promise<number> => {
 export default {
   get,
   set,
-  byteInUse
+  byteInUse,
+  remove
 };

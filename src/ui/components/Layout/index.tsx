@@ -1,8 +1,6 @@
 import type { CSSProperties } from 'react';
 import React from 'react';
 
-import './index.less';
-
 export interface LayoutProps {
   children?: React.ReactNode;
   style?: CSSProperties;
@@ -21,7 +19,8 @@ export function Layout(props: LayoutProps) {
           height: '100vh',
           overflowY: 'auto',
           overflowX: 'hidden',
-          margin: '0 auto'
+          margin: '0 auto',
+          backgroundColor: 'var(--r-neutral-bg1)'
         },
         $styleBase
       )}

@@ -1,20 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unused-vars */
 /// fork from https://github.com/MetaMask/KeyringController/blob/master/index.js
-import * as bip39 from 'bip39';
-import encryptor from 'browser-passworder';
-import { EventEmitter } from 'events';
-import * as kaspa_wasm from 'kaspa-wasm';
-// import i18n from '../i18n';
-import { Generator, PrivateKey, kaspaToSompi } from 'kaspa-wasm';
-import log from 'loglevel';
-
 import { ADDRESS_TYPES, KEYRING_TYPE } from '@/shared/constant';
-import { AddressType, IOpts, NetworkType, tempAccount } from '@/shared/types';
+import type { Account, IOpts, NetworkType, TempAccount } from '@/shared/types';
+import { AddressType } from '@/shared/types';
+import log from '@/shared/utils/logger';
+import browser from '@/shared/webapi/browser';
+import { decrypt, encrypt } from '@metamask/browser-passworder';
 import { ObservableStore } from '@metamask/obs-store';
+import type { Hex } from '@metamask/utils';
+import { validateMnemonic } from '@scure/bip39';
+import { wordlist } from '@scure/bip39/wordlists/english';
+import { EventEmitter } from 'events';
+import type { HexString, PendingTransaction, SighashType, Transaction } from 'kaspa-wasm';
+import kaspaWasmInit, { createAddress, Mnemonic } from 'kaspa-wasm';
 
-import { openapiService } from '..';
+const encryptor = { encrypt, decrypt };
+
 import keyring from '../keyringclass';
 import preference from '../preference';
 import DisplayKeyring from './display';
@@ -37,46 +37,90 @@ interface MemStoreState {
   keyrings: any[];
   preMnemonics: string;
 }
+export interface DisplayedAccount {
+  pubkey: string;
+  // evmPubkey?: string;
+  evmAddress?: string;
+  brandName: string;
+  deriveType: number;
+  index: number;
+  type?: string;
+  keyring?: DisplayKeyring;
+  alianName?: string;
+}
 
 export interface DisplayedKeyring {
   type: string;
-  accounts: {
-    pubkey: string;
-    brandName: string;
-    deriveType: number;
-    index: number;
-    type?: string;
-    keyring?: DisplayKeyring;
-    alianName?: string;
-  }[];
+  accounts: DisplayedAccount[];
   keyring: DisplayKeyring;
   addressType: AddressType;
   index: number;
+  byImport?: boolean;
+  evmPublicKey?: string;
 }
 export interface ToSignInput {
   index: number;
   publicKey: string;
 }
 export interface Keyring {
+  byImport?: boolean;
   type: string;
-  serialize(): Promise<any>;
-  deserialize(opts: any): Promise<void>;
-  addAccounts(n: number, dType?: number, startIndex?: number): Promise<string[]>;
+  hdPath: string;
+  serialize(): any;
+  deserialize(opts: any): void;
+  addAccounts(n: number, dType?: number, startIndex?: number): string[];
   getAccounts(): Promise<string[]>;
-  getAccountsAndIndexAndDType: () => Promise<tempAccount[]>;
-  signTransaction(psbt: any, inputs: ToSignInput[]): Promise<any>;
-  signMessage(address: string, message: string): Promise<string>;
-  verifyMessage(address: string, message: string, sig: string): Promise<boolean>;
-  exportAccount(address: string): Promise<string>;
+  getXpub(): Promise<string>;
+  getAccountsAndIndexAndDType: () => Promise<TempAccount[]>;
+  signPendingTransaction(
+    psbt: PendingTransaction,
+    inputs: ToSignInput[],
+    checkFullSigned?: boolean
+  ): Promise<PendingTransaction>;
+  createInputSignature: (
+    pTx: PendingTransaction,
+    inputs: ToSignInput[],
+    input_index: number,
+    sighash_type?: SighashType
+  ) => string[];
+  signTransactionOneKaspa(
+    tx: Transaction,
+    inputs: ToSignInput[],
+    verify_sig: boolean,
+    txInputsLength: number
+  ): Promise<Transaction>;
+  signTransactionKaspa(tx: Transaction, inputs: ToSignInput[], verify_sig: boolean): Promise<Transaction>;
+  signEcdsaTransaction(
+    tx: Transaction,
+    inputs: ToSignInput[],
+    // signerLenght: number,
+    verify_sig: boolean
+    // inputIndexs: Uint8Array,
+    // sigHashType: Uint8Array
+  ): Promise<Transaction>;
+  signSchnorrTransaction(
+    tx: Transaction,
+    inputs: ToSignInput[],
+    // signerLenght: number,
+    verifySig: boolean
+    // inputIndexs: Uint8Array,
+    // sighashType: Uint8Array
+  ): Promise<Transaction>;
+  signMessage(pubkey: string, message: string, noAuxRand?: boolean): Promise<string>;
+  signMessageECDSA(pubkey: string, message: string, noAuxRand?: boolean): Promise<string>;
+  verifyMessage(publicKey: string, message: string, sig: string): Promise<boolean>;
+  verifyMessageECDSA(publicKey: string, message: string, sig: string): Promise<boolean>;
+  exportAccount(address: string): string;
   removeAccount(address: string): void;
 
   accounts?: string[];
-  unlock?(): Promise<void>;
+  // accountsMap?: { KASPA_CHAINS_ENUM: string }[];
+  // unlock?(): Promise<void>;
   getFirstPage?(): Promise<{ address: string; index: number }[]>;
   getNextPage?(): Promise<{ address: string; index: number }[]>;
   getPreviousPage?(): Promise<{ address: string; index: number }[]>;
   getAddresses?(start: number, end: number): { address: string; index: number }[];
-  getIndexByAddress?(address: string): number;
+  getIndexByAddress?(pubkey: string): string | null;
 
   getAccountsWithBrand?(): { address: string; index: number }[];
   activeAccounts?(indexes: number[]): string[];
@@ -85,36 +129,112 @@ export interface Keyring {
   getAccountByHdPath?(hdPath: string, index: number): string;
 }
 
-type TKaspaWasm = typeof kaspa_wasm;
-
 class EmptyKeyring implements Keyring {
   type = KEYRING_TYPE.Empty;
+  hdPath = '';
   constructor() {
     // todo
   }
-  async addAccounts(n: number, dType?: number, startIndex?: number): Promise<string[]> {
+  accounts?: string[] | undefined;
+  getFirstPage?(): Promise<{ address: string; index: number }[]> {
+    throw new Error('Method not implemented.');
+  }
+  getNextPage?(): Promise<{ address: string; index: number }[]> {
+    throw new Error('Method not implemented.');
+  }
+  getPreviousPage?(): Promise<{ address: string; index: number }[]> {
+    throw new Error('Method not implemented.');
+  }
+  getAddresses?(_start: number, _end: number): { address: string; index: number }[] {
+    throw new Error('Method not implemented.');
+  }
+  getIndexByAddress?(_pubkey: string): string | null {
+    throw new Error('Method not implemented.');
+  }
+  getAccountsWithBrand?(): { address: string; index: number }[] {
+    throw new Error('Method not implemented.');
+  }
+  activeAccounts?(_indexes: number[]): string[] {
+    throw new Error('Method not implemented.');
+  }
+  changeHdPath?(_hdPath: string): void {
+    throw new Error('Method not implemented.');
+  }
+  getAccountByHdPath?(_hdPath: string, _index: number): string {
+    throw new Error('Method not implemented.');
+  }
+  addAccounts(_n: number, _dType?: number, _startIndex?: number): string[] {
     return [];
   }
 
   async getAccounts(): Promise<string[]> {
     return [];
   }
-  async getAccountsAndIndexAndDType(): Promise<tempAccount[]> {
+  async getXpub(): Promise<string> {
+    return '';
+  }
+  async getAccountsAndIndexAndDType(): Promise<TempAccount[]> {
     return [];
   }
-  signTransaction(psbt: any, inputs: ToSignInput[]): Promise<any> {
+  signPendingTransaction(_psbt: PendingTransaction, _inputs: ToSignInput[]): Promise<PendingTransaction> {
     throw new Error('Method not implemented.');
   }
-  signMessage(address: string, message: string): Promise<string> {
+  signTransactionKaspa(_tx: Transaction, _inputs: ToSignInput[], _verify_sig: boolean): Promise<Transaction> {
     throw new Error('Method not implemented.');
   }
-  verifyMessage(address: string, message: string, sig: string): Promise<boolean> {
+
+  signTransactionOneKaspa(
+    _tx: Transaction,
+    _inputs: ToSignInput[],
+    _verify_sig: boolean,
+    _txInputsLength?: number
+  ): Promise<Transaction> {
     throw new Error('Method not implemented.');
   }
-  exportAccount(address: string): Promise<string> {
+  signEcdsaTransaction(
+    _tx: Transaction,
+    _inputs: ToSignInput[],
+    // signerLenght: number,
+    _verify_sig: boolean
+    // inputIndexs: Uint8Array,
+    // sigHashType: Uint8Array
+  ): Promise<Transaction> {
     throw new Error('Method not implemented.');
   }
-  removeAccount(address: string): void {
+  signSchnorrTransaction(
+    _tx: Transaction,
+    _inputs: ToSignInput[],
+    // signerLenght: number,
+    _verifySig: boolean
+    // inputIndexs: Uint8Array,
+    // sighashType: Uint8Array
+  ): Promise<Transaction> {
+    throw new Error('Method not implemented.');
+  }
+  createInputSignature(
+    _pTx: PendingTransaction,
+    _inputs: ToSignInput[],
+    _input_index: number,
+    _sighash_type?: SighashType
+  ): string[] {
+    throw new Error('Method not implemented.');
+  }
+  signMessage(_publicKey: string, _message: string, _noAuxRand?: boolean): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
+  signMessageECDSA(_publicKey: string, _message: string, _noAuxRand?: boolean): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
+  verifyMessage(_publicKey: string, _message: string, _sig: string): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+  verifyMessageECDSA(_publicKey: string, _message: string, _sig: string): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+  exportAccount(_address: string): string {
+    throw new Error('Method not implemented.');
+  }
+  removeAccount(_address: string): void {
     throw new Error('Method not implemented.');
   }
 
@@ -122,21 +242,18 @@ class EmptyKeyring implements Keyring {
     return '';
   }
 
-  async deserialize(opts: any) {
+  async deserialize(_opts: any) {
     return;
   }
 }
 
-class KeyringService extends EventEmitter {
+export class KeyringService extends EventEmitter {
   //
   // PUBLIC METHODS
   //
-  kaspaWasm!: TKaspaWasm;
   keyringTypes: any[];
   store!: ObservableStore<any>;
   memStore: ObservableStore<MemStoreState>;
-  // store!: any
-  // memStore: any
   keyrings: Keyring[];
   addressTypes: AddressType[];
   encryptor: typeof encryptor = encryptor;
@@ -157,8 +274,24 @@ class KeyringService extends EventEmitter {
     this.addressTypes = [];
   }
   initKapaWasm = async () => {
-    this.kaspaWasm = kaspa_wasm;
-    await this.kaspaWasm.default();
+    // Pass explicit WASM URL via browser.runtime.getURL to avoid relying on
+    // import.meta.url / self.location resolution which can fail in MV3 service workers
+    const wasmUrl = browser.runtime.getURL('kaspa_bg.wasm');
+    const MAX_RETRIES = 3;
+    let lastError: unknown;
+    for (let i = 0; i < MAX_RETRIES; i++) {
+      try {
+        await kaspaWasmInit(wasmUrl);
+        return;
+      } catch (err) {
+        lastError = err;
+        log.warn(`kaspa-wasm init attempt ${i + 1} failed:`, err);
+        if (i < MAX_RETRIES - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+        }
+      }
+    }
+    throw lastError;
   };
 
   loadStore = (initState) => {
@@ -216,7 +349,7 @@ class KeyringService extends EventEmitter {
 
   private generateMnemonic = (wordCount = 12): string => {
     // return bip39.generateMnemonic(128);
-    const mnemonic1 = this.kaspaWasm.Mnemonic.random(wordCount);
+    const mnemonic1 = Mnemonic.random(wordCount);
     // an object
     return mnemonic1.phrase;
   };
@@ -252,7 +385,7 @@ class KeyringService extends EventEmitter {
       // throw new Error(i18n.t('you need to unlock wallet first'));
       throw new Error('you need to unlock wallet first');
     }
-    const _menmonics = await this.encryptor.decrypt(this.password, this.memStore.getState().preMnemonics);
+    const _menmonics = (await this.encryptor.decrypt(this.password, this.memStore.getState().preMnemonics)) as Buffer;
     if (_menmonics && _menmonics.length > 0 && (_menmonics as unknown as string).split(' ').length === wordCount) {
       return _menmonics;
     } else {
@@ -284,16 +417,12 @@ class KeyringService extends EventEmitter {
     //   // throw new Error(i18n.t('account count must be greater than 0'));
     //   throw new Error('account count must be greater than 0');
     // }
-    if (!bip39.validateMnemonic(seed)) {
+    if (!validateMnemonic(seed, wordlist)) {
       // return Promise.reject(new Error(i18n.t('mnemonic phrase is invalid')));
       return Promise.reject(new Error('mnemonic phrase is invalid'));
     }
 
     await this.persistAllKeyrings();
-    // const activeIndexes: number[] = [];
-    // for (let i = startIndex; i < accountCount + startIndex; i++) {
-    //   activeIndexes.push(i);
-    // }
     const keyring = await this.addNewKeyring(
       'HD Key Tree',
       {
@@ -324,7 +453,7 @@ class KeyringService extends EventEmitter {
     this.addressTypes.push(addressType);
     await this.persistAllKeyrings();
     await this._updateMemStoreKeyrings();
-    await this.fullUpdate();
+    this.fullUpdate();
     return keyring;
   };
 
@@ -339,7 +468,7 @@ class KeyringService extends EventEmitter {
     this.addressTypes[keyringIndex] = addressType;
     await this.persistAllKeyrings();
     await this._updateMemStoreKeyrings();
-    await this.fullUpdate();
+    this.fullUpdate();
     return keyring;
   };
 
@@ -404,7 +533,7 @@ class KeyringService extends EventEmitter {
 
     await this.persistAllKeyrings();
     await this._updateMemStoreKeyrings();
-    await this.fullUpdate();
+    this.fullUpdate();
   };
 
   /**
@@ -440,13 +569,13 @@ class KeyringService extends EventEmitter {
 
   addNewKeyring = async (type: string, opts: unknown, addressType: AddressType): Promise<Keyring> => {
     const Keyring = this.getKeyringClassForType(type);
-    const keyring = new Keyring(this.password, this.kaspaWasm, opts);
+    const keyring = new Keyring(opts);
     return await this.addKeyring(keyring, addressType);
   };
   // * @param {string} type - HD Key Tree | simple keyring.
   createTmpKeyring = (type: string, opts: IOpts | string[]) => {
     const Keyring = this.getKeyringClassForType(type);
-    const keyring = new Keyring(this.password, this.kaspaWasm, opts);
+    const keyring = new Keyring(opts);
     return keyring;
   };
 
@@ -470,7 +599,6 @@ class KeyringService extends EventEmitter {
       return accounts.find((key) => key === account);
     });
 
-    // return isIncluded ? Promise.reject(new Error(i18n.t('Wallet existed.'))) : Promise.resolve(newAccountArray);
     return isIncluded ? Promise.reject(new Error('Wallet existed.')) : Promise.resolve(newAccountArray);
   };
 
@@ -490,7 +618,7 @@ class KeyringService extends EventEmitter {
     });
     await this.persistAllKeyrings();
     await this._updateMemStoreKeyrings();
-    await this.fullUpdate();
+    this.fullUpdate();
     return accounts;
   };
 
@@ -507,7 +635,7 @@ class KeyringService extends EventEmitter {
    */
   exportAccount = async (address: string): Promise<string> => {
     const keyring = await this.getKeyringForAccount(address);
-    const privkey = await keyring.exportAccount(address);
+    const privkey = keyring.exportAccount(address);
     return privkey;
   };
 
@@ -518,21 +646,22 @@ class KeyringService extends EventEmitter {
    * Removes a specific account from a keyring
    * If the account is the last/only one then it also removes the keyring.
    *
-   * @param {string} address - The address of the account to remove.
+   * @param {string} account - The account to remove.
    * @returns {Promise<void>} A Promise that resolves if the operation was successful.
    */
-  removeAccount = async (address: string, type: string, brand?: string): Promise<any> => {
-    const keyring = await this.getKeyringForAccount(address, type);
+  removeAccount = async (account: Account, type: string, brand?: string): Promise<any> => {
+    const keyring = await this.getKeyringForAccount(account.pubkey, type);
 
     // Not all the keyrings support this, so we have to check
     if (typeof keyring.removeAccount != 'function') {
       throw new Error(`Keyring ${keyring.type} doesn't support account removal operations`);
     }
-    keyring.removeAccount(address);
-    this.emit('removedAccount', address);
+    if (account.evmAddress?.length > 0) keyring.ethKeyring?.removeAccount(account.evmAddress as Hex);
+    keyring.removeAccount(account.pubkey);
+    this.emit('removedAccount', account.pubkey);
     await this.persistAllKeyrings();
     await this._updateMemStoreKeyrings();
-    await this.fullUpdate();
+    this.fullUpdate();
   };
 
   removeKeyring = async (keyringIndex: number): Promise<any> => {
@@ -540,7 +669,7 @@ class KeyringService extends EventEmitter {
     this.keyrings[keyringIndex] = new EmptyKeyring();
     await this.persistAllKeyrings();
     await this._updateMemStoreKeyrings();
-    await this.fullUpdate();
+    this.fullUpdate();
   };
 
   //
@@ -556,8 +685,61 @@ class KeyringService extends EventEmitter {
    * @param fromAddress - The transaction 'from' address.
    * @returns  The signed transactio object.
    */
-  signTransaction = (keyring: Keyring, psbt: any, inputs: ToSignInput[]) => {
-    return keyring.signTransaction(psbt, inputs);
+  signPendingTransaction = (
+    keyring: Keyring,
+    psbt: PendingTransaction,
+    inputs: ToSignInput[],
+    checkFullSigned?: boolean
+  ) => {
+    return keyring.signPendingTransaction(psbt, inputs, checkFullSigned);
+  };
+
+  createInputSignature = (
+    keyring: Keyring,
+    pTx: PendingTransaction,
+    inputs: ToSignInput[],
+    input_index: number,
+    sighash_type?: SighashType
+  ): HexString[] => {
+    return keyring.createInputSignature(pTx, inputs, input_index, sighash_type);
+  };
+
+  signTransactionKaspa = (keyring: Keyring, tx: Transaction, inputs: ToSignInput[], verify_sig: boolean) => {
+    return keyring.signTransactionKaspa(tx, inputs, verify_sig);
+  };
+
+  signTransactionOneKaspa = (
+    keyring: Keyring,
+    tx: Transaction,
+    inputs: ToSignInput[],
+    verify_sig: boolean,
+    txInputsLength = 1
+  ) => {
+    return keyring.signTransactionOneKaspa(tx, inputs, verify_sig, txInputsLength);
+  };
+
+  signEcdsaTransaction = (
+    keyring: Keyring,
+    tx: Transaction,
+    inputs: ToSignInput[],
+    // signerLenght: number,
+    verify_sig: boolean
+    // inputIndexs: Uint8Array,
+    // sigHashType: Uint8Array
+  ) => {
+    // return keyring.signEcdsaTransaction(tx, inputs, signerLenght, verify_sig, inputIndexs, sigHashType);
+    return keyring.signEcdsaTransaction(tx, inputs, verify_sig);
+  };
+  signSchnorrTransaction = (
+    keyring: Keyring,
+    tx: Transaction,
+    inputs: ToSignInput[],
+    // signerLenght: number,
+    verifySig: boolean
+    // inputIndexs: Uint8Array,
+    // sighashType: Uint8Array
+  ) => {
+    return keyring.signSchnorrTransaction(tx, inputs, verifySig);
   };
 
   /**
@@ -566,9 +748,15 @@ class KeyringService extends EventEmitter {
    * Attempts to sign the provided message parameters.
    * address here means publickey string
    */
-  signMessage = async (pubkey: string, data: string) => {
+  signMessage = async (pubkey: string, data: string, noAuxRand?: boolean) => {
     const keyring = await this.getKeyringForAccount(pubkey);
-    const sig = await keyring.signMessage(pubkey, data);
+    const sig = await keyring.signMessage(pubkey, data, noAuxRand);
+    return sig;
+  };
+
+  signMessageECDSA = async (pubkey: string, data: string, noAuxRand?: boolean) => {
+    const keyring = await this.getKeyringForAccount(pubkey);
+    const sig = await keyring.signMessageECDSA(pubkey, data, noAuxRand);
     return sig;
   };
 
@@ -577,9 +765,17 @@ class KeyringService extends EventEmitter {
    *
    * Attempts to verify the provided message parameters.
    */
-  verifyMessage = async (address: string, data: string, sig: string) => {
-    const keyring = await this.getKeyringForAccount(address);
-    const result = await keyring.verifyMessage(address, data, sig);
+  verifyMessage = async (publicKey: string, message: string, sig: string) => {
+    const keyring = await this.getKeyringForAccount(publicKey);
+    let result = false;
+    result = await keyring.verifyMessage(publicKey, message, sig);
+    return result;
+  };
+
+  verifyMessageECDSA = async (publicKey: string, message: string, sig: string) => {
+    const keyring = await this.getKeyringForAccount(publicKey);
+    let result = false;
+    result = await keyring.verifyMessageECDSA(publicKey, message, sig);
     return result;
   };
 
@@ -641,7 +837,7 @@ class KeyringService extends EventEmitter {
     }
 
     await this.clearKeyrings();
-    const vault = await this.encryptor.decrypt(password, encryptedVault);
+    const vault = (await this.encryptor.decrypt(password, encryptedVault)) as Buffer;
 
     const arr = Array.from(vault);
     for (let i = 0; i < arr.length; i++) {
@@ -686,7 +882,7 @@ class KeyringService extends EventEmitter {
       return { keyring, addressType: addressType === undefined ? preference.getAddressType() : addressType };
     }
     const Keyring = this.getKeyringClassForType(type);
-    const keyring = new Keyring(this.password, this.kaspaWasm);
+    const keyring = new Keyring();
     await keyring.deserialize(data);
 
     // getAccounts also validates the accounts for some keyrings
@@ -750,39 +946,75 @@ class KeyringService extends EventEmitter {
    * @returns {Promise<Keyring>} The keyring of the account, if it exists.
    */
   getKeyringForAccount = async (
-    address: string,
+    pubkey: string,
     type?: string,
     start?: number,
     end?: number,
     includeWatchKeyring = true
   ): Promise<Keyring> => {
-    log.debug(`KeyringController - getKeyringForAccount: ${address}`);
     const keyrings = type ? this.keyrings.filter((keyring) => keyring.type === type) : this.keyrings;
     for (let i = 0; i < keyrings.length; i++) {
       const keyring = keyrings[i];
       const accounts = await keyring.getAccounts();
-      if (accounts.includes(address)) {
+      if (accounts.includes(pubkey)) {
         return keyring;
       }
     }
     throw new Error('No keyring found for the requested account.');
   };
 
+  getEVMKeyringForAccount(evmAddress: string, type?: string, start?: number, end?: number, includeWatchKeyring = true) {
+    const hexed = normalizeAddress(evmAddress).toLowerCase();
+    log.debug(`KeyringController - getKeyringForAccount: ${hexed}`);
+    let keyrings = type ? this.keyrings.filter((keyring) => keyring.type === type) : this.keyrings;
+    if (!includeWatchKeyring) {
+      keyrings = keyrings.filter((keyring) => keyring.type !== KEYRING_TYPE.WatchAddressKeyring);
+    }
+    return Promise.all(
+      keyrings.map((keyring) => {
+        return Promise.all([keyring.ethKeyring, keyring?.ethKeyring?.getAccounts()]);
+      })
+    ).then((candidates) => {
+      const winners = candidates.filter((candidate) => {
+        const accounts = candidate?.[1]?.map((addr) => {
+          return normalizeAddress(addr).toLowerCase();
+        });
+        return accounts?.includes(hexed);
+      });
+      if (winners && winners.length > 0) {
+        return winners[0][0];
+      }
+      throw new Error('No keyring found for the requested account.');
+    });
+    // const winners = keyrings?.map((keyring) => [keyring.ethKeyring, keyring?.ethKeyring?.getAccounts()])
+    //   .filter((candidate) => {
+    //     const accounts = candidate?.[1]?.map((addr) => {
+    //       return normalizeAddress(addr).toLowerCase();
+    //     });
+    //     return accounts?.includes(hexed);
+    //   });
+    // if (winners && winners.length > 0) {
+    //   return winners[0][0];
+    // }
+    // throw new Error('No keyring found for the requested account.');
+  }
+
   /**
    * Display For Keyring
    *
    * Is used for adding the current keyrings to the state object.
    * @param {Keyring} keyring
+   * @param index - index of keyring
    * @returns {Promise<Object>} A keyring display object, with type and accounts properties.
    */
   displayForKeyring = async (keyring: Keyring, addressType: AddressType, index: number): Promise<DisplayedKeyring> => {
     // const accounts = await keyring.getAccounts();
     const accounts = await keyring.getAccountsAndIndexAndDType();
-    const all_accounts: { pubkey: string; brandName: string; deriveType: number; index: number }[] = [];
+    const all_accounts: DisplayedAccount[] = [];
     for (let i = 0; i < accounts.length; i++) {
-      // const pubkey = accounts[i];
       all_accounts.push({
         pubkey: accounts[i].publickey,
+        evmAddress: accounts[i].evmAddress || '',
         brandName: keyring.type,
         deriveType: accounts[i].deriveType,
         index: accounts[i].index
@@ -793,7 +1025,9 @@ class KeyringService extends EventEmitter {
       accounts: all_accounts,
       keyring: new DisplayKeyring(keyring),
       addressType,
-      index
+      index,
+      byImport: keyring?.byImport,
+      evmPublicKey: undefined
     };
   };
 
@@ -880,16 +1114,23 @@ class KeyringService extends EventEmitter {
   };
 
   publicKeyToAddress = (pubkey: string, addressType: AddressType, networkType: NetworkType) => {
-    const { createAddress } = this.kaspaWasm;
     if (addressType == AddressType.KASPA_TANGEM_44_111111) {
-      const addr = createAddress(pubkey, networkType,true).toString();
+      const addr = createAddress(pubkey, networkType, true).toString();
       return addr;
     } else {
       const addr = createAddress(pubkey, networkType).toString();
       return addr;
     }
   };
-
+  /**
+   * from r evm
+   */
+  async getAllTypedVisibleAccounts(): Promise<DisplayedKeyring[]> {
+    const keyrings = await Promise.all(
+      this.keyrings.map((keyring, index) => this.displayForKeyring(keyring, this.addressTypes[index], index))
+    );
+    return keyrings.filter((keyring) => keyring.accounts.length > 0);
+  }
 }
 
 export default new KeyringService();

@@ -2,11 +2,14 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
 import type { IKaspaUtxoEntryReference } from '@/shared/types';
-import { Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { CopyOutlined } from '@ant-design/icons';
+import { Column, Content, EndCard, Header, Icon, Layout, MiddleCard, Row, StartCard, Text } from '@/ui/components';
+import { useTools } from '@/ui/components/ActionComponent';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectBlockstreamUrl, selectKasTick } from '@/ui/state/settings/reducer';
+import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
-import { shortAddress } from '@/ui/utils';
+import { copyToClipboard, formatLocaleString, shortAddress } from '@/ui/utils';
 import { sompiToAmount } from '@/shared/utils/format';
 
 export default function UtxoDetailScreen() {
@@ -16,6 +19,19 @@ export default function UtxoDetailScreen() {
     utxoDetail: IKaspaUtxoEntryReference;
   };
   const kasTick = useAppSelector(selectKasTick);
+  const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
+  const tools = useTools();
+  if (!utxoDetail) return null;
+
+  const { entry } = utxoDetail;
+  if (!entry) return null;
+  const amountFormatted = formatLocaleString(sompiToAmount(entry.amount, 8));
+
+  const handleCopy = (text: string) => {
+    copyToClipboard(text).then(() => {
+      tools.toastSuccess(t('Copied'));
+    });
+  };
 
   return (
     <Layout>
@@ -26,94 +42,90 @@ export default function UtxoDetailScreen() {
         title={t('UTXO')}
       />
       <Content>
-        <Column>
-          {utxoDetail &&
-            Object.entries(utxoDetail.entry).map(([key, value]) => {
-              if ((key as keyof typeof utxoDetail.entry) == 'address') {
-                return (
-                  <div key="address">
-                    <Text text="Address" preset="sub" selectText />
-                    <Text text={value as string} style={{ wordWrap: 'break-word' }} selectText />
-                  </div>
-                );
-              }
+        <Column gap="zero">
+          {/* Amount - most important, first row */}
+          <StartCard>
+            <Row justifyBetween full itemsCenter py="sm">
+              <Text text={t('Amount')} preset="sub" />
+              <Text text={`${amountFormatted} ${kasTick}`} />
+            </Row>
+          </StartCard>
 
-              if ((key as keyof typeof utxoDetail.entry) == 'outpoint') {
-                return <Outpoint key={key} outpoint={value} />;
-              }
-              if ((key as keyof typeof utxoDetail.entry) == 'amount') {
-                return (
-                  <Column mt="md" key={key}>
-                    <Row justifyBetween>
-                      <Text text="Amount" preset="sub" selectText />
-                      <Row>
-                        <Text text={`${sompiToAmount(Number(value), 8)} ${kasTick}`} selectText />
-                      </Row>
-                    </Row>
-                  </Column>
-                );
-              }
-              if ((key as keyof typeof utxoDetail.entry) == 'scriptPublicKey') {
-                return (
-                  <Column mt="md" key={key}>
-                    <Text text="script Public Key" preset="sub" selectText />
-                    <Text text={value as string} style={{ wordWrap: 'break-word' }} selectText />
-                  </Column>
-                );
-              }
-              if ((key as keyof typeof utxoDetail.entry) == 'blockDaaScore') {
-                return (
-                  <Column mt="md" key={key}>
-                    <Row justifyBetween>
-                      <Text text="Block DAA Score" preset="sub" selectText />
-                      <Row>
-                        <Text text={`${value}`} selectText />
-                      </Row>
-                    </Row>
-                  </Column>
-                );
-              }
-              if ((key as keyof typeof utxoDetail.entry) == 'isCoinbase') {
-                return (
-                  <Column mt="md" key={key}>
-                    <Row justifyBetween>
-                      <Text text="is Coinbase" preset="sub" selectText />
-                      <Row>
-                        <Text text={`${value}`} selectText />
-                      </Row>
-                    </Row>
-                  </Column>
-                );
-              }
-              return (
-                <Row key={key}>
-                  <Text text={key} preset="sub" selectText />
-                  <Text text={value as string} selectText />
-                </Row>
-              );
-            })}
-        </Column>{' '}
+          {/* Address - copyable */}
+          <MiddleCard>
+            <Row justifyBetween full itemsCenter py="sm" style={{ overflow: 'hidden' }}>
+              <Text text={t('Address')} preset="sub" style={{ flexShrink: 0 }} />
+              <Row
+                itemsCenter
+                gap="xs"
+                onClick={() => handleCopy(entry.address)}
+                style={{ cursor: 'pointer', overflow: 'hidden', minWidth: 0 }}
+              >
+                <Text text={shortAddress(entry.address, 8)} wrap />
+                <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14, flexShrink: 0 }} />
+              </Row>
+            </Row>
+          </MiddleCard>
+
+          {/* Transaction ID - external link */}
+          <MiddleCard>
+            <Row justifyBetween full itemsCenter py="sm" style={{ overflow: 'hidden' }}>
+              <Text text={t('Transaction ID')} preset="sub" style={{ flexShrink: 0 }} />
+              <Row
+                gap="xs"
+                itemsCenter
+                onClick={() => {
+                  window.open(`${blockstreamUrl}/transactions/${entry.outpoint.transactionId}`);
+                }}
+                style={{ cursor: 'pointer', overflow: 'hidden', minWidth: 0 }}
+              >
+                <Text text={shortAddress(entry.outpoint.transactionId, 12)} preset="link" wrap />
+                <Icon icon="link" size={fontSizes.xxs} color="blue" />
+              </Row>
+            </Row>
+          </MiddleCard>
+
+          {/* Outpoint Index */}
+          <MiddleCard>
+            <Row justifyBetween full itemsCenter py="sm">
+              <Text text={t('Outpoint Index')} preset="sub" />
+              <Text text={`${entry.outpoint.index}`} />
+            </Row>
+          </MiddleCard>
+
+          {/* Block DAA Score */}
+          <MiddleCard>
+            <Row justifyBetween full itemsCenter py="sm">
+              <Text text={t('Block DAA Score')} preset="sub" />
+              <Text text={`${entry.blockDaaScore}`} />
+            </Row>
+          </MiddleCard>
+
+          {/* Is Coinbase */}
+          <MiddleCard>
+            <Row justifyBetween full itemsCenter py="sm">
+              <Text text={t('Coinbase')} preset="sub" />
+              <Text text={entry.isCoinbase ? t('Yes') : t('No')} color={entry.isCoinbase ? 'yellow' : undefined} />
+            </Row>
+          </MiddleCard>
+
+          {/* Script Public Key - copyable */}
+          <EndCard>
+            <Row justifyBetween full itemsCenter py="sm" style={{ overflow: 'hidden' }}>
+              <Text text={t('Script Public Key')} preset="sub" style={{ flexShrink: 0 }} />
+              <Row
+                itemsCenter
+                gap="xs"
+                onClick={() => handleCopy(entry.scriptPublicKey)}
+                style={{ cursor: 'pointer', overflow: 'hidden', minWidth: 0 }}
+              >
+                <Text text={shortAddress(entry.scriptPublicKey, 8)} wrap />
+                <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14, flexShrink: 0 }} />
+              </Row>
+            </Row>
+          </EndCard>
+        </Column>
       </Content>
     </Layout>
-  );
-}
-function Outpoint({ outpoint }) {
-  const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
-  return (
-    <Column>
-      <Text text="Transaction ID" preset="sub" selectText />
-      <div>
-        <Row
-          gap="xs"
-          itemsCenter
-          onClick={() => {
-            window.open(`${blockstreamUrl}/txs/${outpoint.transactionId}`);
-          }}
-        >
-          <Text text={shortAddress(outpoint.transactionId)} preset="link" selectText />
-          <Icon icon="link" size={fontSizes.xxs} color="blue" />
-        </Row>
-      </div>
-    </Column>
   );
 }

@@ -1,13 +1,13 @@
-import { ethErrors } from 'eth-rpc-errors';
-import log from 'loglevel';
-import 'reflect-metadata';
 import { openapiService, permissionService, sessionService } from '@/background/service';
 import { NETWORK_TYPES, VERSION } from '@/shared/constant';
 import type { TNetworkId } from '@/shared/types';
 import { NetworkType } from '@/shared/types';
+import { amountToSompi } from '@/shared/utils/format';
+import { ethErrors } from 'eth-rpc-errors';
+import log from 'loglevel';
+import 'reflect-metadata';
 import BaseController from '../base';
 import wallet from '../wallet';
-import { amountToSompi } from '@/shared/utils/format';
 
 class ProviderController extends BaseController {
   requestAccounts = async ({ session: { origin } }) => {
@@ -192,12 +192,8 @@ class ProviderController extends BaseController {
 
   @Reflect.metadata('APPROVAL', [
     'KRC20Order',
-    (req) => {
-      const {
-        data: {
-          params: { krc20Tick, krc20Amount, kasAmount, psktExtraOutput, priorityFee, type }
-        }
-      } = req;
+    (_req) => {
+      return false;
     }
   ])
   createKRC20Order = async ({
@@ -222,11 +218,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'KRC20Order',
     (req) => {
-      const {
-        data: {
-          params: { krc20Tick, txJsonString, sendCommitTxId, type }
-        }
-      } = req;
+      return false;
     }
   ])
   cancelKRC20Order = async ({ approvalRes: { krc20Tick, txJsonString, sendCommitTxId }, session: { origin } }) => {
@@ -246,11 +238,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'KRC20Order',
     (req) => {
-      const {
-        data: {
-          params: { krc20Tick, txJsonString, sendCommitTxId, type }
-        }
-      } = req;
+      return false;
     }
   ])
   signCancelKRC20Order = async ({ approvalRes: { krc20Tick, txJsonString, sendCommitTxId }, session: { origin } }) => {
@@ -270,11 +258,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'KRC20Order',
     (req) => {
-      const {
-        data: {
-          params: { txJsonString, extraOutput, priorityFee, type }
-        }
-      } = req;
+      return false;
     }
   ])
   buyKRC20Token = async ({ approvalRes: { txJsonString, extraOutput, priorityFee }, session: { origin } }) => {
@@ -294,11 +278,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'KRC20Order',
     (req) => {
-      const {
-        data: {
-          params: { txJsonString, extraOutput, priorityFee, type }
-        }
-      } = req;
+      return false;
     }
   ])
   signBuyKRC20Token = async ({ approvalRes: { txJsonString, extraOutput, priorityFee }, session: { origin } }) => {
@@ -318,21 +298,26 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'CommitReveal',
     (req) => {
-      const {
-        data: {
-          params: { priorityEntries, entries, outputs, changeAddress, priorityFee, networkId, script, type }
-        }
-      } = req;
+      return false;
     }
   ])
   submitCommit = async ({
-    approvalRes: { priorityEntries, entries, outputs, changeAddress, priorityFee, networkId, script },
+    approvalRes: { priorityEntries, entries, outputs, changeAddress, priorityFee, feeRate, networkId, script },
     session: { origin }
   }) => {
     wallet.updateApprovalHistory({
       origin: origin,
       fnName: 'submitCommit',
-      params: JSON.stringify({ priorityEntries, entries, outputs, changeAddress, priorityFee, networkId, script })
+      params: JSON.stringify({
+        priorityEntries,
+        entries,
+        outputs,
+        changeAddress,
+        priorityFee,
+        feeRate,
+        networkId,
+        script
+      })
     });
     const results = await wallet.submitCommit({
       priorityEntries,
@@ -340,6 +325,7 @@ class ProviderController extends BaseController {
       outputs,
       changeAddress,
       priorityFee,
+      feeRate,
       networkId,
       script
     });
@@ -349,21 +335,26 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'CommitReveal',
     (req) => {
-      const {
-        data: {
-          params: { priorityEntries, entries, outputs, changeAddress, priorityFee, networkId, script, type }
-        }
-      } = req;
+      return false;
     }
   ])
   submitReveal = async ({
-    approvalRes: { priorityEntries, entries, outputs, changeAddress, priorityFee, networkId, script },
+    approvalRes: { priorityEntries, entries, outputs, changeAddress, priorityFee, feeRate, networkId, script },
     session: { origin }
   }) => {
     wallet.updateApprovalHistory({
       origin: origin,
       fnName: 'submitReveal',
-      params: JSON.stringify({ priorityEntries, entries, outputs, changeAddress, priorityFee, networkId, script })
+      params: JSON.stringify({
+        priorityEntries,
+        entries,
+        outputs,
+        changeAddress,
+        priorityFee,
+        feeRate,
+        networkId,
+        script
+      })
     });
     const results = await wallet.submitReveal({
       priorityEntries,
@@ -371,6 +362,7 @@ class ProviderController extends BaseController {
       outputs,
       changeAddress,
       priorityFee,
+      feeRate,
       networkId,
       script
     });
@@ -380,11 +372,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'CommitReveal',
     (req) => {
-      const {
-        data: {
-          params: { commit, reveal, script, networkId, type }
-        }
-      } = req;
+      return false;
     }
   ])
   submitCommitReveal = async ({ approvalRes: { commit, reveal, script, networkId }, session: { origin } }) => {
@@ -400,11 +388,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'SignPsbt',
     (req) => {
-      const {
-        data: {
-          params: { toAddress, sompi }
-        }
-      } = req;
+      return false;
     }
   ])
   sendKaspa = async ({ approvalRes: { psbtHex, payload }, session: { origin } }) => {
@@ -416,11 +400,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'SignPsbt',
     (req) => {
-      const {
-        data: {
-          params: { inscribeJsonString, type, destAddr, priorityFee }
-        }
-      } = req;
+      return false;
     }
   ])
   signKRC20Transaction = async ({
@@ -432,22 +412,23 @@ class ProviderController extends BaseController {
       fnName: 'signKRC20Transaction',
       params: JSON.stringify({ inscribeJsonString, type, destAddr, priorityFee })
     });
-    return await wallet.signKRC20Tx(inscribeJsonString, type, priorityFee, true);
+    return await wallet.signKRC20Tx(inscribeJsonString, type, priorityFee);
   };
 
   @Reflect.metadata('APPROVAL', [
     'SignPsbt',
     (req) => {
-      const {
-        data: {
-          params: { inscribeJsonString, type, destAddr, priorityFee }
-        }
-      } = req;
+      return false;
     }
   ])
   signKRC20BatchTransferTransaction = async ({
-    approvalRes: { inscribeJsonString, type, destAddr, priorityFee },
-    session: { origin }
+    approvalRes: {
+      inscribeJsonString: _inscribeJsonString,
+      type: _type,
+      destAddr: _destAddr,
+      priorityFee: _priorityFee
+    },
+    session: { origin: _origin }
   }) => {
     return 'deprecated. please use krc20BatchTransferTransaction() instead';
   };
@@ -468,11 +449,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'SignPsbt',
     (req) => {
-      const {
-        data: {
-          params: { list, priorityFee }
-        }
-      } = req;
+      return false;
     }
   ])
   krc20BatchTransferTransaction = async ({ approvalRes: { list, priorityFee }, session: { origin } }) => {
@@ -559,11 +536,7 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'SignPsbt',
     (req) => {
-      const {
-        data: {
-          params: { txJsonString, options }
-        }
-      } = req;
+      return false;
     }
   ])
   signPskt = async ({ approvalRes: { psktJsonString, psktOptions }, session: { origin } }) => {

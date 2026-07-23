@@ -7,6 +7,7 @@ import { AddressType } from '@/shared/types';
 import { Card, Column, Content, Header, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { copyToClipboard, useLocationState, useWallet } from '@/ui/utils';
+import { colors } from '@/ui/theme/colors';
 import { CopyOutlined } from '@ant-design/icons';
 
 export default function WalletInfoScreen() {
@@ -68,7 +69,7 @@ export default function WalletInfoScreen() {
 
       <Content>
         <Column>
-          <Card style={{ backgroundColor: '#2c2323' }}>
+          <Card style={{ backgroundColor: colors.danger_bg }}>
             <Text
               text={`Exercise extreme caution when handling and sharing your xPub. An xPub allows anyone who possesses it to derive all your public keys and view your entire transaction history and balance.`}
               color="textDim"
@@ -90,7 +91,7 @@ export default function WalletInfoScreen() {
             }}
           >
             <Text text="Copy XPUB" color="textDim" />
-            <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+            <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
           </Row>
 
           <Row justifyCenter>

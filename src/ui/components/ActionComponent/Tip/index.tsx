@@ -1,7 +1,6 @@
 import { Column } from '../../Column';
 import { Popover } from '../../Popover';
 import { Text } from '../../Text';
-import './index.less';
 
 export interface TipProps {
   text?: string;
@@ -16,7 +15,8 @@ export function Tip(props: TipProps) {
         if (onClose) {
           onClose();
         }
-      }}>
+      }}
+    >
       <Column>
         <Text text={text} textCenter />
       </Column>

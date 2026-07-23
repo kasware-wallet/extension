@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 
 import type { ColorTypes } from '@/ui/theme/colors';
 import { colors } from '@/ui/theme/colors';
+import { fontSizes } from '@/ui/theme/font';
 import { typography } from '@/ui/theme/typography';
 
 import type { BaseViewProps } from '../BaseView';
@@ -11,15 +12,15 @@ export type Sizes = keyof typeof $sizeStyles;
 type Presets = keyof typeof $presets;
 
 export const $sizeStyles = {
-  xxxl: { fontSize: 32, lineHeight: 'normal' } as CSSProperties,
-  xxl: { fontSize: 24, lineHeight: 'normal' } as CSSProperties,
-  xl: { fontSize: 20, lineHeight: 'normal' } as CSSProperties,
-  lg: { fontSize: 18, lineHeight: 'normal' } as CSSProperties,
-  md: { fontSize: 16, lineHeight: 'normal' } as CSSProperties,
-  sm: { fontSize: 14, lineHeight: 'normal' } as CSSProperties,
-  xs: { fontSize: 12, lineHeight: 'normal' } as CSSProperties,
-  xxs: { fontSize: 10, lineHeight: 'normal' } as CSSProperties,
-  xxxs: { fontSize: 8, lineHeight: 'normal' } as CSSProperties
+  xxxl: { fontSize: fontSizes.xxxl, lineHeight: 'normal' } as CSSProperties,
+  xxl: { fontSize: fontSizes.xxl, lineHeight: 'normal' } as CSSProperties,
+  xl: { fontSize: fontSizes.xl, lineHeight: 'normal' } as CSSProperties,
+  lg: { fontSize: fontSizes.lg, lineHeight: 'normal' } as CSSProperties,
+  md: { fontSize: fontSizes.md, lineHeight: 'normal' } as CSSProperties,
+  sm: { fontSize: fontSizes.sm, lineHeight: 'normal' } as CSSProperties,
+  xs: { fontSize: fontSizes.xs, lineHeight: 'normal' } as CSSProperties,
+  xxs: { fontSize: fontSizes.xxs, lineHeight: 'normal' } as CSSProperties,
+  xxxs: { fontSize: fontSizes.xxxs, lineHeight: 'normal' } as CSSProperties
 };
 
 const $baseStyle: CSSProperties = Object.assign({}, $sizeStyles.sm, {

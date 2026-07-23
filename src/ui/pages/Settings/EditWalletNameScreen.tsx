@@ -1,70 +1,31 @@
-import React, { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import type { WalletKeyring } from '@/shared/types';
-import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
+import EditNameScreen from '@/ui/pages/Settings/EditNameScreen';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
 import { useWallet } from '@/ui/utils';
-import { useTranslation } from 'react-i18next';
 
 export default function EditWalletNameScreen() {
-  const { t } = useTranslation();
   const { state } = useLocation();
-  const { keyring } = state as {
-    keyring: WalletKeyring;
-  };
+  const { keyring } = state as { keyring: WalletKeyring };
 
   const wallet = useWallet();
-  const [alianName, setAlianName] = useState('');
   const dispatch = useAppDispatch();
-  const handleOnClick = async () => {
-    const newKeyring = await wallet.setKeyringAlianName(keyring, alianName || keyring.alianName);
+
+  const handleSubmit = async (name: string) => {
+    const newKeyring = await wallet.setKeyringAlianName(keyring, name || keyring.alianName);
     dispatch(keyringsActions.updateKeyringName(newKeyring));
-    window.history.go(-1);
   };
-
-  const handleOnKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if ('Enter' == e.key) {
-      handleOnClick();
-    }
-  };
-
-  const isValidName = useMemo(() => {
-    if (alianName.length == 0) {
-      return false;
-    }
-    return true;
-  }, [alianName]);
+  const handleBack = () => window.history.go(-1);
 
   return (
-    <Layout>
-      <Header
-        onBack={() => {
-          window.history.go(-1);
-        }}
-        title={keyring.alianName}
-      />
-      <Content>
-        <Column gap="lg">
-          <Input
-            placeholder={keyring.alianName}
-            onChange={(e) => {
-              setAlianName(e.target.value);
-            }}
-            onKeyUp={(e) => handleOnKeyUp(e)}
-            autoFocus={true}
-          />
-          <Button
-            disabled={!isValidName}
-            text={t('Change Wallet Name')}
-            preset="primary"
-            onClick={() => {
-              handleOnClick();
-            }}
-          />
-        </Column>
-      </Content>
-    </Layout>
+    <EditNameScreen
+      title={keyring.alianName}
+      placeholder={keyring.alianName}
+      buttonText="Change Wallet Name"
+      onBack={handleBack}
+      onSubmit={handleSubmit}
+    />
   );
 }

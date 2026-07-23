@@ -1,12 +1,11 @@
 import type { CSSProperties } from 'react';
 
 import { colors } from '@/ui/theme/colors';
-import { fontSizes } from '@/ui/theme/font';
-import { spacing } from '@/ui/theme/spacing';
-import { LoadingOutlined } from '@ant-design/icons';
+import { spacingGap } from '@/ui/theme/spacing';
+
+import { LoadingSpinner } from '../../LoadingSpinner';
 
 import { Text } from '../../Text';
-import './index.less';
 
 export interface LoadingProps {
   text?: string;
@@ -21,21 +20,15 @@ const $baseViewStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   flexDirection: 'column',
-  gap: spacing.small
+  gap: spacingGap.lg
 };
 
 export function Loading(props: LoadingProps) {
   const { text } = props;
   return (
-    <div className="loading-container">
+    <div className="popover-container">
       <div style={$baseViewStyle}>
-        <LoadingOutlined
-          style={{
-            fontSize: fontSizes.icon,
-            color: colors.orange
-          }}
-        />
-        {text && <Text text={text} preset="title" color="orange" />}
+        <LoadingSpinner size="small" color={colors.orange} text={text} />
       </div>
     </div>
   );

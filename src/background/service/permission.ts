@@ -1,20 +1,24 @@
-import { max } from 'lodash';
+import { max } from 'lodash-es';
 import LRU from 'lru-cache';
 
 import { createPersistStore } from '@/background/utils';
-import { CHAINS_ENUM, INTERNAL_REQUEST_ORIGIN } from '@/shared/constant';
+import type { KASPA_CHAINS_ENUM } from '@/shared/constant';
+import { EVM_CHAINS_ENUM, INTERNAL_REQUEST_ORIGIN } from '@/shared/constant';
+import type { ConnectedSite } from '@/shared/types/permission';
+import { storage } from '../webapi';
 
-export interface ConnectedSite {
-  origin: string;
-  icon: string;
-  name: string;
-  chain: CHAINS_ENUM;
-  e?: number;
-  isSigned: boolean;
-  isTop: boolean;
-  order?: number;
-  isConnected: boolean;
-}
+// export interface ConnectedSite {
+//   origin: string;
+//   icon: string;
+//   name: string;
+//   chain: EVM_CHAINS_ENUM | KASPA_CHAINS_ENUM;
+//   e?: number;
+//   isSigned: boolean;
+//   info?: BasicDappInfo;
+//   isTop: boolean;
+//   order?: number;
+//   isConnected: boolean;
+// }
 
 export type PermissionStore = {
   dumpCache: ReadonlyArray<LRU.Entry<string, ConnectedSite>>;
@@ -26,11 +30,13 @@ class PermissionService {
   };
   lruCache: LRU<string, ConnectedSite> | undefined;
 
-  init = async () => {
+  init = async (resetStorage = false) => {
     const storage = await createPersistStore<PermissionStore>({
-      name: 'permission'
+      name: 'permission',
+      template: { dumpCache: [] },
+      fromStorage: !resetStorage
     });
-    this.store = storage || this.store;
+    this.store = storage;
     this.lruCache = new LRU();
     const cache: ReadonlyArray<LRU.Entry<string, ConnectedSite>> = (this.store.dumpCache || []).map((item) => ({
       k: item.k,
@@ -38,6 +44,11 @@ class PermissionService {
       e: 0
     }));
     this.lruCache.load(cache);
+  };
+
+  clearPermission = async () => {
+    await storage.remove('permission');
+    await this.init(true);
   };
 
   sync = () => {
@@ -61,7 +72,13 @@ class PermissionService {
     this.sync();
   };
 
-  addConnectedSite = (origin: string, name: string, icon: string, defaultChain: CHAINS_ENUM, isSigned = false) => {
+  addConnectedSite = (
+    origin: string,
+    name: string,
+    icon: string,
+    defaultChain: KASPA_CHAINS_ENUM,
+    isSigned = false
+  ) => {
     if (!this.lruCache) return;
 
     this.lruCache.set(origin, {
@@ -177,7 +194,7 @@ class PermissionService {
     this.sync();
   };
 
-  getSitesByDefaultChain = (chain: CHAINS_ENUM) => {
+  getSitesByDefaultChain = (chain: KASPA_CHAINS_ENUM) => {
     if (!this.lruCache) return [];
     return this.lruCache.values().filter((item) => item.chain === chain);
   };

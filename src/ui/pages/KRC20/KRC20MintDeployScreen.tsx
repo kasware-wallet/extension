@@ -1,9 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import type { InputNumberProps } from 'antd';
-import { Checkbox, InputNumber, Slider, Tabs } from 'antd';
-import type { CheckboxChangeEvent } from 'antd/es/checkbox';
-import BigNumber from 'bignumber.js';
+import type { InputNumberProps, TabsProps } from 'antd';
+import { InputNumber, Slider, Tabs } from 'antd';
 import log from 'loglevel';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,15 +10,12 @@ import { TxType } from '@/shared/types';
 import { constructKRC20MintJsonStrLowerCase } from '@/shared/utils';
 import { Button, Card, Column, Content, Footer, Header, Input, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
-import { FeeRateBar } from '@/ui/components/FeeRateBar';
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useAccountBalance } from '@/ui/state/accounts/hooks';
-import { selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
-import { useRpcStatus } from '@/ui/state/global/hooks';
-import { useAppDispatch, useAppSelector } from '@/ui/state/hooks';
-import { useKRC20MintDeployTabKey } from '@/ui/state/ui/hooks';
-import { KRC20MintDeployTabKey, uiActions } from '@/ui/state/ui/reducer';
-import { fontSizes } from '@/ui/theme/font';
+import { useAppDispatch } from '@/ui/state/hooks';
+import { useKRC20MintDeployTabKey } from '@/ui/state/temp-ui/hooks';
+import { KRC20MintDeployTabKey, tempUiActions } from '@/ui/state/temp-ui/reducer';
+import { colors } from '@/ui/theme/colors';
 import { useLocationState, useWallet } from '@/ui/utils';
 import { RightOutlined } from '@ant-design/icons';
 
@@ -38,9 +31,9 @@ export default function KRC20MintDeployScreen() {
   const krc20MintDeployTabKey = useKRC20MintDeployTabKey();
   const dataFromForward = useLocationState<LocationState>();
 
-  const tabItems = [
+  const tabItems: TabsProps['items'] = [
     {
-      key: KRC20MintDeployTabKey.MINT,
+      key: KRC20MintDeployTabKey.MINT.toString(),
       label: t('Mint a KRC20 token'),
       children: <MintKRC20Tab tick={dataFromForward?.tick} />
     }
@@ -57,13 +50,13 @@ export default function KRC20MintDeployScreen() {
       <Content>
         <Tabs
           size={'small'}
-          defaultActiveKey="0"
-          activeKey={krc20MintDeployTabKey as unknown as string}
-          items={tabItems as unknown as any[]}
+          defaultActiveKey={KRC20MintDeployTabKey.MINT.toString()}
+          activeKey={krc20MintDeployTabKey.toString()}
+          items={tabItems}
           onTabClick={(key) => {
             dispatch(
-              uiActions.updateKRC20MintDeployTab({
-                krc20MintDeployTabKey: key as unknown as KRC20MintDeployTabKey
+              tempUiActions.updateKRC20MintDeployTab({
+                krc20MintDeployTabKey: Number(key) as KRC20MintDeployTabKey
               })
             );
           }}
@@ -89,7 +82,7 @@ export default function KRC20MintDeployScreen() {
               <Text text={'Deploy a KRC20 token'} preset="regular-bold" />
             </Column>
             <Column justifyCenter>
-              <RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+              <RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
             </Column>
           </Row>
         </Card>
@@ -103,6 +96,7 @@ function MintKRC20Tab({ tick }: { tick: string | undefined }) {
   const dispatch = useAppDispatch();
   const [ticker, setTicker] = useState(tick ? tick : '');
   const tools = useTools();
+  const [mintTimes, setMintTimes] = useState(1);
 
   const navigate = useNavigate();
   const [inscribeJsonString, setInscribeJsonString] = useState('');
@@ -110,39 +104,6 @@ function MintKRC20Tab({ tick }: { tick: string | undefined }) {
   const [errors, setErrors] = useState<string[]>([]);
   const accountBalance = useAccountBalance();
   const wallet = useWallet();
-  const rpcStatus = useRpcStatus();
-  const [feeBarChecked, setFeeBarChecked] = useState(true);
-  const currrentAddress = useAppSelector(selectCurrentKaspaAddress);
-  const [txFee, setTxFee] = useState(0);
-  const onChange = (e: CheckboxChangeEvent) => {
-    const val = e.target.checked;
-    setFeeBarChecked(val);
-  };
-  const [priorityFee, setPriorityFee] = useState(0);
-  useEffect(() => {
-    const fetchTxFee = async () => {
-      // fee kaspa unit
-      const fee = await wallet
-        .getTxFee(
-          currrentAddress,
-          currrentAddress,
-          currrentAddress,
-          20,
-          0,
-          accountBalance.amount == '20' ? true : false
-        )
-        .catch((e) => {
-          console.error(e);
-          setTxFee(0.0001);
-        });
-      if (fee) {
-        setTxFee(fee);
-      } else {
-        setTxFee(0.0001);
-      }
-    };
-    fetchTxFee();
-  }, [accountBalance.amount, currrentAddress, rpcStatus, wallet]);
 
   useEffect(() => {
     setErrors([]);
@@ -154,7 +115,7 @@ function MintKRC20Tab({ tick }: { tick: string | undefined }) {
       return;
     }
     if (!ticker || ticker.length < 4 || ticker.length > 6) {
-      setErrors(['Ticker should be 4 to 6 letter.']);
+      setErrors(['Ticker should be 4 to 6 letters.']);
       setDisabled(true);
       return;
     }
@@ -227,14 +188,12 @@ function MintKRC20Tab({ tick }: { tick: string | undefined }) {
     if (tempErrs && tempErrs.length > 0) {
       setErrors(tempErrs);
     } else {
-      dispatch(uiActions.updateKRC20MintDeployScreen({ mint: { ticker } }));
+      dispatch(tempUiActions.updateKRC20MintDeployScreen({ mint: { ticker } }));
       if (mintTimes == 1) {
         navigate('KRC20TxConfirmScreen', {
           inscribeJsonString,
           type: TxType.SIGN_KRC20_MINT,
           tokenType: 'KRC20Mint',
-          priorityFee,
-          isRBF: false,
           protocol: KASPLEX
         });
       }
@@ -242,8 +201,7 @@ function MintKRC20Tab({ tick }: { tick: string | undefined }) {
         navigate('KRC20BatchTxConfirmScreen', {
           inscribeJsonString,
           type: TxType.SIGN_KRC20_MINT_BATCH,
-          times: mintTimes,
-          priorityFee
+          times: mintTimes
         });
       }
     }
@@ -259,8 +217,6 @@ function MintKRC20Tab({ tick }: { tick: string | undefined }) {
     }
   };
 
-  const [mintTimes, setMintTimes] = useState(1);
-
   const onChangeSlider: InputNumberProps['onChange'] = (newValue) => {
     const num = newValue?.toString().replace(/[^0-9]/g, '');
     setMintTimes(Number(num));
@@ -272,7 +228,6 @@ function MintKRC20Tab({ tick }: { tick: string | undefined }) {
         <Column full>
           <Input
             autoFocus={true}
-            // defaultValue={ticker}
             value={ticker}
             onChange={(e) => {
               const replacedValue = e.target.value.replace(/[^a-zA-Z]/g, '');
@@ -289,30 +244,6 @@ function MintKRC20Tab({ tick }: { tick: string | undefined }) {
         <InputNumber bordered={true} width={50} min={1} max={1000000} value={mintTimes} onChange={onChangeSlider} />
       </Row>
 
-      <Column mt="md">
-        <Row>
-          <Checkbox onChange={onChange} checked={feeBarChecked} style={{ fontSize: fontSizes.sm }}>
-            <Text text={`${t('Upper limit transaction fee')}`} preset="xsub" color="textDim" />
-          </Checkbox>
-        </Row>
-        {feeBarChecked && (
-          <Column mt="md">
-            <FeeRateBar
-              txFee={txFee}
-              onChange={(val) => {
-                setPriorityFee(val - txFee > 0 ? Number(new BigNumber(val).minus(txFee).decimalPlaces(8)) : 0);
-              }}
-            />
-            <Text
-              mt="md"
-              mb="md"
-              color="white"
-              text={`${t('Upper limit transaction fee:')} ${new BigNumber(priorityFee).plus(txFee).toNumber()} KAS`}
-              textCenter
-            />
-          </Column>
-        )}
-      </Column>
       <Column gap="sm">
         <Text
           mt="md"

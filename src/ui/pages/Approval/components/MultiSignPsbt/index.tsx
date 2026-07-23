@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { DecodedPsbt, SignPsbtOptions, ToSignInput } from '@/shared/types';
@@ -12,11 +10,10 @@ import { WarningPopover } from '@/ui/components/WarningPopover';
 import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useAccountAddress, useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { colors } from '@/ui/theme/colors';
-import { fontSizes } from '@/ui/theme/font';
 import { copyToClipboard, formatLocaleString, useApproval, useWallet } from '@/ui/utils';
-import { LoadingOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { sompiToAmount } from '@/shared/utils/format';
+import { LoadingView, ScammerView, Section } from '../common';
 
 interface Props {
   header?: React.ReactNode;
@@ -54,7 +51,7 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
       .reduce((pre, cur) => cur.value + pre, 0);
     const spend = inValue - outValue;
     return spend;
-  }, [decodedPsbt]);
+  }, [address, decodedPsbt.inputInfos, decodedPsbt.outputInfos]);
 
   const spendAmount = useMemo(() => sompiToAmount(spendSompi, 8), [spendSompi]);
 
@@ -62,7 +59,7 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
     <Column gap="lg">
       <Text text={t('Sign Transaction')} preset="title-bold" textCenter mt="lg" />
       <Row justifyCenter>
-        <Card style={{ backgroundColor: '#272626', maxWidth: 320, width: 320 }}>
+        <Card style={{ backgroundColor: colors.card, maxWidth: 320, width: 320 }}>
           <Column gap="lg">
             <Column>
               <Column>
@@ -82,19 +79,6 @@ function SignTxDetails({ decodedPsbt }: { decodedPsbt: DecodedPsbt }) {
           </Column>
         </Card>
       </Row>
-    </Column>
-  );
-}
-
-function Section({ title, children }: { title: string; children?: React.ReactNode }) {
-  return (
-    <Column>
-      <Text text={title} preset="bold" />
-      <Card>
-        <Row full justifyBetween itemsCenter>
-          {children}
-        </Row>
-      </Card>
     </Column>
   );
 }
@@ -179,6 +163,7 @@ export default function MultiSignPsbt({
 
   useEffect(() => {
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateTxInfo = useCallback(
@@ -236,25 +221,17 @@ export default function MultiSignPsbt({
   }, [psbtHex]);
 
   const isValid = useMemo(() => {
-    if (decodedPsbt && decodedPsbt.inputInfos.length == 0) {
+    if (decodedPsbt && decodedPsbt.inputInfos.length === 0) {
       return false;
     }
-    if (!toSignInputs || toSignInputs.length == 0) {
+    if (!toSignInputs || toSignInputs.length === 0) {
       return false;
     }
     return true;
   }, [decodedPsbt, toSignInputs]);
 
   if (loading) {
-    return (
-      <Layout>
-        <Content itemsCenter justifyCenter>
-          <Icon size={fontSizes.xxxl} color="gold">
-            <LoadingOutlined />
-          </Icon>
-        </Content>
-      </Layout>
-    );
+    return <LoadingView />;
   }
 
   if (!decodedPsbt) {
@@ -270,26 +247,7 @@ export default function MultiSignPsbt({
   }
 
   if (txInfo.isScammer) {
-    return (
-      <Layout>
-        <Content>
-          <Column>
-            <Text text="Phishing Detection" preset="title-bold" textCenter mt="xxl" />
-            <Text text="Malicious behavior and suspicious activity have been detected." mt="md" />
-            <Text
-              text="Your access to this page has been restricted by KasWare Wallet as it might be unsafe."
-              mt="md"
-            />
-          </Column>
-        </Content>
-
-        <Footer>
-          <Row full>
-            <Button text="Reject (blocked by KasWare Wallet)" preset="danger" onClick={handleCancel} full />
-          </Row>
-        </Footer>
-      </Layout>
-    );
+    return <ScammerView onCancel={handleCancel} />;
   }
 
   const count = txInfo.psbtHexs.length;

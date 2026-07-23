@@ -1,5 +1,4 @@
-import { Checkbox } from 'antd';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { colors } from '@/ui/theme/colors';
 
@@ -10,50 +9,58 @@ import { Popover } from '../Popover';
 import { Row } from '../Row';
 import { Text } from '../Text';
 
-export const NoticePopover = ({ content, onClose }: { content: string; onClose: () => void }) => {
-  const [checked1, setChecked1] = useState(false);
-  const [checked2, setChecked2] = useState(true);
+interface NoticePopoverProps {
+  content: string;
+  onClose: () => void;
+  coolDownSeconds?: number;
+}
 
-  const [enable, setEnable] = useState(false);
-  const [coolDown, setCoolDown] = useState(3);
+export const NoticePopover = ({ content, onClose, coolDownSeconds = 10 }: NoticePopoverProps) => {
+  const [coolDown, setCoolDown] = useState(coolDownSeconds);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const isEnabled = coolDown === 0;
 
   useEffect(() => {
-    if (coolDown > 0) {
-      setTimeout(() => {
-        setCoolDown(coolDown - 1);
-      }, 1000);
-    } else {
-      setEnable(true);
-    }
-  }, [coolDown]);
+    timerRef.current = setInterval(() => {
+      setCoolDown((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <Popover>
       <Column justifyCenter itemsCenter>
-        {/* <Text text="Tips" preset="title-bold" /> */}
-        <Icon icon={'info'} color={'icon_yellow'} size={57} />
+        <Icon icon="info" color="icon_yellow" size={57} />
 
         <Column gap="zero">
-          {/* <Text text={'Please be aware that:'} preset={'bold'} /> */}
           <div style={{ marginTop: 8 }}>
-            <Checkbox
-              checked={checked1}
-              onChange={(e) => {
-                setChecked1(e.target.checked);
+            <Text
+              text={content}
+              preset="bold"
+              style={{
+                userSelect: 'text',
+                overflow: 'auto',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                flexWrap: 'wrap'
               }}
-            >
-              <Text
-                text={content}
-                preset={'bold'}
-                style={{
-                  userSelect: 'text',
-                  overflow: 'auto',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  flexWrap: 'wrap'
-                }}
-              />
-            </Checkbox>
+            />
           </div>
           <Row style={{ borderTopWidth: 1, borderColor: colors.border }} my="md" />
         </Column>
@@ -62,14 +69,9 @@ export const NoticePopover = ({ content, onClose }: { content: string; onClose: 
           <Button
             text={coolDown > 0 ? `OK (${coolDown}s)` : 'OK'}
             preset="primary"
-            disabled={!checked1 || !checked2}
+            disabled={!isEnabled}
             full
-            onClick={() => {
-              if (!enable) return;
-              if (onClose) {
-                onClose();
-              }
-            }}
+            onClick={isEnabled ? onClose : undefined}
           />
         </Row>
       </Column>

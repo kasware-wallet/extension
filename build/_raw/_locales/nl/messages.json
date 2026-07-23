@@ -1,0 +1,467 @@
+{
+  "Copy__address": {
+    "message": "Kopieer adres"
+  },
+  "Edit__Name": {
+    "message": "Naam bewerken"
+  },
+  "New__account": {
+    "message": "Nieuw account"
+  },
+  "Your__transaction__has__been__successfully__sent": {
+    "message": "Jouw transactie is succesvol verzonden"
+  },
+  "Export__Private__Key": {
+    "message": "Exporteer Private Key"
+  },
+  "Save__it__somewhere__safe__and__secret": {
+    "message": "Bewaar het ergens geheim en veilig"
+  },
+  "Discover__address": {
+    "message": "Ontdek adres"
+  },
+  "Change__Password": {
+    "message": "Paswoord veranderen"
+  },
+  "Receive": {
+    "message": "Ontvangen"
+  },
+  "shortName": {
+    "message": "KasWare"
+  },
+  "appName": {
+    "message": "KasWare Wallet"
+  },
+  "Switch__Language": {
+    "message": "Taal veranderen"
+  },
+  "Reject__All": {
+    "message": "Alles afwijzen"
+  },
+  "From__single__private__key": {
+    "message": "Van alleen Private Key"
+  },
+  "24__words": {
+    "message": "24 woorden"
+  },
+  "From__seed__phrase": {
+    "message": "Vanuit Seed Phrase"
+  },
+  "Restore__Wallet": {
+    "message": "Wallet herstellen"
+  },
+  "12__words": {
+    "message": "12 woorden"
+  },
+  "With__seed__phrase": {
+    "message": "Met Seed Phrase"
+  },
+  "Create__Wallet": {
+    "message": "Creeer Wallet"
+  },
+  "Create__Single__Wallet": {
+    "message": "Creeer een enkele wallet"
+  },
+  "Invalid__PrivateKey": {
+    "message": "Ongeldige Private Key"
+  },
+  "Copied__address": {
+    "message": "Adres gekopieerd"
+  },
+  "HEX__Private__Key": {
+    "message": "HEX Private Key"
+  },
+  "Change__Wallet__Name": {
+    "message": "Naam wallet veranderen"
+  },
+  "Reset": {
+    "message": "Opnieuw instellen"
+  },
+  "Change__Network__URL": {
+    "message": "Netwerk URL veranderen"
+  },
+  "Remove__Contact": {
+    "message": "Contact verwijderen"
+  },
+  "Change__Contact__Name": {
+    "message": "Naam contact veranderen"
+  },
+  "Change__Account__Name": {
+    "message": "Accountnaam veranderen"
+  },
+  "Address__type__changed": {
+    "message": "Adrestype is veranderd"
+  },
+  "Address__Type": {
+    "message": "Adrestype"
+  },
+  "First__Open__Source__Chrome__wallet__for__Kaspa__in__the__world__Simple__and__reliable": {
+    "message": "De eerste \"open source\" chrome wallet voor Kaspa ter wereld. Betrouwbaar en makkelijk."
+  },
+  "Address": {
+    "message": "Adres"
+  },
+  "You__may__increase__transfer__amount": {
+    "message": "Je mag het overdrachtsbedrag verhogen"
+  },
+  "Done": {
+    "message": "Klaar"
+  },
+  "History": {
+    "message": "Geschiedenis"
+  },
+  "safe__to__send": {
+    "message": "veilig om te verzenden"
+  },
+  "Unconfirmed": {
+    "message": "Niet bevestigd"
+  },
+  "Priority__Fee__Rate": {
+    "message": "tarief prioriteitsfee"
+  },
+  "Optional": {
+    "message": "Optioneel"
+  },
+  "Balance": {
+    "message": "Saldo"
+  },
+  "My__account": {
+    "message": "Mijn account"
+  },
+  "Contacts": {
+    "message": "Contacten"
+  },
+  "Recent": {
+    "message": "Recent"
+  },
+  "NO__DATA": {
+    "message": "Geen data"
+  },
+  "no__contacts__yet": {
+    "message": "Nog geen contacten"
+  },
+  "Connected__Sites": {
+    "message": "Verbonden websites"
+  },
+  "Not__connected": {
+    "message": "Niet verbonden"
+  },
+  "Connected": {
+    "message": "Verbonden"
+  },
+  "Lock__Now": {
+    "message": "Nu vergrendelen"
+  },
+  "Expand__View": {
+    "message": "weergave uitvergroten"
+  },
+  "Network": {
+    "message": "Netwerk URL veranderen"
+  },
+  "Accelerating__Kaspa__adoption": {
+    "message": "Versnellen van Kaspa adoptie"
+  },
+  "No__contacts": {
+    "message": "Geen contacten"
+  },
+  "My__Contacts": {
+    "message": "Mijn contacten"
+  },
+  "Activity": {
+    "message": "Bezig"
+  },
+  "Latest__Transactions": {
+    "message": "Laatste transacties"
+  },
+  "Success": {
+    "message": "Geslaagd"
+  },
+  "Switch__Account": {
+    "message": "Van account veranderen"
+  },
+  "Japanese__Yen": {
+    "message": "Japanse Yen"
+  },
+  "British__Pound": {
+    "message": "Britse Pond"
+  },
+  "Import__an__existing__account": {
+    "message": "Een bestaande account importeren"
+  },
+  "English": {
+    "message": "Engels"
+  },
+  "Login": {
+    "message": "Log in"
+  },
+  "You__will__use__this__to__unlock__your__wallet": {
+    "message": "Je zult dit gebruiken om je wallet te ontgrendelen"
+  },
+  "Show__Private__Key": {
+    "message": "Laat Private Key zien"
+  },
+  "Spanish": {
+    "message": "Spaans"
+  },
+  "Recipient": {
+    "message": "Ontvanger"
+  },
+  "Confirm__payment": {
+    "message": "Betaling bevestigen"
+  },
+  "I__saved__My__Secret__Recovery__Phrase": {
+    "message": "Ik heb mijn Secret Recovery Phrase opgeslagen"
+  },
+  "If__you__ever__change__browsers__or__move__computers": {
+    "message": "Als je ooit van browser verandert of van computer verhuist"
+  },
+  "appDescription": {
+    "message": "De meest veelzijdige en veiligste wallet voor Kaspa – met ondersteuning voor KRC20, KNS, KRC721 en L2-netwerk."
+  },
+  "Password_must_contain_at_least_5_characters": {
+    "message": "Paswoord moet ten minste 5 tekens bevatten"
+  },
+  "This__is__an__imported__account": {
+    "message": "Dit is een geimporteerd account"
+  },
+  "Successfully__imported": {
+    "message": "Succesvol geimporteerd"
+  },
+  "Canadian__Dollar": {
+    "message": "Canadese Dollar"
+  },
+  "Send": {
+    "message": "Verzenden"
+  },
+  "Back": {
+    "message": "Terug"
+  },
+  "Add__New__Account": {
+    "message": "Voeg nieuw account toe"
+  },
+  "Chinese": {
+    "message": "Chinees"
+  },
+  "Create__a__new__wallet": {
+    "message": "Creeer een nieuwe wallet"
+  },
+  "Create__a__new__account": {
+    "message": "Creeer een nieuw account"
+  },
+  "Current__Password": {
+    "message": "Huidig paswoord"
+  },
+  "Your__transaction__has__not__been__successfully__sent": {
+    "message": "Jouw transactie is niet succesvol verzonden"
+  },
+  "Next": {
+    "message": "Volgende"
+  },
+  "Amount": {
+    "message": "Hoeveelheid"
+  },
+  "Import__wallet": {
+    "message": "Importeer wallet"
+  },
+  "Get__Started": {
+    "message": "Aan de slag"
+  },
+  "Password": {
+    "message": "Paswoord"
+  },
+  "Import__Private__Key": {
+    "message": "Importeer Private Key"
+  },
+  "Language": {
+    "message": "Taal"
+  },
+  "Show__Secret__Recovery__Phrase": {
+    "message": "Laat Secret Recovery Phrase zien"
+  },
+  "Deposit": {
+    "message": "Storten"
+  },
+  "Do__NOT__share__it__with__anyone": {
+    "message": "Deel het met NIEMAND"
+  },
+  "View__on__Block__Explorer": {
+    "message": "Bekijk op Block Explorer"
+  },
+  "Create__Account": {
+    "message": "Creeer account"
+  },
+  "Copied": {
+    "message": "Gekopieerd"
+  },
+  "Clipboard__cleared__for__security": {
+    "message": "Klembord gewist voor beveiliging"
+  },
+  "Change__your__lockscreen__password": {
+    "message": "Paswoord schermvergrendeling veranderen"
+  },
+  "US__Dollar": {
+    "message": "US Dollar"
+  },
+  "Detected__multiple__requests__from__this__Dapp": {
+    "message": "Meerdere requests gedetecteerd van deze Dapp"
+  },
+  "Cancel__current__transaction": {
+    "message": "Huidige transactie annuleren"
+  },
+  "Block__Dapp__from__sending__requests__for__1__minute": {
+    "message": "Dapp blockeren van het verzenden van requests voor 1 minuut"
+  },
+  "Do__you__want__to__delete": {
+    "message": "Wilt u verwijderen"
+  },
+  "Related__tokens__will__be__removed__from__the__list__of__tokens": {
+    "message": "Tokens verbonden worden verwijderd uit de lijst met tokens."
+  },
+  "Transaction__Data": {
+    "message": "Transactiegegevens"
+  },
+  "Reserve__Gas": {
+    "message": "Gas reserveren"
+  },
+  "Instant": {
+    "message": "Direct"
+  },
+  "Fast": {
+    "message": "Snel"
+  },
+  "Normal": {
+    "message": "Normaal"
+  },
+  "Do__Not__Reserve__Gas": {
+    "message": "Niet gas reserveren"
+  },
+  "Collection": {
+    "message": "Collectie"
+  },
+  "Chain": {
+    "message": "Rant"
+  },
+  "Last__Price": {
+    "message": "Laatste prijs"
+  },
+  "Purchase__Date": {
+    "message": "Aankoopdatum"
+  },
+  "Only__ERC721__and__ERC1155__NFTs__are__supported__for__now": {
+    "message": "Alleen NFTs ERC721 en ERC1155 worden momenteel ondersteund"
+  },
+  "Your__balance__is": {
+    "message": "Jouw saldo is "
+  },
+  "Only__one__NFT__of__ERC721__can__be__sent__at__a__time": {
+    "message": "Alleen 1 NFT van ERC721 kan worden verzonden per keer"
+  },
+  "No__transactions__found": {
+    "message": "Geen transacties gevonden"
+  },
+  "No__transactions": {
+    "message": "Geen transacties"
+  },
+  "You__can__select__NFT__from__All__and__add__to__Starred": {
+    "message": "Je kunt NFTs selecteren van \"All\" en toevoegen aan \"Favorieten\""
+  },
+  "No__Starred__NFT": {
+    "message": "Geen favorieten NFTs"
+  },
+  "No__NFT": {
+    "message": "Geen NFTs"
+  },
+  "Canceled__a__pending__transaction": {
+    "message": "Geannuleerde transactie"
+  },
+  "Contract__Interaction": {
+    "message": "Contractinteractie"
+  },
+  "Contract__address__must__be__specified": {
+    "message": "Een contractadres moet worden opgegeven"
+  },
+  "The__specified__address__is__invalid": {
+    "message": "De opgegeven adres is ongeldig"
+  },
+  "transactions__need_to_sign": {
+    "message": "Transacties moeten worden подписane"
+  },
+  "View": {
+    "message": "Bekijk"
+  },
+  "View__first_one": {
+    "message": "Bekijk de eerste"
+  },
+  "No__Transactions": {
+    "message": "Geen transacties"
+  },
+  "No__quotes__available__for__this__chain__yet": {
+    "message": "Er zijn nog geen cotizaties beschikbaar voor deze chain"
+  },
+  "Please__use__a__third__party__Dapp__to__proceed": {
+    "message": "Gebruik een derden Dapp om te doorgaan"
+  },
+  "View__Dapp__Options": {
+    "message": "Bekijk Dapp opties"
+  },
+  "Select__a__Dapp": {
+    "message": "Selecteer een Dapp"
+  },
+  "No__Dapps__available": {
+    "message": "Geen Dapps beschikbaar"
+  },
+  "Please__contact__the__official__team__of__this__chain__for__support": {
+    "message": "Neem contact op met het officiële team van deze keten voor ondersteuning"
+  },
+  "Not__supported__on__this__chain": {
+    "message": "Niet ondersteund op deze keten"
+  },
+  "No__Dapp__available__on__this__chain": {
+    "message": "Geen Dapp beschikbaar op deze keten"
+  },
+  "Swap__on__Dapp": {
+    "message": "Intercambier op Dapp"
+  },
+  "Bridge__on__Dapp": {
+    "message": "Aanpassen op Dapp"
+  },
+  "Not__supported": {
+    "message": "Niet ondersteund"
+  },
+  "No__chains": {
+    "message": "Geen kettingen"
+  },
+  "Search__by__Name__or__Address": {
+    "message": "Zoek op Naam of Adres"
+  },
+  "Add__to__my__token__list": {
+    "message": "Voeg toe aan mijn tokenlijst"
+  },
+  "Edit": {
+    "message": "Bewerken"
+  },
+  "Delete": {
+    "message": "Verwijderen"
+  },
+  "Speed__Up": {
+    "message": "Versnellen"
+  },
+  "Fee": {
+    "message": "Kosten"
+  },
+  "Add__Transaction__Fee__RBF": {
+    "message": "Transactiekosten toevoegen (RBF)"
+  },
+  "Enter__additional__fee": {
+    "message": "Voer extra kosten in"
+  },
+  "New__Total__Fee": {
+    "message": "Nieuwe totale kosten"
+  },
+  "Please__enter__a__valid__fee__amount": {
+    "message": "Voer een geldig bedrag aan kosten in"
+  },
+  "Transaction__fee__added__successfully": {
+    "message": "Transactiekosten succesvol toegevoegd!"
+  }
+}

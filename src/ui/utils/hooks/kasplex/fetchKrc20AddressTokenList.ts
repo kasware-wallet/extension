@@ -1,4 +1,3 @@
-import useDebounceValue from '@/evm/ui/hooks/useDebounceValue';
 import type {
   Account,
   IKasBalance,
@@ -11,14 +10,15 @@ import type {
 } from '@/shared/types';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { transactionsActions } from '@/ui/state/transactions/reducer';
-import ErrorMessages from '@/ui/utils2/constants/errorMessages';
-import type { KRC20TokenListForAddress, TokenFromApi } from '@/ui/utils2/interfaces';
+import ErrorMessages from '@/ui/utils/constants/errorMessages';
+import type { KRC20TokenListForAddress, TokenFromApi } from '@/ui/utils/types';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import produce from 'immer';
 import { useEffect, useMemo, useState } from 'react';
 
-import { getKasplexHost } from '.';
+import { fetchWithRetryAndFallback } from '@/ui/utils/fetchWithRetry';
+import { getKasplexHosts } from '.';
 import { useWallet } from '../../WalletContext';
 import { getApiBase } from './fetchHelper';
 
@@ -121,13 +121,11 @@ async function fetchKrc20Activities(
   addr: string,
   contractAddress?: string
 ): Promise<IKRC20Transfer[] | IKRC20Mint[] | IKRC20Deploy[] | null> {
-  const host = getKasplexHost(networkId);
-  let url = `${host}/krc20/oplist?address=${addr}`;
-  if (contractAddress) url = `${url}&tick=${contractAddress}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Network response was not ok ' + response.statusText);
-  }
+  const hosts = getKasplexHosts(networkId);
+  let path = `/krc20/oplist?address=${addr}`;
+  if (contractAddress) path = `${path}&tick=${contractAddress}`;
+  const urls = hosts.map((h) => `${h}${path}`);
+  const response = await fetchWithRetryAndFallback(urls);
   const data = await response.json();
   return data.result;
 }
@@ -142,7 +140,7 @@ export const useKrc20TokenInfoQuery = (
   includeHolders = false,
   enableQuery = true
 ) => {
-  const debouncedTick = useDebounceValue(contractAddress, 250);
+  const debouncedTick = contractAddress
 
   const { isLoading, isError, error, data, refetch } = useQuery({
     queryKey: ['krc20TokenInfo', { networkId: kasNetworkId, contractAddress: debouncedTick, includeHolders }],
@@ -168,13 +166,11 @@ async function fetchKrc20TokenInfo(
   includeHolders = false
 ): Promise<IKRC20TokenInfo | IKRC20TokenInfoIssue | null> {
   try {
-    const host = getKasplexHost(networkId);
-    let url = `${host}/krc20/token/${contractAddress}`;
-    if (includeHolders) url = `${url}?holder=true`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Network response was not ok ' + response.statusText);
-    }
+    const hosts = getKasplexHosts(networkId);
+    let path = `/krc20/token/${contractAddress}`;
+    if (includeHolders) path = `${path}?holder=true`;
+    const urls = hosts.map((h) => `${h}${path}`);
+    const response = await fetchWithRetryAndFallback(urls);
     const data = await response.json();
     if (data.result && data.result.length > 0) {
       return data.result[0];
@@ -199,7 +195,7 @@ export function useKrc20DecName(kasNetworkId: TNetworkId, contractAddress: strin
   const [nameDec, setNameDec] = useState<{ name: string; dec: string } | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const debouncedContractAddress = useDebounceValue(contractAddress, 250);
+  const debouncedContractAddress = contractAddress;
 
   // Improved type guards with better type safety
   const isTokenInfoIssue = (token: unknown): token is IKRC20TokenInfoIssue => {

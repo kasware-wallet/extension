@@ -1,4 +1,4 @@
-import type { KaspaTransactionList } from '@/ui/utils2/interfaces';
+import type { KaspaTransactionList } from '@/ui/utils/types';
 import axios from 'axios';
 
 export const fetchKaspaTransactionHistory = async (

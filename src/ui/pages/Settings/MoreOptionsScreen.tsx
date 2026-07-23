@@ -6,6 +6,7 @@ import {
 } from '@/shared/constant/route-path';
 import { Card, Column, Content, Header, Layout, Row, Text } from '@/ui/components';
 import { LogoutPopover } from '@/ui/components/LogoutPopover';
+import { colors } from '@/ui/theme/colors';
 import { useAutoLockMinutes } from '@/ui/state/settings/hooks';
 import { RightOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
@@ -56,7 +57,9 @@ export default function MoreOptionsScreen() {
                   <Text text={t('Language')} preset="regular-bold" />
                 </Column>
 
-                <Column justifyCenter>{<RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />}</Column>
+                <Column justifyCenter>
+                  {<RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />}
+                </Column>
               </Row>
             </Card>
             <Card
@@ -76,7 +79,7 @@ export default function MoreOptionsScreen() {
                 </Column>
 
                 <Column justifyCenter>
-                  <RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+                  <RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
                 </Column>
               </Row>
             </Card>
@@ -97,7 +100,7 @@ export default function MoreOptionsScreen() {
                 </Column>
 
                 <Column justifyCenter>
-                  <RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+                  <RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
                 </Column>
               </Row>
             </Card>
@@ -115,7 +118,7 @@ export default function MoreOptionsScreen() {
                 </Column>
 
                 <Column justifyCenter>
-                  <RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+                  <RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
                 </Column>
               </Row>
             </Card>

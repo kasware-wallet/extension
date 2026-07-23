@@ -43,13 +43,7 @@ export const securityEngine = createSlice({
   reducers: {
     setField(state, action: { payload: Partial<typeof state> }) {
       const { payload } = action;
-      return Object.keys(payload).reduce(
-        (accu, key) => {
-          accu[key] = payload[key];
-          return accu;
-        },
-        { ...state }
-      );
+      Object.assign(state, payload || {});
     },
     updateCurrentTx(state, action: { payload: Partial<State['currentTx']> }) {
       const { payload } = action;

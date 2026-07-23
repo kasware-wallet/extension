@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { Checkbox } from 'antd';
-import type { CheckboxChangeEvent } from 'antd/es/checkbox';
-import BigNumber from 'bignumber.js';
 import log from 'loglevel';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,28 +7,16 @@ import { TxType, type IKRC20TokenInfo } from '@/shared/types';
 import { constructKRC20DeployJsonStrLowerCase } from '@/shared/utils';
 import { Button, Column, Content, Header, Input, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
-import { FeeRateBar } from '@/ui/components/FeeRateBar';
 import { WarningPopover } from '@/ui/components/WarningPopover';
 import { useNavigate } from '@/ui/pages/MainRoute';
-import { selectAccountBalance, selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
-import { useRpcStatus } from '@/ui/state/global/hooks';
+import { selectAccountBalance } from '@/ui/state/accounts/reducer';
 import { useAppDispatch, useAppSelector } from '@/ui/state/hooks';
-import { selectNetworkId } from '@/ui/state/settings/reducer';
-import { useAvgFeeRate, useFetchFeeRateOptionCallback } from '@/ui/state/ui/hooks';
-import { uiActions } from '@/ui/state/ui/reducer';
-import { fontSizes } from '@/ui/theme/font';
+import { tempUiActions } from '@/ui/state/temp-ui/reducer';
 import { formatCompactNumber, useWallet } from '@/ui/utils';
 
 export default function KRC20DeployScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  // const krc20MintDeploy = useKRC20MintDeployScreen();
-  // const previousDeployInfo = useMemo(() => {
-  //   if (krc20MintDeploy?.deploy) {
-  //     return krc20MintDeploy.deploy;
-  //   }
-  //   return undefined;
-  // }, [krc20MintDeploy?.deploy]);
 
   return (
     <Layout>
@@ -73,23 +56,11 @@ function DeployKRC20Tab({
   const [disabled, setDisabled] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const dispatch = useAppDispatch();
-  const networkId = useAppSelector(selectNetworkId);
   const [isWarningVisible, setIsWarningVisible] = useState(false);
   const accountBalance = useAppSelector((s) => selectAccountBalance(s, undefined));
   const [riskDesc, setRiskDesc] = useState('');
-  const [feeBarChecked, setFeeBarChecked] = useState(true);
-  const onChange = (e: CheckboxChangeEvent) => {
-    const val = e.target.checked;
-    setFeeBarChecked(val);
-  };
-  const avgFeeRate = useAvgFeeRate();
-  const rpcStatus = useRpcStatus();
-  const [txFee, setTxFee] = useState(0);
-  const [priorityFee, setPriorityFee] = useState(0);
   const tools = useTools();
   const wallet = useWallet();
-  const currrentAddress = useAppSelector(selectCurrentKaspaAddress);
-  const fetchFeeRateOption = useFetchFeeRateOptionCallback();
 
   const checkMintDeployErrors = async () => {
     const tempErrs: string[] = [];
@@ -155,52 +126,15 @@ function DeployKRC20Tab({
     } else if (desc.length > 0) {
       setIsWarningVisible(true);
     } else {
-      dispatch(uiActions.updateKRC20MintDeployScreen({ deploy: { ticker, supply, lim, pre, dec } }));
+      dispatch(tempUiActions.updateKRC20MintDeployScreen({ deploy: { ticker, supply, lim, pre, dec } }));
       navigate('KRC20TxConfirmScreen', {
         inscribeJsonString,
         type: TxType.SIGN_KRC20_DEPLOY,
         tokenType: 'KRC20Mint',
-        priorityFee,
-        isRBF: false,
         protocol: KASPLEX
       });
     }
   };
-  useEffect(() => {
-    const fetchTxFee = async () => {
-      // fee kaspa unit
-      const fee = await wallet
-        .getTxFee(
-          currrentAddress,
-          currrentAddress,
-          currrentAddress,
-          20,
-          0,
-          accountBalance.amount == '20' ? true : false
-        )
-        .catch((error) => {
-          console.error(error);
-          setTxFee(0.0001);
-        });
-      if (fee) {
-        setTxFee(fee);
-        if (avgFeeRate > 1) {
-          const f = new BigNumber(fee)
-            .multipliedBy(avgFeeRate - 1)
-            .decimalPlaces(8)
-            .toNumber();
-          setPriorityFee(f);
-        }
-      } else {
-        setTxFee(0.0001);
-      }
-    };
-    fetchTxFee();
-  }, [currrentAddress, avgFeeRate, rpcStatus]);
-
-  useEffect(() => {
-    fetchFeeRateOption();
-  }, [networkId]);
 
   useEffect(() => {
     if (deployInfo) {
@@ -234,7 +168,7 @@ function DeployKRC20Tab({
       // const jsonStr = constructKRC20DeployJsonStrLowerCase(tempTick, 100000000, 1000, 0);
       // setInscribeJsonString(jsonStr);
     }
-  }, []);
+  }, [deployInfo]);
   useEffect(() => {
     setErrors([]);
     if (!ticker) return;
@@ -245,7 +179,7 @@ function DeployKRC20Tab({
       return;
     }
     if (!ticker || ticker.length < 4 || ticker.length > 6) {
-      setErrors(['Ticker should be 4 to 6 letter.']);
+      setErrors(['Ticker should be 4 to 6 letters.']);
       setDisabled(true);
       return;
     }
@@ -273,7 +207,7 @@ function DeployKRC20Tab({
     setInscribeJsonString(jsonStr);
 
     setDisabled(false);
-  }, [ticker, lim, supply, pre, dec, accountBalance.amount]);
+  }, [ticker, lim, supply, pre, dec, accountBalance.amount, t]);
   const onNext = async () => {
     try {
       tools.showLoading(true);
@@ -330,23 +264,19 @@ function DeployKRC20Tab({
         preset="regular"
         color="textDim"
       />
-      <Row full justifyBetween>
-        <Column full>
-          <Input
-            preset="amount"
-            placeholder={'lim'}
-            defaultValue={lim.toString()}
-            onAmountInputChange={(val) => {
-              setLim(Number(val));
-            }}
-            onBlur={() => {
-              if (lim.toString()) {
-                setLim(lim);
-              }
-            }}
-          />
-        </Column>
-      </Row>
+      <Input
+        preset="amount"
+        placeholder={'lim'}
+        defaultValue={lim.toString()}
+        onAmountInputChange={(val) => {
+          setLim(Number(val));
+        }}
+        onBlur={() => {
+          if (lim.toString()) {
+            setLim(lim);
+          }
+        }}
+      />
       <Text
         mt="md"
         mb="sm"
@@ -354,27 +284,23 @@ function DeployKRC20Tab({
         preset="regular"
         color="textDim"
       />
-      <Row full justifyBetween>
-        <Column full>
-          <Input
-            preset="amount"
-            placeholder={'pre-allocation amount'}
-            defaultValue={pre?.toString()}
-            onAmountInputChange={(val) => {
-              if (val && val.length > 0) {
-                setPre(Number(val));
-              } else {
-                setPre(0);
-              }
-            }}
-            onBlur={() => {
-              if (pre?.toString()) {
-                setPre(pre);
-              }
-            }}
-          />
-        </Column>
-      </Row>
+      <Input
+        preset="amount"
+        placeholder={'pre-allocation amount'}
+        defaultValue={pre?.toString()}
+        onAmountInputChange={(val) => {
+          if (val && val.length > 0) {
+            setPre(Number(val));
+          } else {
+            setPre(0);
+          }
+        }}
+        onBlur={() => {
+          if (pre?.toString()) {
+            setPre(pre);
+          }
+        }}
+      />
       <Text
         mt="md"
         mb="sm"
@@ -383,55 +309,26 @@ function DeployKRC20Tab({
         color="textDim"
         selectText
       />
-      <Row full justifyBetween>
-        <Column full>
-          <Input
-            preset="amount"
-            disableDecimal
-            placeholder={'decimal'}
-            defaultValue={dec?.toString()}
-            onAmountInputChange={(val) => {
-              if (val && val.length > 0) {
-                setDec(Number(val));
-              } else {
-                setDec(undefined);
-              }
-            }}
-            onBlur={() => {
-              if (dec?.toString()) {
-                setDec(dec);
-              } else {
-                setDec(undefined);
-              }
-            }}
-          />
-        </Column>
-      </Row>
-      <Column mt="md">
-        <Row>
-          <Checkbox onChange={onChange} checked={feeBarChecked} style={{ fontSize: fontSizes.sm }}>
-            <Text text={`${t('Transaction Fee')}`} preset="xsub" color="textDim" selectText />
-          </Checkbox>
-        </Row>
-        {feeBarChecked && (
-          <Column mt="md">
-            <FeeRateBar
-              txFee={txFee}
-              onChange={(val) => {
-                setPriorityFee(val - txFee > 0 ? Number(new BigNumber(val).minus(txFee).decimalPlaces(8)) : 0);
-              }}
-            />
-            <Text
-              mt="md"
-              mb="md"
-              color="white"
-              text={`${t('Transaction Fee:')} ${priorityFee + txFee} KAS`}
-              textCenter
-              selectText
-            />
-          </Column>
-        )}
-      </Column>
+      <Input
+        preset="amount"
+        disableDecimal
+        placeholder={'decimal'}
+        defaultValue={dec?.toString()}
+        onAmountInputChange={(val) => {
+          if (val && val.length > 0) {
+            setDec(Number(val));
+          } else {
+            setDec(undefined);
+          }
+        }}
+        onBlur={() => {
+          if (dec?.toString()) {
+            setDec(dec);
+          } else {
+            setDec(undefined);
+          }
+        }}
+      />
       <Column gap="sm">
         <Text
           mt="md"
@@ -453,13 +350,11 @@ function DeployKRC20Tab({
           risks={[{ level: 'high', desc: riskDesc }]}
           onClose={() => {
             setIsWarningVisible(false);
-            dispatch(uiActions.updateKRC20MintDeployScreen({ deploy: { ticker, supply, lim, pre, dec } }));
+            dispatch(tempUiActions.updateKRC20MintDeployScreen({ deploy: { ticker, supply, lim, pre, dec } }));
             navigate('KRC20TxConfirmScreen', {
               inscribeJsonString,
               type: TxType.SIGN_KRC20_DEPLOY,
               tokenType: 'KRC20Mint',
-              priorityFee,
-              isRBF: false,
               protocol: KASPLEX
             });
           }}

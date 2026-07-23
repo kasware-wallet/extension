@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-unused-vars */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * this script is live in content-script / dapp's page
@@ -25,7 +25,7 @@ abstract class Message extends EventEmitter {
 
   abstract send(type: string, data: any): void;
 
-  request = (data) => {
+  request = (data: { type?: string; method?: any; params?: any }) => {
     if (!this._requestIdPool.length) {
       throw ethErrors.rpc.limitExceeded();
     }
@@ -37,6 +37,10 @@ abstract class Message extends EventEmitter {
         resolve,
         reject
       });
+      if (data.type === 'sendToUI') {
+        this._requestIdPool.push(ident);
+        this._waitingMap.delete(ident);
+      }
 
       this.send('request', { ident, data });
     });
@@ -52,7 +56,11 @@ abstract class Message extends EventEmitter {
 
     this._requestIdPool.push(ident);
     this._waitingMap.delete(ident);
-    err ? reject(err) : resolve(res);
+    if (err) {
+      reject(err);
+    } else {
+      resolve(res);
+    }
   };
 
   onRequest = async ({ ident, data }) => {
@@ -63,11 +71,15 @@ abstract class Message extends EventEmitter {
         res = await this.listenCallback(data);
       } catch (e: any) {
         err = {
-          message: e.message,
+          message: e?.message ? e?.message : JSON.stringify(e),
           stack: e.stack
         };
-        e.code && (err.code = e.code);
-        e.data && (err.data = e.data);
+        if (e.code) {
+          err.code = e.code;
+        }
+        if (e.data) {
+          err.data = e.data;
+        }
       }
 
       this.send('response', { ident, res, err });

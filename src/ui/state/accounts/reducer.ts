@@ -1,16 +1,6 @@
-import type { TotalBalanceResponse } from '@kasware-wallet/api/dist/types';
-import produce from 'immer';
 import type { AbstractPortfolioToken } from '@/shared/types/token';
+import produce from 'immer';
 
-import type { DisplayedKeyring } from '@/evm/background/service/keyring';
-import type { CurvePointCollection } from '@/evm/background/service/preference';
-import { KEYRING_CLASS } from '@/constant';
-import { coerceFloat, sleep } from '@/evm/ui/utils';
-import { requestOpenApiMultipleNets } from '@/evm/ui/utils/openapi';
-import type { DisplayChainWithWhiteLogo } from '@/utils/chain';
-import { isTestnet as checkIsTestnet, findChain, findChainByEnum, formatChainToDisplay } from '@/utils/chain';
-import type { Chain } from '@kasware-wallet/common';
-import type { EVM_CHAINS_ENUM } from '@/shared/constant';
 import type {
   Account,
   AddressSummary,
@@ -23,13 +13,7 @@ import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit'
 
 import type { AppState, TAppDispatch } from '..';
 import { updateVersion } from '../global/actions';
-import { selectIsShowTestnet, selectPinnedChainEnum } from '../models/preference';
 
-type MatteredChainBalancesResult = {
-  mainnet: TotalBalanceResponse | null;
-  testnet: TotalBalanceResponse | null;
-};
-const symLoaderMatteredBalance = Symbol('uiHelperMateeredChainBalancesPromise');
 
 export interface AccountsState {
   accounts: Account[];
@@ -60,7 +44,6 @@ export interface AccountsState {
   appSummary: AppSummary;
   inscriptionSummary: InscriptionSummary;
   addressSummary: AddressSummary;
-  blueScore: number;
   // kasPrice: number;
   // krc20LaunchStatus: { testnet: boolean; mainnet: boolean };
 
@@ -68,23 +51,6 @@ export interface AccountsState {
    * @description alias name of CURRENT account
    */
   alianName: string;
-  visibleAccounts: DisplayedKeyring[];
-  hiddenAccounts: Account[];
-  keyrings: DisplayedKeyring[];
-  balanceAboutCache: {
-    totalBalance: TotalBalanceResponse | null;
-    curvePoints: CurvePointCollection;
-  };
-  balanceAboutCacheMap: {
-    balanceMap: Record<string, TotalBalanceResponse>;
-    curvePointsMap: Record<string, CurvePointCollection>;
-  };
-  matteredChainBalances: {
-    [P in Chain['id']]?: DisplayChainWithWhiteLogo;
-  };
-  testnetMatteredChainBalances: {
-    [P in Chain['id']]?: DisplayChainWithWhiteLogo;
-  };
   tokens: {
     list: AbstractPortfolioToken[];
     customize: AbstractPortfolioToken[];
@@ -96,9 +62,7 @@ export interface AccountsState {
     blocked: AbstractPortfolioToken[];
   };
 
-  mnemonicAccounts: DisplayedKeyring[];
-
-  [symLoaderMatteredBalance]: Promise<MatteredChainBalancesResult> | null;
+  loadingMatteredChainBalances: boolean;
 }
 
 const initialAccount = {
@@ -142,7 +106,7 @@ const initialAccount = {
     blocked: []
   },
 
-  [symLoaderMatteredBalance]: null
+  loadingMatteredChainBalances: false
 };
 
 export const initialState: AccountsState = {
@@ -164,25 +128,10 @@ export const initialState: AccountsState = {
     assetSompi: 0,
     loading: true
   },
-  blueScore: 0,
   // kasPrice: 0,
   // krc20LaunchStatus: { testnet: true, mainnet: false }
   // evm below
   alianName: '',
-  visibleAccounts: [],
-  hiddenAccounts: [],
-  keyrings: [],
-  balanceAboutCache: {
-    totalBalance: null,
-    curvePoints: []
-  },
-  balanceAboutCacheMap: {
-    balanceMap: {},
-    curvePointsMap: {}
-  },
-  matteredChainBalances: {},
-  testnetMatteredChainBalances: {},
-  mnemonicAccounts: [],
   tokens: {
     list: [],
     customize: [],
@@ -194,7 +143,7 @@ export const initialState: AccountsState = {
     blocked: []
   },
 
-  [symLoaderMatteredBalance]: null
+  loadingMatteredChainBalances: false
 };
 
 const slice = createSlice({
@@ -344,18 +293,6 @@ const slice = createSlice({
       const { payload } = action;
       state.appSummary = payload;
     },
-    // setKRC20LaunchStatus(state, action: { payload: IKRC20LaunchStatus }) {
-    //   const { payload } = action;
-    //   state.krc20LaunchStatus = payload;
-    // },
-    setBlueScore(state, action: { payload: number }) {
-      const { payload } = action;
-      state.blueScore = payload;
-    },
-    // setKasPrice(state, action: { payload: number }) {
-    //   const { payload } = action;
-    //   state.kasPrice = payload;
-    // },
     rejectLogin(state) {
       state.loading = false;
     },
@@ -381,13 +318,7 @@ const slice = createSlice({
     // evm below
     setField(state, action: { payload: Partial<typeof state> }) {
       const { payload } = action;
-      return Reflect.ownKeys(payload).reduce(
-        (accu, key) => {
-          accu[key] = payload[key];
-          return accu;
-        },
-        { ...state }
-      );
+      Object.assign(state, payload || {});
     },
 
     setTestnetTokenList(state, action: { payload: AbstractPortfolioToken[] }) {
@@ -460,58 +391,13 @@ export const selectAccountsState = (s: AppState) => s.accounts;
 export const selectCurrentAccount = createSelector([selectAccountsState], (s) => s.current);
 export const selectCurrentEvmAddress = createSelector([selectCurrentAccount], (s) => s.evmAddress);
 export const selectCurrentKaspaAddress = createSelector([selectCurrentAccount], (s) => s.address);
-export const selectMnemonicAccounts = createSelector([selectAccountsState], (s) => s.mnemonicAccounts);
-export const selectIsShowMnemonic = createSelector([selectMnemonicAccounts], (s) => s.length <= 0);
 export const selectAlianName = createSelector([selectCurrentAccount], (s) => s.alianName);
-export const selectMatteredChainBalances = createSelector([selectAccountsState], (s) => s.matteredChainBalances);
-export const selectTestnetMatteredChainBalances = createSelector(
-  [selectAccountsState],
-  (s) => s.testnetMatteredChainBalances
-);
-export const selectCachedChainBalances = createSelector(
-  [selectMatteredChainBalances, selectTestnetMatteredChainBalances],
-  (matteredChainBalances, testnetMatteredChainBalances) => {
-    return {
-      mainnet: matteredChainBalances,
-      testnet: testnetMatteredChainBalances
-    };
-  }
-);
-
-export const selectPinnedAndChainBalances = createSelector(
-  [selectPinnedChainEnum, selectMatteredChainBalances, selectIsShowTestnet, (_, netTabKey) => netTabKey],
-  (pinnedChain, matteredChainBalances, isShowTestnet, netTabKey) => {
-    return {
-      pinned: (pinnedChain?.filter((item) => findChain({ enum: item })) || []) as EVM_CHAINS_ENUM[],
-      chainBalances: netTabKey === 'testnet' ? {} : matteredChainBalances,
-      isShowTestnet
-    };
-  }
-);
-export const selectPinAndChainBalances = createSelector(
-  [
-    selectMatteredChainBalances,
-    selectTestnetMatteredChainBalances,
-    selectPinnedChainEnum,
-    selectIsShowTestnet,
-    (_, netTabKey) => netTabKey
-  ],
-  (matteredChainBalances, testnetMatteredChainBalances, pinnedChain, isShowTestnet, netTabKey) => {
-    return {
-      pinned: (pinnedChain?.filter((item) => findChainByEnum(item)) || []) as EVM_CHAINS_ENUM[],
-      chainBalances: netTabKey === 'testnet' ? testnetMatteredChainBalances : matteredChainBalances,
-      isShowTestnet: isShowTestnet
-    };
-  }
-);
-
 export const selectAccountInscriptions = createSelector(
   [selectAccountsState, selectCurrentAccount],
   (s, c) => s.inscriptionsMap[c.address] || { list: [], expired: true }
 );
 
 export const selectBalanceMap = createSelector([selectAccountsState], (s) => s.balanceMap);
-export const selectBalanceAboutCacheMap = createSelector([selectAccountsState], (s) => s.balanceAboutCacheMap);
 
 export const selectAccountBalance = createSelector(
   [selectBalanceMap, selectCurrentAccount, (_, address) => address],
@@ -541,8 +427,14 @@ export const selectAccountBalance = createSelector(
 
 export const selectIsLoadingMateeredChainBalances = createSelector(
   [selectAccountsState],
-  (state) => !!state[symLoaderMatteredBalance]
+  (state) => state.loadingMatteredChainBalances
 );
+
+export const selectTokens = createSelector([selectAccountsState], (s) => s.tokens);
+export const selectTestnetTokens = createSelector([selectAccountsState], (s) => s.testnetTokens);
+export const selectAppSummary = createSelector([selectAccountsState], (s) => s.appSummary);
+export const selectHistoryMap = createSelector([selectAccountsState], (s) => s.historyMap);
+export const selectAccounts = createSelector([selectAccountsState], (s) => s.accounts);
 
 /**
  * filter chains with balance:
@@ -551,39 +443,6 @@ export const selectIsLoadingMateeredChainBalances = createSelector(
  */
 export function isChainMattered(chainUsdValue: number, totalUsdValue: number) {
   return chainUsdValue >= 1000 || (chainUsdValue > 1 && chainUsdValue / totalUsdValue > 0.01);
-}
-
-// export function isShowMnemonic() {
-//   return useAppSelector((s) => s.accounts.mnemonicAccounts.length <= 0);
-// }
-
-// export function currentAccountAddr() {
-//   return useAppSelector((s) => s.accounts.current?.evmAddress);
-// }
-
-// export function currentBalanceAboutMap() {
-//   return useAppSelector((s) => s.accounts.balanceAboutCacheMap);
-// }
-
-// export function allMatteredChainBalances() {
-//   return useAppSelector((s) => {
-//     return {
-//       ...s.accounts.testnetMatteredChainBalances,
-//       ...s.accounts.matteredChainBalances
-//     };
-//   });
-// }
-
-// export function isLoadingMateeredChainBalances() {
-//   return useAppSelector((s) => !!s.accounts[symLoaderMatteredBalance]);
-// }
-
-export function accountInit() {
-  return async (dispatch: TAppDispatch) => {
-    const account: Account = (await dispatch(getCurrentAccountAsync())) as Account;
-    dispatch(onAccountChanged(account?.address));
-    return account;
-  };
 }
 
 export const changeAccountAsync = createAsyncThunk(
@@ -601,64 +460,6 @@ export const changeAccountAsync = createAsyncThunk(
     return null;
   }
 );
-export function onAccountChanged(currentAccountAddress: string | undefined) {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-
-    try {
-      currentAccountAddress = currentAccountAddress || store?.accounts.current?.evmAddress;
-      // trigger once when account fetched;
-      await dispatch(
-        getMatteredChainBalance({
-          currentAccountAddress,
-          leastLoadingTime: true
-        })
-      );
-    } catch (error) {
-      console.debug('error on getMatteredChainBalance');
-      console.error(error);
-    }
-    return null;
-  };
-}
-
-// export const onAccountChanged = createAsyncThunk(
-//   'accounts/onAccountChanged',
-//   async (currentAccountAddress: string | undefined, thunkApi) => {
-//     const store = thunkApi.getState() as AppState;
-//     const dispatch = thunkApi.dispatch;
-
-//     try {
-//       currentAccountAddress = currentAccountAddress || store?.accounts.current?.evmAddress;
-//       // trigger once when account fetched;
-//       await dispatch(
-//         getMatteredChainBalance({
-//           currentAccountAddress,
-//           leastLoadingTime: true
-//         })
-//       );
-//     } catch (error) {
-//       console.debug('error on getMatteredChainBalance');
-//       console.error(error);
-//     }
-//     return null;
-//   }
-// );
-
-// export const getCurrentAccountAsync = createAsyncThunk(
-//   'accounts/getCurrentAccountAsync',
-//   async (_: string | undefined, thunkApi) => {
-//     const store = thunkApi.getState() as AppState;
-//     const dispatch = thunkApi.dispatch;
-//     const account: Account = await store.app.wallet.walletEVM.getCurrentAccount();
-//     if (account) {
-//       dispatch(accountsActions.setCurrentAccount({ current: account }));
-//     }
-
-//     return account;
-//   }
-// );
-
 export function getCurrentAccountAsync() {
   return async (dispatch: TAppDispatch, getState) => {
     const store = getState() as AppState;
@@ -669,34 +470,6 @@ export function getCurrentAccountAsync() {
     return account;
   };
 }
-
-export const getPersistedBalanceAboutCacheAsync = createAsyncThunk(
-  'accounts/getPersistedBalanceAboutCacheAsync',
-  async (_, thunkApi) => {
-    const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
-
-    const result = await store.app.wallet.walletEVM.getPersistedBalanceAboutCacheMap();
-
-    if (result) {
-      dispatch(
-        accountsActions.setField({
-          balanceAboutCacheMap: result
-            ? {
-                balanceMap: result.balanceMap || {},
-                curvePointsMap: result.curvePointsMap || {}
-              }
-            : {
-                balanceMap: {},
-                curvePointsMap: {}
-              }
-        })
-      );
-    }
-
-    return result;
-  }
-);
 
 export function resetTokenList() {
   return async (dispatch: TAppDispatch, getState) => {
@@ -719,293 +492,14 @@ export function fetchCurrentAccountAliasNameAsync() {
     if (!currentAccount?.address) return '';
 
     const alianName = await store.app.wallet.getAlianName(currentAccount?.pubkey);
-    currentAccount.alianName = alianName;
 
     dispatch(
       accountsActions.setField({
         alianName,
-        current: { ...currentAccount }
+        current: { ...currentAccount, alianName }
       })
     );
 
     return alianName;
-  };
-}
-
-export function getAllClassAccountsAsync() {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    const keyrings: DisplayedKeyring[] = await store.app.wallet.walletEVM.getAllClassAccounts();
-    dispatch(accountsActions.setField({ keyrings }));
-    return keyrings;
-  };
-}
-
-export function getAllVisibleAccountsAsync() {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    const visibleAccounts = await store.app.wallet.walletEVM.getAllVisibleAccounts();
-    dispatch(accountsActions.setField({ visibleAccounts }));
-    return visibleAccounts;
-  };
-}
-
-// export function getAllHiddenAccountsAsync() {
-//   return async (dispatch: TAppDispatch, getState) => {
-//     const store = getState() as AppState;
-//     const hiddenAccounts: Account[] = await store.app.wallet.walletEVM.getHiddenAddresses();
-//     dispatch(accountsActions.setField({ hiddenAccounts }));
-//     return hiddenAccounts;
-//   };
-// }
-
-export function getTypedMnemonicAccountsAsync() {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    const mnemonicAccounts = await store.app.wallet.walletEVM.getTypedAccounts(KEYRING_CLASS.MNEMONIC);
-    dispatch(accountsActions.setField({ mnemonicAccounts }));
-  };
-}
-
-export function addCustomizeToken(token: AbstractPortfolioToken) {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    await store.app.wallet.walletEVM.addCustomTestnetToken({
-      id: token._tokenId,
-      chainId: token.chain,
-      symbol: token.symbol,
-      decimals: token.decimals
-    });
-    const isTestnetToken = checkIsTestnet(token.chain);
-    const currentList = isTestnetToken ? store.accounts.testnetTokens.customize : store.accounts.tokens.customize;
-    const setCustomizeTokenList = isTestnetToken
-      ? dispatch(accountsActions.setTestnetCustomizeTokenList)
-      : dispatch(accountsActions.setCustomizeTokenList);
-    const setTokenList = isTestnetToken
-      ? dispatch(accountsActions.setTestnetTokenList)
-      : dispatch(accountsActions.setTokenList);
-    setCustomizeTokenList([...currentList, token]);
-    if (token.amount > 0) {
-      const tokenList = isTestnetToken ? store.accounts.testnetTokens.list : store.accounts.tokens.list;
-      setTokenList([...tokenList, token]);
-    }
-  };
-}
-
-export function removeCustomizeToken(token: AbstractPortfolioToken) {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    await store.app.wallet.walletEVM.removeCustomTestnetToken({
-      id: token._tokenId,
-      chainId: token.chain
-    });
-    const isTestnetToken = checkIsTestnet(token.chain);
-    const currentList = isTestnetToken ? store.accounts.testnetTokens.customize : store.accounts.tokens.customize;
-    const setCustomizeTokenList = isTestnetToken
-      ? dispatch(accountsActions.setTestnetCustomizeTokenList)
-      : dispatch(accountsActions.setCustomizeTokenList);
-    const setTokenList = isTestnetToken
-      ? dispatch(accountsActions.setTestnetTokenList)
-      : dispatch(accountsActions.setTokenList);
-    setCustomizeTokenList(
-      currentList.filter((item) => {
-        return item.id !== token.id;
-      })
-    );
-    const tokenList = isTestnetToken ? store.accounts.testnetTokens.list : store.accounts.tokens.list;
-    setTokenList(tokenList.filter((item) => item.id !== token.id));
-  };
-}
-
-export function addBlockedToken(token: AbstractPortfolioToken) {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    await store.app.wallet.walletEVM.addBlockedToken({
-      address: token._tokenId,
-      chain: token.chain
-    });
-    const isTestnetToken = checkIsTestnet(token.chain);
-    const currentList = isTestnetToken ? store.accounts.testnetTokens.blocked : store.accounts.tokens.blocked;
-    const setBlockedTokenList = isTestnetToken
-      ? dispatch(accountsActions.setTestnetBlockedTokenList)
-      : dispatch(accountsActions.setBlockedTokenList);
-    const setTokenList = isTestnetToken
-      ? dispatch(accountsActions.setTestnetTokenList)
-      : dispatch(accountsActions.setTokenList);
-    setBlockedTokenList([...currentList, token]);
-    const tokenList = isTestnetToken ? store.accounts.testnetTokens.list : store.accounts.tokens.list;
-    setTokenList(tokenList.filter((item) => item.id !== token.id));
-
-    return token;
-  };
-}
-
-export function removeBlockedToken(token: AbstractPortfolioToken) {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    await store.app.wallet.walletEVM.removeBlockedToken({
-      address: token._tokenId,
-      chain: token.chain
-    });
-    const isTestnetToken = checkIsTestnet(token.chain);
-    const currentList = isTestnetToken ? store.accounts.testnetTokens.blocked : store.accounts.tokens.blocked;
-    const setBlockedTokenList = isTestnetToken
-      ? dispatch(accountsActions.setTestnetBlockedTokenList)
-      : dispatch(accountsActions.setBlockedTokenList);
-    const setTokenList = isTestnetToken
-      ? dispatch(accountsActions.setTestnetTokenList)
-      : dispatch(accountsActions.setTokenList);
-    setBlockedTokenList(
-      currentList.filter((item) => {
-        return item.id !== token.id;
-      })
-    );
-    if (token.amount > 0) {
-      const tokenList = isTestnetToken ? store.accounts.testnetTokens.list : store.accounts.tokens.list;
-      setTokenList([...tokenList, token]);
-    }
-
-    return token;
-  };
-}
-
-export function triggerFetchBalanceOnBackground(
-  options: {
-    forceUpdate?: boolean;
-  } | void
-) {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    const currentAccount = store.accounts.current;
-
-    if (!currentAccount?.address) return;
-    const wallet = store.app.wallet;
-
-    const isShowTestnet = store.preference.isShowTestnet;
-
-    await requestOpenApiMultipleNets<TotalBalanceResponse | null, void>(
-      (ctx) => {
-        return wallet.walletEVM.getInMemoryAddressBalance(currentAccount.address, true /* force */, ctx.isTestnetTask);
-      },
-      {
-        wallet,
-        needTestnetResult: isShowTestnet,
-        processResults: () => null,
-        fallbackValues: {
-          mainnet: null,
-          testnet: null
-        }
-      }
-    );
-  };
-}
-
-export function getMatteredChainBalance(
-  options: {
-    currentAccountAddress?: string;
-    leastLoadingTime?: boolean;
-  } | void
-) {
-  return async (
-    dispatch: TAppDispatch,
-    getState
-  ): Promise<{
-    matteredChainBalances: AccountsState['matteredChainBalances'];
-    testnetMatteredChainBalances: AccountsState['testnetMatteredChainBalances'];
-  }> => {
-    const store = getState() as AppState;
-    const wallet = store.app.wallet;
-    const isShowTestnet = store.preference.isShowTestnet;
-
-    const { currentAccountAddress = '', leastLoadingTime } = options || {};
-    const currentAccountAddr = currentAccountAddress || store.accounts.current?.address;
-
-    const pendingPromise = store.accounts[symLoaderMatteredBalance];
-    let result: MatteredChainBalancesResult = {
-      mainnet: null,
-      testnet: null
-    };
-    try {
-      const promise =
-        pendingPromise ||
-        Promise.all([
-          leastLoadingTime ? sleep(500) : null,
-          requestOpenApiMultipleNets<TotalBalanceResponse | null, MatteredChainBalancesResult>(
-            (ctx) => {
-              if (ctx.isTestnetTask) {
-                return null;
-              }
-
-              return wallet.walletEVM.getAddressCacheBalance(currentAccountAddr, ctx.isTestnetTask);
-            },
-            {
-              wallet,
-              needTestnetResult: isShowTestnet,
-              processResults: ({ mainnet, testnet }) => {
-                return {
-                  mainnet: mainnet,
-                  testnet: testnet
-                };
-              },
-              fallbackValues: {
-                mainnet: null,
-                testnet: null
-              }
-            }
-          )
-        ]).then(([_, r]) => r);
-
-      dispatch(
-        accountsActions.setField({
-          [symLoaderMatteredBalance]: promise
-        })
-      );
-      result = await promise;
-    } catch (error) {
-      console.error(error);
-    } finally {
-      dispatch(
-        accountsActions.setField({
-          [symLoaderMatteredBalance]: null
-        })
-      );
-    }
-
-    const mainnetTotalUsdValue = (result.mainnet?.chain_list || []).reduce(
-      (accu, cur) => accu + coerceFloat(cur.usd_value),
-      0
-    );
-    const matteredChainBalances = (result.mainnet?.chain_list || []).reduce((accu, cur) => {
-      const curUsdValue = coerceFloat(cur.usd_value);
-      if (isChainMattered(curUsdValue, mainnetTotalUsdValue)) {
-        accu[cur.id] = formatChainToDisplay(cur);
-      }
-      return accu;
-    }, {} as AccountsState['matteredChainBalances']);
-
-    const testnetTotalUsdValue = (result.testnet?.chain_list || []).reduce(
-      (accu, cur) => accu + coerceFloat(cur.usd_value),
-      0
-    );
-    const testnetMatteredChainBalances = (result.testnet?.chain_list || []).reduce((accu, cur) => {
-      const curUsdValue = coerceFloat(cur.usd_value);
-
-      if (isChainMattered(curUsdValue, testnetTotalUsdValue)) {
-        accu[cur.id] = formatChainToDisplay(cur);
-      }
-      return accu;
-    }, {} as AccountsState['testnetMatteredChainBalances']);
-
-    dispatch(
-      accountsActions.setField({
-        matteredChainBalances,
-        testnetMatteredChainBalances
-      })
-    );
-
-    return {
-      matteredChainBalances,
-      testnetMatteredChainBalances
-    };
   };
 }

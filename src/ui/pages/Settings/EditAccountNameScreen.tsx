@@ -1,70 +1,33 @@
-import React, { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
 import type { Account } from '@/shared/types';
-import { Button, Content, Header, Input, Layout } from '@/ui/components';
+import EditNameScreen from '@/ui/pages/Settings/EditNameScreen';
 import { accountsActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
 import { useWallet } from '@/ui/utils';
 
 export default function EditAccountNameScreen() {
-  const { t } = useTranslation();
-
   const { state } = useLocation();
-  const { account } = state as {
-    account: Account;
-  };
+  const { account } = state as { account: Account };
 
   const wallet = useWallet();
-  const [alianName, setAlianName] = useState('');
   const dispatch = useAppDispatch();
-  const handleOnClick = async () => {
-    const newAccount = await wallet.setAccountAlianName(account, alianName);
+
+  const handleSubmit = async (name: string) => {
+    const newAccount = await wallet.setAccountAlianName(account, name);
     dispatch(keyringsActions.updateAccountName(newAccount));
     dispatch(accountsActions.updateAccountName(newAccount));
-    window.history.go(-1);
   };
+  const handleBack = () => window.history.go(-1);
 
-  const handleOnKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if ('Enter' == e.key) {
-      handleOnClick();
-    }
-  };
-
-  const validName = useMemo(() => {
-    if (alianName.length == 0) {
-      return false;
-    }
-    return true;
-  }, [alianName]);
   return (
-    <Layout>
-      <Header
-        onBack={() => {
-          window.history.go(-1);
-        }}
-        title={account.alianName}
-      />
-      <Content>
-        <Input
-          placeholder={account.alianName}
-          onChange={(e) => {
-            setAlianName(e.target.value);
-          }}
-          onKeyUp={(e) => handleOnKeyUp(e)}
-          autoFocus={true}
-        />
-        <Button
-          disabled={!validName}
-          text={t('Change Account Name')}
-          preset="primary"
-          onClick={() => {
-            handleOnClick();
-          }}
-        />
-      </Content>
-    </Layout>
+    <EditNameScreen
+      title={account.alianName || ''}
+      placeholder={account.alianName || ''}
+      buttonText="Change Account Name"
+      onBack={handleBack}
+      onSubmit={handleSubmit}
+    />
   );
 }

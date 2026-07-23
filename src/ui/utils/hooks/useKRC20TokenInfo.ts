@@ -1,4 +1,3 @@
-import useDebounceValue from '@/evm/ui/hooks/useDebounceValue';
 import type { IKRC20TokenInfo, IKRC20TokenInfoIssue } from '@/shared/types';
 import { useTools } from '@/ui/components/ActionComponent';
 import { useWallet } from '@/ui/utils';
@@ -19,7 +18,6 @@ export default function useKRC20TokenInfo(tick: string | undefined) {
   const wallet = useWallet();
   const { toastError } = useTools();
   const [krc20Info, setKrc20Info] = useState<IKRC20TokenInfo | IKRC20TokenInfoIssue>();
-  const debouncedTick = useDebounceValue(tick, 250);
 
   const fetchKRC20Info = useCallback(
     async (tick: string) => {
@@ -36,10 +34,10 @@ export default function useKRC20TokenInfo(tick: string | undefined) {
   );
 
   useEffect(() => {
-    if (debouncedTick && debouncedTick?.length >= 4) {
-      fetchKRC20Info(debouncedTick);
+    if (tick && tick?.length >= 4) {
+      fetchKRC20Info(tick);
     }
-  }, [debouncedTick, fetchKRC20Info]);
+  }, [tick, fetchKRC20Info]);
 
   return {
     krc20Info,

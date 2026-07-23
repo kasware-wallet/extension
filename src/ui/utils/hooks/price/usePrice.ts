@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useWallet } from '../../WalletContext';
 import { fetchFromCoinGecko } from '../coingecko/fetchFromCoinGecko';
 import { fetchFromKaspaApi } from '../kaspa/fetchFromKaspaApi';
-import { getNativeTokenPrice } from '@kasware-wallet/common';
 
 export function useKaspaPrice() {
   const wallet = useWallet();

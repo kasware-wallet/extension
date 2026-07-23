@@ -1,0 +1,22 @@
+import webpack from 'webpack';
+
+// for extension local test, can build each time
+const config = {
+  mode: 'development',
+  devtool: 'inline-cheap-module-source-map',
+  // devtool: 'inline-nosources-cheap-module-source-map',
+  watch: true,
+  watchOptions: {
+    ignored: ['**/public', '**/node_modules'],
+    followSymlinks: false
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.BUILD_ENV': JSON.stringify('DEV'),
+      'process.env.DEBUG': true,
+      'process.env.TAILWIND_MODE': 'watch'
+    })
+  ]
+};
+
+export default config;

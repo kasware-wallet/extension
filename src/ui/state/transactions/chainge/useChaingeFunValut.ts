@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const API_URL = 'https://api2.chainge.finance/fun/getVault';
 
-export interface KsprNftResponse {
+interface KsprNftResponse {
   code: number;
   msg: string;
   data: {

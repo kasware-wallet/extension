@@ -2,16 +2,27 @@ import { useEffect, useState } from 'react';
 
 import type { Account } from '@/shared/types';
 import { WebsiteState } from '@/shared/types';
-import { Button, Card, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import {
+  Button,
+  Card,
+  Column,
+  Content,
+  Footer,
+  Header,
+  Icon,
+  Layout,
+  LoadingSpinner,
+  Row,
+  Text
+} from '@/ui/components';
 import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { accountsActions } from '@/ui/state/accounts/reducer';
 import { useAppDispatch } from '@/ui/state/hooks';
 import { useCurrentKeyring, useKeyrings } from '@/ui/state/keyrings/hooks';
 import { keyringsActions } from '@/ui/state/keyrings/reducer';
-import { fontSizes } from '@/ui/theme/font';
 import { shortAddress, useApproval, useWallet } from '@/ui/utils';
-import { CheckCircleFilled, LoadingOutlined } from '@ant-design/icons';
+import { CheckCircleFilled } from '@ant-design/icons';
 
 interface MyItemProps {
   account?: Account;
@@ -86,15 +97,14 @@ export default function Connect({ params: { session } }: Props) {
         setWarning(v.warning);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (checkState === WebsiteState.CHECKING) {
     return (
       <Layout>
         <Content itemsCenter justifyCenter>
-          <Icon size={fontSizes.xxxl} color="gold">
-            <LoadingOutlined />
-          </Icon>
+          <LoadingSpinner size="xlarge" color="gold" />
         </Content>
       </Layout>
     );

@@ -1,3 +1,4 @@
+import { decodeIgraEntryPayload } from '@/shared/utils/helper';
 import { hexToBytes } from '@noble/hashes/utils';
 class EthereumJSError extends Error {
   type: any;
@@ -72,34 +73,7 @@ function _decode(o) {
   }
 }
 const Ks = Array.from({ length: 256 }, (o, _) => _.toString(16).padStart(2, '0'));
-// const Ys = 48,
-//     Gs = 57,
-//     Xs = 65,
-//     Zs = 70,
-//     Qs = 97,
-//     Js = 102;
-// function asciiToBase16(o) {
-//     return o >= Ys && o <= Gs ? o - Ys : o >= Xs && o <= Zs ? o - (Xs - 10) : o >= Qs && o <= Js ? o - (Qs - 10) : void 0;
-// }
-// function hexToBytes(o) {
-//     if (("0x" === o.slice(0, 2) && (o = o.slice(0, 2)), "string" != typeof o))
-//         throw EthereumJSErrorWithoutCode("hex string expected, got " + typeof o, undefined);
-//     const _ = o.length,
-//         j = _ / 2;
-//     if (_ % 2) throw EthereumJSErrorWithoutCode("padded hex string expected, got unpadded hex of length " + _, undefined);
-//     const $ = new Uint8Array(j);
-//     for (let V = 0, U = 0; V < j; V++, U += 2) {
-//         const _ = asciiToBase16(o.charCodeAt(U)),
-//             j = asciiToBase16(o.charCodeAt(U + 1));
-//         if (void 0 === _ || void 0 === j) {
-//             throw EthereumJSErrorWithoutCode(
-//                 'hex string expected, got non-hex character "' + (o[U] + o[U + 1]) + '" at index ' + U, undefined
-//             );
-//         }
-//         $[V] = 16 * _ + j;
-//     }
-//     return $;
-// }
+
 function isHexString(o) {
   return o.length >= 2 && '0' === o[0] && 'x' === o[1];
 }
@@ -139,23 +113,17 @@ function decode(o, _ = !1) {
   if (0 !== j.remainder.length) throw EthereumJSErrorWithoutCode('invalid RLP: remainder must be zero', undefined);
   return j.data;
 }
-export const IGRA_HEX = '97b1';
+export const IGRA_HEX = '92';
 export const KASPLEX_HEX = '6b6173706c6578';
 export const KASPLEX_L2_BRIDGE_HEX = '3078'; // 3078 means '0x'
 const kasplexPayloadType = { '00': 'json', '01': 'binary', 80: 'json_zlib', 81: 'binary_zlib' };
 const hexToU8 = (o) => Uint8Array.from(o.match(/.{1,2}/g).map((o) => parseInt(o, 16)));
 const u8ToHex = (o) => [...o].map((o) => o.toString(16).padStart(2, '0')).join('');
 function decodeIgraPayload(o) {
-  const _ = o.slice(4, 6);
-  if ('a2' !== _) return { error: 'Unsupported IGRA format (not zipped)' };
   try {
-    // const _ = Hs(hexToU8(o.slice(6))),
-    const _ = hexToU8(o.slice(6)),
-      j = u8ToHex(_);
-    if (!j.startsWith('02')) return { rawHex: j };
     return {
-      txType: '0x02 (EIP-1559)',
-      fields: decode(Buffer.from(j.slice(2), 'hex')).map((o) => (o instanceof Uint8Array ? u8ToHex(o) : o))
+      txType: 'IGRA_BRIDGE_0X92',
+      fields: decodeIgraEntryPayload(o)
     };
   } catch (BE: unknown) {
     return {
@@ -224,16 +192,18 @@ function decodeKasplexL2BridgePayload(o) {
     address: Buffer.from(j, 'hex').toString('utf8')
   };
 }
+export const IGRA_PAYLOAD_HEX_LEN = 66; // 33 bytes = 66 hex chars
 export function decodePayload(o: string) {
-  return o && 'string' == typeof o
-    ? o.startsWith(IGRA_HEX)
-      ? decodeIgraPayload(o)
-      : o.startsWith(KASPLEX_HEX)
-      ? decodeKasplexPayload(o)
-      : o.startsWith(KASPLEX_L2_BRIDGE_HEX)
-      ? decodeKasplexL2BridgePayload(o)
-      : { error: 'Unsupported payload prefix' }
-    : { error: 'No payload' };
+  if (!o || 'string' != typeof o) return { error: 'No payload' };
+  if (o.startsWith(IGRA_HEX) && o.length === IGRA_PAYLOAD_HEX_LEN) return decodeIgraPayload(o);
+  if (o.startsWith(KASPLEX_HEX)) return decodeKasplexPayload(o);
+  if (o.startsWith(KASPLEX_L2_BRIDGE_HEX)) return decodeKasplexL2BridgePayload(o);
+  try {
+    return Buffer.from(o, 'hex').toString('utf8');
+  } catch (e) {
+    console.error(`Failed to decode payload as UTF-8: ${e instanceof Error ? e.message : 'Unknown error'}`); // eslint-disable-line no-console
+    return { error: 'Failed to decode payload' };
+  }
 }
 
 // const payload = '6b6173706c65780102f8b883028c648206238601d1e4e4ea008601d1e4e4ea0082b5e294d6411bc52c8cbd192477233f2db211cb96bc350480b844095ea7b300000000000000000000000086264b694c3c3bc1907ace84dbcf823758e9b94800000000000000000000000000000000000000000000006124c621b081f80c60c080a00f74d986ac5ad1e5880eb0fae451139fd806c0f0938b32a5ea8a998c4c90cf2da0651ed2aae967c6a38377aca864389131318b75cd997827d015b46cd7066fce2d'

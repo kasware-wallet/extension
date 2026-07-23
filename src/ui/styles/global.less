@@ -1,9 +1,4 @@
 @import url('./font.css');
-@import '../../evm/ui/style/index.less';
-
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
 
 .popover-container {
   position: fixed;
@@ -38,31 +33,28 @@ iframe {
   width: 15px !important;
   height: 15px !important;
 
-  background-color: #383535 !important;
+  background-color: var(--r-neutral-card-1) !important;
 }
 
 .ant-checkbox-checked {
-  background-color: #48e3c5 !important;
+  background-color: var(--r-aqua-default) !important;
 }
 
 div {
   border: 0px solid;
 }
 
-// For scrollbar
+// Global scrollbar styles (also sets height for horizontal scrollbars)
+// Component-level scrollbars use the chromelike-scrollbar() mixin from mixin.less
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
+  background-color: var(--r-neutral-line, rgba(255, 255, 255, 0.1));
 }
 
 ::-webkit-scrollbar-thumb {
-  border-radius: 3px;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.854);
-}
-
-::-webkit-scrollbar-track {
-  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1) inset;
+  background-color: rgba(var(--r-neutral-foot-rgb), 0.75);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-corner {
@@ -80,29 +72,30 @@ div {
   justify-content: space-between;
 
   padding: 2px 2px;
-  background: #2a2626;
+  background: var(--r-neutral-card-1);
   border: none;
   border-radius: 0.3rem;
   cursor: pointer;
 
   &:hover {
-    background: #383535;
+    background: var(--r-neutral-card-1);
     border: none;
     border-radius: 0.3rem;
   }
 }
 .card-select {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
   &:hover {
-    background: #383535 !important;
-    border: none !important;
-    // border-radius: 0.3rem !important;
+    background: rgba(255, 255, 255, 0.12) !important;
   }
 }
 
 .column-select {
   padding: 5px 5px;
   &:hover {
-    background: #383535 !important;
+    background: var(--r-neutral-card-1) !important;
     border: none !important;
     border-radius: 0.3rem !important;
   }
@@ -115,7 +108,7 @@ div {
 }
 
 .custom-steps .ant-steps-item-wait .ant-steps-item-icon {
-  background-color: #383535;
+  background-color: var(--r-neutral-card-1);
   border-color: rgba(254, 252, 252, 0.879);
   .ant-steps-icon {
     color: rgba(255, 255, 255);
@@ -131,11 +124,11 @@ div {
 }
 
 .ant-segmented-item-selected {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  color: #339999 !important;
+  background-color: var(--r-neutral-card-1) !important;
+  color: var(--r-blue-default) !important;
 }
 .ant-segmented {
-  color: #ffffff !important;
+  color: var(--r-neutral-title-1) !important;
 }
 
 .ant-tabs-small > .ant-tabs-nav .ant-tabs-tab {
@@ -160,4 +153,13 @@ div {
 
 .ant-drawer .ant-drawer-body {
   padding: 10px 20px 24px !important;
+}
+
+// Limit bottom drawer max-width to match Layout
+// Apply to all bottom drawer states (open/close) to prevent flash during animation
+.ant-drawer-bottom .ant-drawer-content-wrapper {
+  max-width: 800px !important;
+  margin: 0 auto !important;
+  left: 0 !important;
+  right: 0 !important;
 }

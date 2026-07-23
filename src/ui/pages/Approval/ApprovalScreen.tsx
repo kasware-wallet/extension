@@ -7,11 +7,12 @@ import { useApproval, useWallet } from '@/ui/utils';
 
 import * as ApprovalComponent from './components';
 import { PATH_BOOST_SCREEN } from '@/shared/constant/route-path';
+import { useFetchFeeRateOptionCallback } from '@/ui/state/temp-ui/hooks';
 
 export default function ApprovalScreen() {
   const wallet = useWallet();
   const [getApproval, resolveApproval, rejectApproval] = useApproval();
-
+  const fetchFeeRateOption = useFetchFeeRateOptionCallback();
   const [approval, setApproval] = useState<any>(null);
 
   const navigate = useNavigate();
@@ -34,7 +35,12 @@ export default function ApprovalScreen() {
   };
 
   useEffect(() => {
+    fetchFeeRateOption();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!approval) return <></>;

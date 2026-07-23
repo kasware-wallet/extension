@@ -5,20 +5,18 @@ import { useTranslation } from 'react-i18next';
 
 import { NETWORK_TYPES } from '@/shared/constant';
 import type { INetworkType } from '@/shared/types';
-import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { Card, Column, Content, Header, Icon, Layout, LoadingSpinner, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { useReloadAccounts } from '@/ui/state/accounts/hooks';
 import { useRpcStatus } from '@/ui/state/global/hooks';
 import { useAppSelector } from '@/ui/state/hooks';
 import { useChangeNetworkTypeCallback, useRpcLinks } from '@/ui/state/settings/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
-import { colors } from '@/ui/theme/colors';
-import { fontSizes } from '@/ui/theme/font';
 import { useWallet } from '@/ui/utils';
-import { CheckCircleFilled, LoadingOutlined, SettingOutlined } from '@ant-design/icons';
+import { CheckCircleFilled, SettingOutlined } from '@ant-design/icons';
 
 import { useNavigate } from '../MainRoute';
-import { AHOOK_CACHE_KEY } from '@/ui/utils2/constants/constants';
+import { AHOOK_CACHE_KEY } from '@/ui/utils/constants';
 import { selectCurrentAccount } from '@/ui/state/accounts/reducer';
 import { clearCache } from 'ahooks';
 
@@ -87,16 +85,7 @@ export default function NetworkTypeScreen() {
       <Content>
         <Column>
           <Row justifyCenter>
-            {loading && (
-              <Icon>
-                <LoadingOutlined
-                  style={{
-                    fontSize: fontSizes.icon,
-                    color: colors.grey
-                  }}
-                />
-              </Icon>
-            )}
+            {loading && <LoadingSpinner size="medium" />}
           </Row>
         </Column>
         <VirtualList

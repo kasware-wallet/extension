@@ -1,47 +1,46 @@
+import { useQuery } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
 import log from 'loglevel';
 import React, { useCallback, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 
 import type { Account, AddressType, TTokenType, WalletKeyring } from '@/shared/types';
 import { useWallet, type WalletController } from '@/ui/utils';
 import { useKaspaPrice, useTetherPrice } from '@/ui/utils/hooks/price/usePrice';
 
+import { sompiToAmount } from '@/shared/utils/format';
 import type { AppState } from '..';
+import { useRpcStatus } from '../global/hooks';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { useCurrentKeyring, useKeyrings } from '../keyrings/hooks';
 import { keyringsActions } from '../keyrings/reducer';
+import { selectNetworkId } from '../settings/reducer';
 import { transactionsActions } from '../transactions/reducer';
 import {
   accountsActions,
   selectAccountInscriptions,
+  selectAccounts,
   selectAccountsState,
+  selectAppSummary,
+  selectBalanceMap,
   selectCurrentAccount,
-  selectCurrentKaspaAddress
+  selectCurrentKaspaAddress,
+  selectHistoryMap,
+  selectTestnetTokens,
+  selectTokens
 } from './reducer';
-import { sompiToAmount } from '@/shared/utils/format';
-import { createSelector } from '@reduxjs/toolkit';
-import { selectNetworkId } from '../settings/reducer';
-import { useRpcStatus } from '../global/hooks';
 
 export function useAccountsState(): AppState['accounts'] {
-  return useAppSelector((state) => state.accounts);
+  return useAppSelector(selectAccountsState);
 }
 
 export function useCurrentAccount() {
   return useAppSelector(selectCurrentAccount);
 }
 export function useMainnetTokens() {
-  const accountsState = useAccountsState();
-  return accountsState.tokens;
+  return useAppSelector(selectTokens);
 }
 export function useTestnetTokens() {
-  const accountsState = useAccountsState();
-  return accountsState.testnetTokens;
-}
-const selectBlueScore = createSelector(selectAccountsState, (state) => state.blueScore);
-export function useBlueScore() {
-  return useAppSelector(selectBlueScore);
+  return useAppSelector(selectTestnetTokens);
 }
 
 /**
@@ -66,16 +65,15 @@ export function useKRC20Price(contractAddress: string) {
 }
 
 export function useAccounts() {
-  const accountsState = useAccountsState();
-  return accountsState.accounts;
+  return useAppSelector(selectAccounts);
 }
 
 export function useAccountBalance(address?: string) {
-  const accountsState = useAccountsState();
+  const balanceMap = useAppSelector(selectBalanceMap);
   const currentAccount = useCurrentAccount();
   if (address) {
     return (
-      accountsState.balanceMap[address] || {
+      balanceMap[address] || {
         amount: '0',
         expired: false,
         confirm_kas_amount: '0',
@@ -85,7 +83,7 @@ export function useAccountBalance(address?: string) {
     );
   }
   return (
-    accountsState.balanceMap[currentAccount.address] || {
+    balanceMap[currentAccount.address] || {
       amount: '0',
       expired: true,
       confirm_kas_amount: '0',
@@ -96,9 +94,8 @@ export function useAccountBalance(address?: string) {
 }
 
 export function useAccountInscriptions() {
-  const accountsState = useAccountsState();
-  const currentAccount = useCurrentAccount();
-  return accountsState.inscriptionsMap[currentAccount.address] || { list: [], expired: true };
+  const accountInscriptions = useAppSelector(selectAccountInscriptions);
+  return accountInscriptions;
 }
 
 // export function useAddressSummary() {
@@ -111,7 +108,6 @@ export function useAccountInscriptions() {
 //   return accountsState.krc20LaunchStatus;
 // }
 
-const selectAppSummary = createSelector(selectAccountsState, (state) => state.appSummary);
 export function useAppSummary() {
   return useAppSelector(selectAppSummary);
 }
@@ -158,9 +154,9 @@ export function useReadApp() {
 }
 
 export function useHistory() {
-  const accountsState = useAccountsState();
+  const historyMap = useAppSelector(selectHistoryMap);
   const address = useAccountAddress();
-  return accountsState.historyMap[address] || { list: [], expired: true };
+  return historyMap[address] || { list: [], expired: true };
 }
 
 export function useAccountAddress() {
@@ -340,42 +336,7 @@ export function useFetchBalancesQuery() {
   return query;
 }
 
-export function useFetchKeyringsBalancesCallback() {
-  const dispatch = useAppDispatch();
-  const wallet = useWallet();
-  const keyrings = useKeyrings();
-  return useCallback(async () => {
-    const balancePromises = keyrings.map(async (keyring) => {
-      const addresses: string[] = keyring.accounts.map((item) => item.address);
-      if (!addresses || addresses.length === 0) {
-        return { key: keyring.key, balanceKas: 0 };
-      }
-
-      try {
-        const _accountsBalanceArray = await wallet.getAddressesBalance(addresses);
-        const balanceKas = _accountsBalanceArray.reduce(
-          (pre, cur) => pre.plus(new BigNumber(cur?.amount || '0')),
-          new BigNumber(0)
-        );
-        return { key: keyring.key, balanceKas: Number(balanceKas) };
-      } catch (error) {
-        console.error(`Failed to fetch balance for keyring ${keyring.key}:`, error);
-        return { key: keyring.key, balanceKas: 0 };
-      }
-    });
-
-    const results = await Promise.allSettled(balancePromises);
-    results.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        dispatch(keyringsActions.setKeyringBalanceKas(result.value));
-      } else {
-        console.error(`Failed to fetch balance for keyring at index ${index}:`, result.reason);
-      }
-    });
-  }, [dispatch, wallet, keyrings]);
-}
-
-// Pure data fetching function without side effects
+// Pure data fetching function without side effects - reused by both hooks below
 const fetchKeyringsBalances = async (
   wallet: WalletController,
   keyrings: WalletKeyring[]
@@ -402,19 +363,26 @@ const fetchKeyringsBalances = async (
   });
 
   const results = await Promise.allSettled(balancePromises);
-  const balances: Array<{ key: string; balanceKas: number }> = [];
-
-  results.forEach((result, index) => {
+  return results.map((result, index) => {
     if (result.status === 'fulfilled') {
-      balances.push(result.value);
-    } else {
-      console.error(`Failed to fetch balance for keyring at index ${index}:`, result.reason);
-      balances.push({ key: keyrings[index].key, balanceKas: 0 });
+      return result.value;
     }
+    console.error(`Failed to fetch balance for keyring at index ${index}:`, result.reason);
+    return { key: keyrings[index].key, balanceKas: 0 };
   });
-
-  return balances;
 };
+
+export function useFetchKeyringsBalancesCallback() {
+  const dispatch = useAppDispatch();
+  const wallet = useWallet();
+  const keyrings = useKeyrings();
+  return useCallback(async () => {
+    const balances = await fetchKeyringsBalances(wallet, keyrings);
+    balances.forEach((balance) => {
+      dispatch(keyringsActions.setKeyringBalanceKas(balance));
+    });
+  }, [dispatch, wallet, keyrings]);
+}
 
 export function useKeyringsBalancesQuery() {
   const dispatch = useAppDispatch();

@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 
-import type { Approval } from '@/evm/background/service/notification';
 import { getUiType, useApproval, useWallet } from '@/ui/utils';
-import { useApproval as useApprovalEVM } from '@/evm/ui/utils';
 import Browser from 'webextension-polyfill';
 import { useNavigate, useNavigateOrigin } from '../MainRoute';
 
@@ -12,14 +10,12 @@ export default function BoostScreen() {
   const wallet = useWallet();
 
   const [getApproval, , rejectApproval, removeNotifiWindow] = useApproval();
-  const getApprovalEVM = useApprovalEVM()[0];
   const loadView = async () => {
     const UIType = getUiType();
     const isInNotification = UIType.isNotification;
     const isInTab = UIType.isTab;
     let approval = await getApproval();
-    const approvalEVM: Approval | undefined = await getApprovalEVM();
-    if (isInNotification && !approval && !approvalEVM) {
+    if (isInNotification && !approval) {
       Browser.runtime.sendMessage({ type: 'closeNotification' });
       window.close();
       return;
@@ -49,9 +45,7 @@ export default function BoostScreen() {
 
     if (!isUnlocked) {
       if (
-        isInNotification &&
-        approvalEVM?.data?.approvalComponent === 'Connect' &&
-        approvalEVM?.data?.params?.$ctx?.providers?.length
+        isInNotification 
       ) {
         navigateOrigin('/connect-approval');
       } else {
@@ -60,7 +54,7 @@ export default function BoostScreen() {
       // navigate('UnlockScreen');
       return;
     }
-    if ((await wallet.walletEVM.hasPageStateCache()) && !isInNotification && !isInTab && !approvalEVM && !approval) {
+    if ((await wallet.walletEVM.hasPageStateCache()) && !isInNotification && !isInTab  && !approval) {
       const cache = (await wallet.walletEVM.getPageStateCache())!;
       if (cache.path && cache.path !== '/') {
         // prevent path is empty then extension will stuck
@@ -88,8 +82,6 @@ export default function BoostScreen() {
       return;
     } else if (approval) {
       navigate('ApprovalScreen');
-    } else if (approvalEVM && isInNotification) {
-      navigateOrigin('/approval-evm');
     } else {
       navigate('WalletTabScreen');
       return;
@@ -97,7 +89,12 @@ export default function BoostScreen() {
   };
 
   const init = async () => {
-    const ready = await wallet.isReady();
+    let ready = false;
+    try {
+      ready = await wallet.isReady();
+    } catch {
+      // Background not ready yet, retry
+    }
 
     if (ready) {
       loadView();

@@ -53,6 +53,7 @@ export default function CreateContactScreen() {
   };
   useEffect(() => {
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useAsync(async () => {
     setDisabled(true);

@@ -1,4 +1,5 @@
 import { Card, Column, Content, Header, Layout, Row, Text } from '@/ui/components';
+import { colors } from '@/ui/theme/colors';
 import { RightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -54,7 +55,7 @@ export default function AppsOptionScreen() {
                       {item.value != undefined && item.value?.length > 0 && <Text text={item.value} preset="sub" />}
                     </Column>
                     <Column justifyCenter>
-                      {item.right && <RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />}
+                      {item.right && <RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />}
                     </Column>
                   </Row>
                 </Card>

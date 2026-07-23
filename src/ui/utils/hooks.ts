@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { getUiType } from '.';
@@ -101,12 +101,12 @@ export const useWalletRequest = (
 
   return [run, loading, res, err] as const;
 };
-export interface UseHoverOptions {
+interface UseHoverOptions {
   mouseEnterDelayMS?: number;
   mouseLeaveDelayMS?: number;
 }
 
-export type HoverProps = Pick<React.HTMLAttributes<HTMLElement>, 'onMouseEnter' | 'onMouseLeave'>;
+type HoverProps = Pick<React.HTMLAttributes<HTMLElement>, 'onMouseEnter' | 'onMouseLeave'>;
 
 export const useHover = ({ mouseEnterDelayMS = 0, mouseLeaveDelayMS = 0 }: UseHoverOptions = {}): [
   boolean,
@@ -124,6 +124,8 @@ export const useHover = ({ mouseEnterDelayMS = 0, mouseLeaveDelayMS = 0 }: UseHo
     };
   }, []);
 
+  const resetHovering = useCallback(() => setIsHovering(false), []);
+
   return [
     isHovering,
     {
@@ -136,6 +138,6 @@ export const useHover = ({ mouseEnterDelayMS = 0, mouseLeaveDelayMS = 0 }: UseHo
         mouseOutTimer.current = window.setTimeout(() => setIsHovering(false), mouseLeaveDelayMS);
       }
     },
-    () => setIsHovering(false)
+    resetHovering
   ];
 };

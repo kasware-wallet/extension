@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import BigNumber from 'bignumber.js';
 import { t } from 'i18next';
 import log from 'loglevel';
@@ -13,10 +11,9 @@ import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectKasTick } from '@/ui/state/settings/reducer';
-import { fontSizes } from '@/ui/theme/font';
 import { formatLocaleString, useApproval, useWallet } from '@/ui/utils';
-import { LoadingOutlined } from '@ant-design/icons';
 import type { ISubmitCommitParams, ISubmitRevealParams } from '@/shared/types';
+import { LoadingView, ScammerView } from '../common';
 
 interface Props {
   header?: React.ReactNode;
@@ -62,7 +59,7 @@ function SignTxDetails({
 
   const title = useMemo(() => {
     return protocolName + ' ' + type;
-  }, [type]);
+  }, [protocolName, type]);
 
   const prettyInscribeJsonString = useMemo(() => {
     if (content?.length > 0) {
@@ -148,19 +145,6 @@ function SignTxDetails({
   );
 }
 
-function Section({ title, children }: { title: string; children?: React.ReactNode }) {
-  return (
-    <Column>
-      <Text text={title} preset="bold" selectText />
-      <Card>
-        <Row full justifyBetween itemsCenter>
-          {children}
-        </Row>
-      </Card>
-    </Column>
-  );
-}
-
 interface TxInfo {
   toAddressInfos: {
     address: string;
@@ -168,15 +152,6 @@ interface TxInfo {
   }[];
   txFee: number;
   isScammer: boolean;
-  // changedBalance: number;
-  // rawtx: string;
-  // psbtHex: string;
-  // toSignInputs: ToSignInput[];
-  // txError: string;
-  // decodedPsbt: DecodedPsbt;
-  // isScammer: boolean;
-  // inscribeJsonString: string;
-  // destAddr?: string;
 }
 
 const initTxInfo = {
@@ -214,8 +189,6 @@ export default function CommitReveal({
 
   const currentAccount = useCurrentAccount();
   const [disabled, setDisabled] = useState(false);
-
-  const [isWarningVisible, setIsWarningVisible] = useState(false);
 
   const init = async () => {
     const { XOnlyPublicKey, mime, protocol, Data, unknown } = parseScript(script);
@@ -293,6 +266,7 @@ export default function CommitReveal({
 
   useEffect(() => {
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!handleCancel) {
@@ -331,35 +305,10 @@ export default function CommitReveal({
         unknownContent={unknownContent}
       />
     );
-  }, [txInfo]);
-  const canChanged = useMemo(() => {
-    return true;
-  }, [txInfo]);
-
-  const isValid = useMemo(() => {
-    return true;
-  }, [txInfo]);
-
-  // const isValidData = useMemo(() => {
-  //   if (txInfo.psbtHex === '') {
-  //     return false;
-  //   }
-  //   return true;
-  // }, [txInfo.psbtHex]);
-  const hasHighRisk = useMemo(() => {
-    return false;
-  }, [txInfo]);
+  }, [content, mimeType, protocolName, txInfo, type, unknownContent]);
 
   if (loading) {
-    return (
-      <Layout>
-        <Content itemsCenter justifyCenter>
-          <Icon size={fontSizes.xxxl} color="gold">
-            <LoadingOutlined />
-          </Icon>
-        </Content>
-      </Layout>
-    );
+    return <LoadingView />;
   }
 
   if (!header && session) {
@@ -371,27 +320,7 @@ export default function CommitReveal({
   }
 
   if (txInfo.isScammer) {
-    return (
-      <Layout>
-        <Content>
-          <Column>
-            <Text text="Phishing Detection" preset="title-bold" textCenter mt="xxl" selectText />
-            <Text text="Malicious behavior and suspicious activity have been detected." mt="md" selectText />
-            <Text
-              text="Your access to this page has been restricted by KasWare Wallet as it might be unsafe."
-              mt="md"
-              selectText
-            />
-          </Column>
-        </Content>
-
-        <Footer>
-          <Row full>
-            <Button text="Reject (blocked by KasWare Wallet)" preset="danger" onClick={handleCancel} full />
-          </Row>
-        </Footer>
-      </Layout>
-    );
+    return <ScammerView onCancel={handleCancel} />;
   }
 
   return (
@@ -400,20 +329,6 @@ export default function CommitReveal({
       <Content>
         <Column gap="xxs">
           {detailsComponent}
-          {canChanged == false && (
-            <Section title="Transaction Fee:">
-              <Text text={networkFee} selectText />
-              <Text text={kasTick} color="textDim" selectText />
-            </Section>
-          )}
-
-          {canChanged == false && (
-            <Section title="Network Fee Rate:">
-              {/* <Text text={txInfo.decodedPsbt.feeRate.toString()} /> */}
-              <Text text={''} selectText />
-              <Text text="sat/vB" color="textDim" selectText />
-            </Section>
-          )}
           {errors &&
             errors.map((error, index) => {
               if (errors.length == 1) {
@@ -439,28 +354,18 @@ export default function CommitReveal({
         </Column>
         <Row full>
           <Button preset="default" text="Reject" onClick={handleCancel} full />
-          {hasHighRisk == false && (
-            <Button
-              preset="primary"
-              text={'Sign & Submit'}
-              onClick={() => {
-                setLoading(true);
-                handleConfirm();
-              }}
-              disabled={disabled}
-              full
-            />
-          )}
+          <Button
+            preset="primary"
+            text={'Sign & Submit'}
+            onClick={() => {
+              setLoading(true);
+              handleConfirm();
+            }}
+            disabled={disabled}
+            full
+          />
         </Row>
       </Footer>
-      {/* {isWarningVisible && (
-        <WarningPopover
-          risks={txInfo.decodedPsbt.risks}
-          onClose={() => {
-            setIsWarningVisible(false);
-          }}
-        />
-      )} */}
     </Layout>
   );
 }

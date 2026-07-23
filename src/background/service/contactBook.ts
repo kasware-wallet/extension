@@ -1,27 +1,22 @@
 import { createPersistStore } from '@/background/utils';
-
-export interface ContactBookItem {
-  name: string;
-  address: string;
-  isAlias: boolean;
-  isContact: boolean;
-}
-
-export interface UIContactBookItem {
-  name: string;
-  address: string;
-}
+import type { ContactBookItem } from '@/shared/types/contact-book';
+import { storage } from '../webapi';
 
 export type ContactBookStore = Record<string, ContactBookItem | undefined>;
 
-class ContactBook {
+export class ContactBook {
   store!: ContactBookStore;
 
-  init = async () => {
+  init = async (resetStorage = false) => {
     this.store = await createPersistStore<ContactBookStore>({
       name: 'contactBook',
-      template: {}
+      template: {},
+      fromStorage: !resetStorage
     });
+  };
+  clearContact = async () => {
+    await storage.remove('contactBook');
+    await this.init(true);
   };
 
   getContactByAddress = (address: string) => {

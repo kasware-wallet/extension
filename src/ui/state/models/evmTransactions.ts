@@ -6,27 +6,21 @@ type IState = {
 };
 
 export const evmTransactions = createSlice({
-  name: 'evmTansactions',
+  name: 'evmTransactions',
   initialState: <IState>{
     pendingTransactionCount: 0
   },
   reducers: {
     setField(state, action: { payload: Partial<typeof state> }) {
       const { payload } = action;
-      return Object.keys(payload).reduce(
-        (accu, key) => {
-          accu[key] = payload[key];
-          return accu;
-        },
-        { ...state }
-      );
+      Object.assign(state, payload || {});
     }
   }
 });
 
-const { actions: evmTransactionsActions, reducer: evmTansactionsReducer } = evmTransactions;
+const { actions: evmTransactionsActions, reducer: evmTransactionsReducer } = evmTransactions;
 
-export default evmTansactionsReducer;
+export default evmTransactionsReducer;
 
 export const selectEvmTransactionsState = (state: AppState) => state.evmTransactions;
 
@@ -35,7 +29,7 @@ export const selectPendingTxCount = createSelector(
   (state) => state.pendingTransactionCount
 );
 export const getPendingTxCountAsync = createAsyncThunk(
-  'evmTansactions/getPendingTxCountAsync',
+  'evmTransactions/getPendingTxCountAsync',
   async (address: string, thunkApi) => {
     const state = thunkApi.getState() as AppState;
     const dispatch = thunkApi.dispatch;

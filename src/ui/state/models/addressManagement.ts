@@ -1,9 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
-import type { AppState } from '..';
-import { getAllAccountsToDisplay } from './accountToDisplay';
 import type { Account } from '@/shared/types';
 import type { IHighlightedAddress } from '@/shared/types/preference';
+import type { AppState } from '..';
 
 type IState = {
   highlightedAddresses: IHighlightedAddress[];
@@ -17,13 +16,7 @@ export const addressManagement = createSlice({
   reducers: {
     setField(state, action: { payload: Partial<typeof state> }) {
       const { payload } = action;
-      return Object.keys(payload).reduce(
-        (accu, key) => {
-          accu[key] = payload[key];
-          return accu;
-        },
-        { ...state }
-      );
+      Object.assign(state, payload || {});
     }
   }
 });
@@ -103,8 +96,6 @@ export const removeAddress = createAsyncThunk(
     thunkApi
   ) => {
     const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
     await store.app.wallet.walletEVM.removeAddress(...payload);
-    await dispatch(getAllAccountsToDisplay());
   }
 );

@@ -1,17 +1,14 @@
+import { spacingGap } from '@/ui/theme/spacing';
 import type { CSSProperties } from 'react';
-
-import { spacing, spacingGap } from '@/ui/theme/spacing';
-
 import type { BaseViewProps } from '../BaseView';
 import { BaseView } from '../BaseView';
-import './index.less';
 
 type Presets = keyof typeof $viewPresets;
 export interface ContentProps extends BaseViewProps {
   preset?: Presets;
 }
 const $contentStyle = {
-  backgroundColor: '#1C1919',
+  backgroundColor: 'var(--r-neutral-bg1)',
   display: 'flex',
   flex: 1,
   flexDirection: 'column',
@@ -26,7 +23,7 @@ const $contentStyle = {
 const $viewPresets = {
   large: Object.assign({}, $contentStyle, {
     alignItems: 'stretch',
-    padding: spacing.medium,
+    padding: spacingGap.xl,
     paddingTop: 0
   }),
   middle: Object.assign({}, $contentStyle, {

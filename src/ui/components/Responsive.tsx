@@ -1,10 +1,7 @@
-import { useThemeModeOnMain } from '@/evm/ui/hooks/usePreference';
 import { useExtensionIsInTab } from '../features/browser/tabs';
 
 export const AppDimensions = (props) => {
   const extensionIsInTab = useExtensionIsInTab();
-  useThemeModeOnMain();
-
   return (
     <div
       style={{

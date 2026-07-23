@@ -45,7 +45,7 @@ export const RetrieveSuccessPopover = ({
                 mb="sm"
                 justifyCenter
                 onClick={() => {
-                  window.open(`${blockstreamUrl}/txs/${txid}`);
+                  window.open(`${blockstreamUrl}/transactions/${txid}`);
                 }}
               >
                 <ExportOutlined style={{ color: colors.aqua, fontSize: 10 }} />

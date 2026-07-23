@@ -9,6 +9,7 @@ import { EndCard, MiddleCard, StartCard } from '@/ui/components/Card';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectBlockstreamUrl } from '@/ui/state/settings/reducer';
 import { fontSizes } from '@/ui/theme/font';
+import { colors } from '@/ui/theme/colors';
 import { copyToClipboard, formatLocaleString, shortAddress } from '@/ui/utils';
 import { CopyOutlined } from '@ant-design/icons';
 import { sompiToAmount } from '@/shared/utils/format';
@@ -71,7 +72,7 @@ export default function KSPR721TxDetailScreen() {
                   }}
                 >
                   <Text text={shortAddress(txDetail.deployer, 8)} wrap selectText />
-                  <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                  <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                 </Row>
               </Row>
             </MiddleCard>
@@ -91,7 +92,7 @@ export default function KSPR721TxDetailScreen() {
                   }}
                 >
                   <Text text={shortAddress(txDetail.to, 8)} wrap selectText />
-                  <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                  <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                 </Row>
               </Row>
             </MiddleCard>
@@ -113,7 +114,7 @@ export default function KSPR721TxDetailScreen() {
                   gap="xs"
                   itemsCenter
                   onClick={() => {
-                    window.open(`${blockstreamUrl}/txs/${txDetail?.txIdRev}`);
+                    window.open(`${blockstreamUrl}/transactions/${txDetail?.txIdRev}`);
                   }}
                 >
                   <Text preset="link" text={shortAddress(txDetail?.txIdRev, 12)} selectText />
@@ -166,7 +167,7 @@ export default function KSPR721TxDetailScreen() {
         </Column>
         <Text text="raw data" preset="bold" />
 
-        <Column style={{ backgroundColor: '#272626' }} px="md" py="md">
+        <Column style={{ backgroundColor: colors.card }} px="md" py="md">
           <div
             style={{
               userSelect: 'text',

@@ -92,120 +92,214 @@ export default function ExportMnemonicsScreen() {
       />
 
       <Content>
-        {mnemonic == '' ? (
-          <Column>
-            <Card style={{ backgroundColor: '#2c2323' }} rounded>
-              <Column>
-                <WarningOutlined style={{ fontSize: '300%', color: colors.red }} />
+        {mnemonic === '' ? (
+          <Column gap="xl">
+            {/* Warning Banner */}
+            <Card
+              style={{
+                backgroundColor: 'rgba(237, 51, 75, 0.1)',
+                border: '1px solid rgba(237, 51, 75, 0.3)',
+                borderRadius: 12,
+                padding: '24px 16px'
+              }}
+            >
+              <Column itemsCenter gap="md">
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(237, 51, 75, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <WarningOutlined style={{ fontSize: 28, color: colors.red }} />
+                </div>
               </Column>
             </Card>
-            <Column gap="lg">
-              <Text
-                text="1. Seed phrase alone gives you full access to your wallets and funds."
-                preset="regular"
-                color="red"
-              />
 
-              <Text text="2. Never share it with anyone." preset="regular" color="red" />
-
-              <Text text="3. Seed phrase is only stored in your browser." preset="regular" color="red" />
-              <Text text="4. KasWare will never ask for your seed phrase." preset="regular" color="red" />
+            {/* Warning List */}
+            <Column gap="md" style={{ padding: '0 8px' }}>
+              {[
+                t('Seed phrase alone gives you full access to your wallets and funds.'),
+                t('Never share it with anyone.'),
+                t('Seed phrase is only stored in your browser.'),
+                t('KasWare will never ask for your seed phrase.')
+              ].map((item, index) => (
+                <Row key={index} gap="sm" itemsCenter>
+                  <div
+                    style={{
+                      minWidth: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(237, 51, 75, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <span style={{ color: colors.red, fontSize: 12, fontWeight: 600 }}>{index + 1}</span>
+                  </div>
+                  <Text text={item} preset="regular" color="text" />
+                </Row>
+              ))}
             </Column>
 
-            <Text text="" preset="title" textCenter my="xl" />
-            <Input
-              preset="password"
-              onChange={(e) => {
-                setPassword(e.target.value);
-              }}
-              onKeyUp={(e) => handleOnKeyUp(e)}
-              autoFocus={true}
-            />
-            {error && <Text text={error} preset="regular" color="error" selectText />}
+            {/* Password Input Section */}
+            <Column gap="sm" style={{ marginTop: 16 }}>
+              <Text text={t('Enter your password to continue')} preset="sub" color="textDim" />
 
+              <Input
+                preset="password"
+                placeholder={t('Password')}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
+                onKeyUp={(e) => handleOnKeyUp(e)}
+                autoFocus={true}
+                style={{ backgroundColor: 'transparent', border: 'none' }}
+              />
+              {error && (
+                <Row gap="xs" itemsCenter style={{ marginTop: 4 }}>
+                  <WarningOutlined style={{ color: colors.red, fontSize: 12 }} />
+                  <Text text={error} preset="sub" color="red" />
+                </Row>
+              )}
+            </Column>
+
+            {/* Action Button */}
             <Button
               disabled={disabled}
               text={t('Show Seed Phrase')}
               preset="primary"
               onClick={btnClick}
-              style={{ marginTop: 5 }}
+              style={{ marginTop: 16, height: 48, borderRadius: 8 }}
             />
           </Column>
         ) : (
-          <Column>
-            <Card style={{ backgroundColor: '#2c2323' }}>
-              <Text
-                text={`The seedphrase ${
-                  passphrase ? 'and passphrase are' : 'is'
-                } the ONLY way to recover your wallet. Do NOT share it with anyone!`}
-                color="red"
-                textCenter
-                mt="xl"
-                mb="xl"
-              />
+          <Column gap="lg">
+            {/* Security Warning */}
+            <Card
+              style={{
+                backgroundColor: 'rgba(237, 51, 75, 0.1)',
+                border: '1px solid rgba(237, 51, 75, 0.3)',
+                borderRadius: 12,
+                padding: '16px'
+              }}
+            >
+              <Row gap="sm" itemsCenter>
+                <WarningOutlined style={{ fontSize: 20, color: colors.red }} />
+                <Text
+                  text={`The seedphrase ${
+                    passphrase ? 'and passphrase are' : 'is'
+                  } the ONLY way to recover your wallet. Do NOT share it with anyone!`}
+                  color="red"
+                  preset="regular-bold"
+                />
+              </Row>
             </Card>
 
+            {/* Copy All Button */}
+            <Button
+              preset="default"
+              text={t('Copy Seed Phrase')}
+              onClick={() => copy(mnemonic)}
+              RightAccessory={<CopyOutlined style={{ color: colors.white_muted, fontSize: 14 }} />}
+              style={{
+                height: 44,
+                borderRadius: 8,
+                border: `1px solid ${colors.border}`,
+                backgroundColor: colors.bg5
+              }}
+            />
+
+            {/* Seed Phrase Grid */}
+            <Card
+              style={{
+                backgroundColor: colors.bg5,
+                borderRadius: 12,
+                padding: '20px 16px',
+                border: `1px solid ${colors.border}`
+              }}
+            >
+              <Grid columns={3} gap="sm">
+                {words.map((v, index) => (
+                  <Row key={index} justifyCenter>
+                    <div
+                      style={{
+                        width: '100%',
+                        maxWidth: 100,
+                        backgroundColor: colors.bg4,
+                        borderRadius: 8,
+                        padding: '10px 8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        border: `1px solid ${colors.border}`
+                      }}
+                    >
+                      <span style={{ color: colors.white_muted, fontSize: 11, fontWeight: 500, minWidth: 18 }}>
+                        {index + 1}
+                      </span>
+                      <span style={{ color: colors.white, fontSize: 13, fontWeight: 500 }}>{v}</span>
+                    </div>
+                  </Row>
+                ))}
+              </Grid>
+            </Card>
+
+            {/* Passphrase Card */}
             {passphrase && (
               <Card
-                onClick={() => {
-                  copy(passphrase);
+                onClick={() => copy(passphrase)}
+                style={{
+                  backgroundColor: colors.bg5,
+                  borderRadius: 12,
+                  padding: '16px',
+                  cursor: 'pointer',
+                  border: `1px solid ${colors.border}`,
+                  transition: 'all 0.2s'
                 }}
               >
-                <Row fullX justifyBetween>
-                  <Row selfItemsCenter>
-                    <Text text={'Passphrase: '} disableTranslate color="textDim" />
-                    <Text text={`${passphrase}`} disableTranslate />
+                <Row fullX justifyBetween itemsCenter>
+                  <Row gap="sm" itemsCenter>
+                    <Text text={t('Passphrase:')} preset="sub" color="textDim" />
+                    <Text text={passphrase} preset="regular-bold" disableTranslate />
                   </Row>
-                  <Row itemsCenter>
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
-                  </Row>
+                  <CopyOutlined style={{ color: colors.white_muted, fontSize: 14 }} />
                 </Row>
               </Card>
             )}
 
-            <Row
-              justifyCenter
-              itemsCenter
-              onClick={() => {
-                copy(mnemonic);
+            {/* Wallet Info Card */}
+            <Card
+              style={{
+                backgroundColor: colors.bg5,
+                borderRadius: 12,
+                padding: '16px',
+                border: `1px solid ${colors.border}`
               }}
             >
-              <Text text="Copy Seedphrase" color="textDim" />
-              <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
-            </Row>
-
-            <Row justifyCenter>
-              <Grid columns={3}>
-                {words.map((v, index) => {
-                  return (
-                    <Row key={index}>
-                      <Card preset="style2" style={{ width: 100, margin: '3px 1px', padding: '10px 15px 10px 7px' }}>
-                        <Row full>
-                          <Text text={`${index + 1}.`} color="textDim" />
-                          <Text text={v} selectText disableTranslate />
-                        </Row>
-                      </Card>
-                    </Row>
-                  );
-                })}
-              </Grid>
-            </Row>
-            <Card justifyBetween>
-              <Column>
+              <Column gap="md">
                 <Row
                   fullX
-                  selfItemsCenter
-                  onClick={() => {
-                    copy(keyring.hdPath);
-                  }}
+                  justifyBetween
+                  itemsCenter
+                  onClick={() => copy(keyring.hdPath)}
+                  style={{ cursor: 'pointer' }}
                 >
-                  <Text text={'Derivation Path: '} disableTranslate color="textDim" />
-                  <Text text={`${keyring.hdPath} (${pathName})`} disableTranslate />
+                  <Text text={t('Derivation Path:')} preset="sub" color="textDim" />
+                  <Row gap="xs" itemsCenter>
+                    <Text text={`${keyring.hdPath} (${pathName})`} preset="regular" disableTranslate />
+                    <CopyOutlined style={{ color: colors.white_muted, fontSize: 12 }} />
+                  </Row>
                 </Row>
                 {addressTypeStr && (
-                  <Row fullX selfItemsCenter>
-                    <Text text={'Address Type: '} disableTranslate color="textDim" />
-                    <Text text={`${addressTypeStr}`} disableTranslate />
+                  <Row fullX justifyBetween itemsCenter>
+                    <Text text={t('Address Type:')} preset="sub" color="textDim" />
+                    <Text text={addressTypeStr} preset="regular" disableTranslate />
                   </Row>
                 )}
               </Column>

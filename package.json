@@ -15,26 +15,16 @@
   },
   "scripts": {
     "clean": "mkdir -p dist && rm -rf dist/* && cp -r build/_raw/* dist",
-    "build:chrome:dev": "webpack --progress --env browser=chrome manifest=mv2 config=dev version=0.0.0",
-    "build:chrome": "gulp build --env=pro --browser=chrome --manifest=mv2",
-    "build:firefox": "cross-env manifest=mv2 gulp build --env=pro --browser=firefox --manifest=mv2",
-    "build:firefox:dev": "webpack --progress --env browser=firefox manifest=mv2 config=dev version=0.0.0",
-    "build:brave": "gulp build --env=pro --browser=brave --manifest=mv2",
-    "build:edge": "gulp build --env=pro --browser=edge --manifest=mv2",
     "build:chrome:mv3:dev": "yarn install && webpack --progress --env browser=chrome manifest=mv3 config=dev",
     "build:chrome:mv3:pro": "yarn install && webpack --progress --env browser=chrome manifest=mv3 config=pro",
     "build:chrome:mv3": "yarn install && gulp build --env=pro --browser=chrome --manifest=mv3",
-    "translate": "node build/pull_translation",
-    "lint": "eslint src --fix --ext .js,.ts,.tsx,.json  && npm run format",
-    "lint:fix": "eslint --fix src/**/*.{js,jsx,ts,tsx,json}",
     "_prettier": "prettier --write .",
     "fix:modules": "node scripts/fix-modules.js",
     "test": "jest unit",
     "playwright:headless": "PLAYWRIGHT_HEADLESS=false playwright test --project=chromium ",
     "playwright": "playwright test --project=chromium ",
     "format": "prettier --write \"src/**/*.{js,jsx,json,md,ts,tsx}\"",
-    "prepare": "husky install",
-    "build": "yarn workspaces run build"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@1inch/multicall": "^2.0.0",
@@ -298,9 +288,10 @@
     "typescript-plugin-styled-components": "2.0.0",
     "typescript-transform-paths": "^3.4.6",
     "url-loader": "4.1.1",
-    "webpack": "^5.90.1",
+    "webpack": "^5.94.0",
+    "webpack-bundle-analyzer": "4.4.0",
     "webpack-cli": "^4.10.0",
-    "webpack-dev-server": "^4.15.1",
+    "webpack-dev-server": "^4.15.2",
     "webpack-merge": "^5.10.0"
   },
   "lint-staged": {

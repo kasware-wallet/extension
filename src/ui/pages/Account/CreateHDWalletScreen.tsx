@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Checkbox, Radio } from 'antd';
-import type { CheckboxChangeEvent } from 'antd/lib/checkbox';
 import { validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
+import { Checkbox, Radio } from 'antd';
+import type { CheckboxChangeEvent } from 'antd/lib/checkbox';
 // import bitcore from 'bitcore-lib';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -11,21 +11,21 @@ import { useLocation } from 'react-router-dom';
 import { ADDRESS_TYPES, RESTORE_WALLETS } from '@/shared/constant';
 import type { IScannedGroup } from '@/shared/types';
 import { AddressType, RestoreWalletType } from '@/shared/types';
-import { Button, Card, Column, Content, Grid, Header, Input, Layout, Row, Text } from '@/ui/components';
+import { Button, Card, Column, Content, Grid, Header, Input, Layout, LoadingSpinner, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressTypeCard2 } from '@/ui/components/AddressTypeCard';
 import { FooterButtonContainer } from '@/ui/components/FooterButtonContainer';
-import { Icon } from '@/ui/components/Icon';
 import { TabBar } from '@/ui/components/TabBar';
 import { useCreateAccountCallback } from '@/ui/state/global/hooks';
+import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
 import { copyToClipboard, generateHdPath, useWallet } from '@/ui/utils';
-import { CopyOutlined, LoadingOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 
+import { sompiToAmount } from '@/shared/utils/format';
 import log from 'loglevel';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '../MainRoute';
-import { sompiToAmount } from '@/shared/utils/format';
 
 function Step0({
   contextData,
@@ -35,7 +35,7 @@ function Step0({
   updateContextData: (params: UpdateContextDataParams) => void;
 }) {
   return (
-    <Column gap="lg">
+    <Column gap="md">
       <Text text="Choose a wallet" preset="title-bold" textCenter mt="xl" />
       {RESTORE_WALLETS.map((item, index) => {
         // if (item.value == RestoreWalletType.TANGEM) return null;
@@ -88,6 +88,7 @@ function Step1_Create({
 
   useEffect(() => {
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wordCount]);
   const wordsItems = [WORDS_12_ITEM, WORDS_24_ITEM];
   const onChange = (e: CheckboxChangeEvent) => {
@@ -148,11 +149,11 @@ function Step1_Create({
           }}
         >
           <Text text="Copy" color="textDim" itemsCenter selfItemsCenter />
-          <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+          <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
         </Row>
         <Row justifyCenter itemsCenter selfItemsCenter fullX onClick={renewSeedphrase}>
           <Text text="Renew" color="textDim" itemsCenter selfItemsCenter />
-          <ReloadOutlined style={{ color: '#888', fontSize: 14 }} />
+          <ReloadOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
         </Row>
       </Row>
 
@@ -216,18 +217,31 @@ function Step1_Import({
 
   const [keys, setKeys] = useState<Array<string>>(new Array(wordsItems[contextData.wordsType].count).fill(''));
 
+  const tools = useTools();
+  const { t } = useTranslation();
+
   const handleEventPaste = (event, index: number) => {
     const copyText = event.clipboardData?.getData('text/plain');
-    const textArr = copyText.trim().split(' ');
+    const textArr = copyText
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0);
     const newKeys = [...keys];
-    if (textArr) {
-      for (let i = 0; i < keys.length - index; i++) {
-        if (textArr.length == i) {
-          break;
-        }
+    if (copyText && textArr) {
+      for (let i = 0; i < keys.length - index && i < textArr.length; i++) {
         newKeys[index + i] = textArr[i];
       }
       setKeys(newKeys);
+
+      // Clear clipboard after pasting seed phrase for security
+      navigator.clipboard
+        .writeText('')
+        .then(() => {
+          tools.toastSuccess(t('Clipboard cleared for security'));
+        })
+        .catch(() => {
+          // Silently fail if clipboard cannot be cleared
+        });
     }
 
     event.preventDefault();
@@ -264,7 +278,6 @@ function Step1_Import({
 
   // const createAccount = useCreateAccountCallback();
   // const navigate = useNavigate();
-  const tools = useTools();
   const onNext = async () => {
     try {
       const mnemonics = keys.join(' ');
@@ -785,19 +798,6 @@ function Step2({
           );
         })}
 
-      {/* <Text text="Custom HdPath (Optional)" preset="bold" mt="lg" />
-
-      <Column>
-        <Input
-          placeholder={'Custom HD Wallet Derivation Path'}
-          value={pathText}
-          onChange={(e) => {
-            submitCustomHdPath(e.target.value);
-          }}
-        />
-      </Column>
-      {pathError && <Text text={pathError} color="error" />}
-      {error && <Text text={error} color="error" />} */}
       {!discoverLoading && contextData.isRestore && contextData.restoreWalletType !== RestoreWalletType.CHAINGE && (
         <Row justifyCenter>
           <Text
@@ -813,9 +813,7 @@ function Step2({
       {discoverLoading && (
         <Row justifyCenter>
           <Text text="Finding accounts with balance" size="sm" />
-          <Icon>
-            <LoadingOutlined />
-          </Icon>
+          <LoadingSpinner size="medium" />
         </Row>
       )}
       <Row mt="lg">
@@ -863,9 +861,7 @@ function Step2({
       </FooterButtonContainer>
 
       {/* {loading && (
-        <Icon>
-          <LoadingOutlined />
-        </Icon>
+        <LoadingSpinner size="medium" />
       )} */}
     </Column>
   );

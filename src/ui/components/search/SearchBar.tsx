@@ -1,6 +1,7 @@
 import { Column } from '@/ui/components/Column';
 import { Input } from '@/ui/components/Input';
 import { Row } from '@/ui/components/Row';
+import { colors } from '@/ui/theme/colors';
 import { SearchOutlined } from '@ant-design/icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,13 +24,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ placeholder, onSearch, autoFocus 
   };
 
   return (
-    <Row fullX justifyBetween itemsCenter selfItemsCenter style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+    <Row
+      fullX
+      justifyBetween
+      itemsCenter
+      selfItemsCenter
+      style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}
+    >
       <Row style={{ marginLeft: 10 }}>
         <SearchOutlined />
       </Row>
       <Column full>
         <Input
-          containerStyle={{ paddingLeft: 0 }}
+          containerStyle={{ paddingLeft: 0, backgroundColor: 'transparent' }}
           preset="text"
           value={searchTerm}
           onChange={handleSearchChange}

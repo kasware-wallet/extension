@@ -5,6 +5,10 @@ import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit'
 
 import type { AppState } from '..';
 
+// Module-level storage for event handlers to enable cleanup
+let _gasAccountLogoutHandler: (() => void) | null = null;
+let _gasAccountLoginHandler: (() => void) | null = null;
+
 export const gasAccount = createSlice({
   name: 'gasAccount',
 
@@ -17,13 +21,7 @@ export const gasAccount = createSlice({
   reducers: {
     setField(state, action: { payload: Partial<typeof state> }) {
       const { payload } = action;
-      return Object.keys(payload).reduce(
-        (accu, key) => {
-          accu[key] = payload[key];
-          return accu;
-        },
-        { ...state }
-      );
+      Object.assign(state, payload || {});
     }
   }
 });
@@ -37,6 +35,16 @@ export const selectGasAccount = createSelector([selectGasAccountState], (state) 
 export const gasAccountInit = createAsyncThunk('gasAccount/init', async (_, thunkApi) => {
   const dispatch = thunkApi.dispatch;
 
+  // Cleanup previous listeners to prevent memory leaks
+  if (_gasAccountLogoutHandler) {
+    eventBus.removeEventListener(EVM_EVENTS.GAS_ACCOUNT.LOG_OUT, _gasAccountLogoutHandler);
+    _gasAccountLogoutHandler = null;
+  }
+  if (_gasAccountLoginHandler) {
+    eventBus.removeEventListener(EVM_EVENTS.GAS_ACCOUNT.LOG_IN, _gasAccountLoginHandler);
+    _gasAccountLoginHandler = null;
+  }
+
   const logout = () => {
     dispatch(setGasAccountSig({}));
   };
@@ -44,6 +52,11 @@ export const gasAccountInit = createAsyncThunk('gasAccount/init', async (_, thun
   const login = () => {
     dispatch(gasAccountSyncState());
   };
+
+  // Store handler references for cleanup
+  _gasAccountLogoutHandler = logout;
+  _gasAccountLoginHandler = login;
+
   eventBus.addEventListener(EVM_EVENTS.GAS_ACCOUNT.LOG_OUT, logout);
   eventBus.addEventListener(EVM_EVENTS.GAS_ACCOUNT.LOG_IN, login);
 

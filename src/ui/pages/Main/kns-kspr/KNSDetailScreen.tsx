@@ -1,35 +1,25 @@
-// import moment from 'moment';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { IKNSAsset } from '@/shared/types';
 import { TxType } from '@/shared/types';
 import { Button, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
-import { useTools } from '@/ui/components/ActionComponent';
+import { Section } from './Section';
 import { useQueryConfigJSON } from '@/ui/hooks/kasware';
 import { useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectBlockstreamUrl, selectNetworkId } from '@/ui/state/settings/reducer';
-import { useResetUiTxCreateScreen } from '@/ui/state/ui/hooks';
-import type { ColorTypes } from '@/ui/theme/colors';
-import { fontSizes } from '@/ui/theme/font';
-import { copyToClipboard, useLocationState } from '@/ui/utils';
+import { useResetUiTxCreateScreenCallback } from '@/ui/state/temp-ui/hooks';
+import { useLocationState } from '@/ui/utils';
 import { useNavigate } from '../../MainRoute';
 
-// import { useNavigate } from '../MainRoute';
-
-// const HIGH_BALANCE = 10000;
 export default function KNSDetailScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { knsAsset } = useLocationState<{ knsAsset: IKNSAsset }>();
-  const resetUiTxCreateScreen = useResetUiTxCreateScreen();
+  const resetUiTxCreateScreen = useResetUiTxCreateScreenCallback();
 
   const currentAccount = useCurrentAccount();
-  // const withSend = currentAccount.pubkey.includes(inscription.owner);
-
-  // const dispatch = useAppDispatch();
-  // const krc20LaunchStatus = useKRC20LaunchStatus();
   const networkId = useAppSelector(selectNetworkId);
   const [enableSend, setEnableSend] = useState(false);
   const configJSON = useQueryConfigJSON();
@@ -107,49 +97,11 @@ export default function KNSDetailScreen() {
             <Section
               title="View on"
               value={'Explorer'}
-              link={`${blockstreamUrl}/txs/${knsAsset.assetId?.slice(0, -2)}`}
+              link={`${blockstreamUrl}/transactions/${knsAsset.assetId?.slice(0, -2)}`}
             />
           </Column>
         </Column>
       </Content>
     </Layout>
-  );
-}
-
-function Section({
-  value,
-  title,
-  link,
-  valueColor
-}: {
-  value: string | number;
-  title: string;
-  link?: string;
-  valueColor?: ColorTypes;
-}) {
-  const tools = useTools();
-  return (
-    <Column>
-      <Text text={title} preset="sub" />
-      <Row itemsCenter gap="xs">
-        <Text
-          text={value}
-          preset={link ? 'link' : 'regular'}
-          size="xs"
-          color={valueColor || undefined}
-          wrap
-          onClick={() => {
-            if (link) {
-              window.open(link);
-            } else {
-              copyToClipboard(value).then(() => {
-                tools.toastSuccess('Copied');
-              });
-            }
-          }}
-        />
-        {link !== undefined && <Icon icon="link" size={fontSizes.xxs} color="blue" />}
-      </Row>
-    </Column>
   );
 }

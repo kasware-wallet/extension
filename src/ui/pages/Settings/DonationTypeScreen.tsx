@@ -2,6 +2,7 @@ import { DONATION_ADDRESS } from '@/shared/constant';
 import { Column, Content, Header, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { sizes } from '@/ui/theme/spacing';
+import { colors } from '@/ui/theme/colors';
 import { copyToClipboard, shortAddress } from '@/ui/utils';
 import { CopyOutlined } from '@ant-design/icons';
 import QRCode from 'qrcode.react';
@@ -40,7 +41,7 @@ export default function DonationTypeScreen() {
             }}
           >
             <Text text={shortAddress(address, length)} color="textDim" style={{ wordWrap: 'normal' }} />
-            <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+            <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
           </Row>
         </Column>
       </Content>

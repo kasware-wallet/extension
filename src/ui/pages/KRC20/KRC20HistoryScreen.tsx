@@ -8,32 +8,37 @@ import { Empty } from '@/ui/components/Empty';
 import { selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
-import { useKRC20History } from '@/ui/state/ui/hooks';
 import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
 import { shortAddress, useWallet } from '@/ui/utils';
 import { sompiToAmount } from '@/shared/utils/format';
+import log from 'loglevel';
 
 export default function KRC20HistoryScreen() {
   const wallet = useWallet();
   const { t } = useTranslation();
   const networkId = useAppSelector(selectNetworkId);
   const currentAddress = useAppSelector(selectCurrentKaspaAddress);
-  const krc20History = useKRC20History();
   const [krc20Actions, setKrc20Actions] = useState<string[]>([]);
   useEffect(() => {
-    wallet.getKRC20HistoryLocalStorage(networkId, currentAddress).then((res) => {
-      setKrc20Actions(res);
-    });
+    let isMounted = true;
+    wallet
+      .getKRC20HistoryLocalStorage(networkId, currentAddress)
+      .then((res) => {
+        if (isMounted) {
+          setKrc20Actions(res);
+        }
+      })
+      .catch((error) => {
+        log.error('Failed to fetch KRC20 history:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [networkId, currentAddress, wallet]);
   const mintStr = useMemo(() => {
-    let tickArr: string[] = [];
-    if (krc20History[networkId]?.mintArr) {
-      tickArr = krc20History[networkId].mintArr.map((item) => {
-        const itemObj: KasplexData<'mint'> = JSON.parse(item);
-        return itemObj.tick;
-      });
-    }
+    const tickArr: string[] = [];
     krc20Actions.forEach((item) => {
       const { mint } = parseKRC20Json(item);
       if (mint && mint.length > 0) {
@@ -45,58 +50,26 @@ export default function KRC20HistoryScreen() {
       }
     });
     return tickArr.join(',');
-  }, [krc20History, networkId, krc20Actions]);
-  // const deployArr = useMemo(() => {
-  //   let arr: KasplexData<'deploy'>[] = [];
-  //   if (krc20History[networkId]?.deployArr) {
-  //     arr = krc20History[networkId].deployArr.map((item) => {
-  //       const itemObj: KasplexData<'deploy'> = JSON.parse(item);
-  //       const dec = itemObj?.dec || '8';
-  //       const multiplier = Math.pow(10, dec);
-  //       return {
-  //         p: itemObj.p,
-  //         op: itemObj.op,
-  //         tick: itemObj.tick,
-  //         max: new BigNumber(itemObj.max).dividedBy(multiplier).toString(),
-  //         lim: new BigNumber(itemObj.lim).dividedBy(multiplier).toString(),
-  //         pre: new BigNumber(itemObj.pre).dividedBy(multiplier).toString()
-  //       };
-  //     });
-  //   }
-  //   return arr;
-  // }, [krc20History]);
+  }, [networkId, krc20Actions]);
 
   const deployStrArr = useMemo(() => {
-    let deployArr: string[] = [];
-    if (krc20History[networkId]?.deployArr) {
-      deployArr = krc20History[networkId]?.deployArr;
-    }
+    const deployArr: string[] = [];
     krc20Actions.forEach((item) => {
       const { deploy } = parseKRC20Json(item);
       if (deploy && deploy.length > 0) {
-        if (deployArr.includes(deploy)) {
+        if (!deployArr.includes(deploy)) {
           deployArr.push(deploy);
         }
       }
     });
     return deployArr;
-  }, [krc20History, networkId, krc20Actions]);
+  }, [networkId, krc20Actions]);
   const transferArr = useMemo(() => {
-    let arr: {
+    const arr: {
       tick: string;
       amt: string;
       to?: string;
     }[] = [];
-    if (krc20History[networkId]?.transferArr) {
-      arr = krc20History[networkId].transferArr.map((item) => {
-        const itemObj: KasplexData<'transfer'> = JSON.parse(item);
-        return {
-          tick: itemObj.tick,
-          amt: sompiToAmount(itemObj.amt, 8),
-          to: itemObj?.to
-        };
-      });
-    }
     krc20Actions.forEach((item) => {
       const { transfer } = parseKRC20Json(item);
       if (transfer && transfer.length > 0) {
@@ -109,7 +82,7 @@ export default function KRC20HistoryScreen() {
       }
     });
     return arr;
-  }, [krc20History, networkId, krc20Actions]);
+  }, [networkId, krc20Actions]);
 
   return (
     <Layout>
@@ -120,7 +93,7 @@ export default function KRC20HistoryScreen() {
         title={`Latest KRC20 ${t('History')}`}
       />
       <Content>
-        {mintStr.length == 0 && deployStrArr.length == 0 && transferArr.length == 0 && <Empty />}
+        {mintStr.length === 0 && deployStrArr.length === 0 && transferArr.length === 0 && <Empty />}
         {mintStr.length > 0 && (
           <>
             <Text preset="large" text={'Mint'} />

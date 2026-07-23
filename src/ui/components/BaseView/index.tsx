@@ -16,9 +16,12 @@ export interface BaseViewProps {
   justifyAround?: boolean;
   justifyEnd?: boolean;
   itemsCenter?: boolean;
+  itemsEnd?: boolean;
   selfItemsCenter?: boolean;
   gap?: Gap;
   onClick?: ReactEventHandler<HTMLDivElement>;
+  onMouseEnter?: ReactEventHandler<HTMLDivElement>;
+  onMouseLeave?: ReactEventHandler<HTMLDivElement>;
   px?: Gap;
   py?: Gap;
   pt?: Gap;
@@ -51,6 +54,7 @@ export function BaseView(props: BaseViewProps) {
     justifyAround,
     justifyEnd,
     itemsCenter,
+    itemsEnd,
     selfItemsCenter,
     gap,
     px,
@@ -71,6 +75,8 @@ export function BaseView(props: BaseViewProps) {
     color,
     relative,
     onClick,
+    onMouseEnter,
+    onMouseLeave,
     fixed,
     classname,
     overflowX,
@@ -83,6 +89,7 @@ export function BaseView(props: BaseViewProps) {
     justifyAround ? { justifyContent: 'space-around' } : {},
     justifyEnd ? { justifyContent: 'end' } : {},
     itemsCenter ? { alignItems: 'center' } : {},
+    itemsEnd ? { alignItems: 'flex-end' } : {},
     selfItemsCenter ? { alignSelf: 'center' } : {},
     gap ? { gap: spacingGap[gap] } : {},
     px ? { paddingLeft: spacingGap[px], paddingRight: spacingGap[px] } : {},
@@ -111,7 +118,13 @@ export function BaseView(props: BaseViewProps) {
   const $classname = [classname].join(' ').trim();
 
   return (
-    <div style={$style} onClick={onClick} className={$classname}>
+    <div
+      style={$style}
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      className={$classname}
+    >
       {children}
     </div>
   );

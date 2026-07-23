@@ -1,18 +1,23 @@
 {
   "compilerOptions": {
-    "target": "es2015",
+    "target": "es2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/utils": ["src/utils"],
+      "consts": ["./src/constant/index"],
+      "consts/*": ["./src/constant/*"],
+      "changeLogs": ["./changeLogs"]
     },
     "noImplicitAny": false,
     "downlevelIteration": true,
-    "types": ["chrome", "node", "react", "react-dom"],
+    "types": ["chrome", "node", "react", "react-dom", "jest"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "alwaysStrict": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
@@ -21,9 +26,20 @@
     "resolveJsonModule": true,
     "isolatedModules": false,
     "jsx": "react-jsx",
-    "plugins": [{ "transform": "typescript-transform-paths", "afterDeclarations": true }],
-    "experimentalDecorators": true
+    "plugins": [
+      { "transform": "typescript-transform-paths", "afterDeclarations": true }
+      // {
+      //   "name": "typescript-styled-plugin",
+      //   "tags": ["styled", "css"],
+      //   "validate": true
+      // }
+    ],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    // Critical configuration: Force type imports to use import type
+    // "verbatimModuleSyntax": true,
+    "outDir": "./dist"
   },
-  "exclude": ["./node_modules"],
-  "include": ["src"]
+  "exclude": ["./node_modules", "./packages/**/node_modules"],
+  "include": ["src", "build"]
 }

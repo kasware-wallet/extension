@@ -1,8 +1,7 @@
-import { KEYRING_TYPE } from '@/constant';
 import { createSlice } from '@reduxjs/toolkit';
 
-import type { AppState, TAppDispatch } from '..';
 import type { Account } from '@/shared/types';
+import type { AppState, TAppDispatch } from '..';
 
 export type ISimpleAccount = Required<Pick<Account, 'address' | 'alianName' | 'index'>>;
 
@@ -54,35 +53,12 @@ export const importMnemonics = createSlice({
   reducers: {
     setField(state, action: { payload: Partial<typeof state> }) {
       const { payload } = action;
-      return Object.keys(payload).reduce(
-        (accu, key) => {
-          accu[key] = payload[key];
-          return accu;
-        },
-        { ...state }
-      );
+      Object.assign(state, payload || {});
     }
   }
 });
 
 export const { actions: importMnemonicsActions, reducer: importMnemonicsReducer } = importMnemonics;
-
-// export function accountsToImport() {
-//   return useAppSelector(
-//     (s) =>
-//       s.importMnemonics.confirmingAccounts.filter(
-//         (account) => !new Set(s.importMnemonics.importedAddresses).has(account.address)
-//       ) as Account[]
-//   );
-// }
-// export function countDraftSelected() {
-//   return useAppSelector(
-//     (s) =>
-//       [...s.importMnemonics.draftAddressSelection].filter(
-//         (addr) => !new Set(s.importMnemonics.importedAddresses).has(addr)
-//       ).length
-//   );
-// }
 
 export function switchKeyring(payload: {
   finalMnemonics?: IState['finalMnemonics'];
@@ -111,99 +87,6 @@ export function switchKeyring(payload: {
         isExistedKeyring: payload.isExistedKeyring ?? false
       })
     );
-  };
-}
-
-export function getImportedAccountsAsync() {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    const importedAccounts = !store.importMnemonics.isExistedKeyring
-      ? await store.app.wallet.walletEVM.requestKeyring<Account['address'][]>(
-          KEYRING_TYPE.HdKeyring,
-          'getAccounts',
-          store.importMnemonics.stashKeyringId ?? null
-        )
-      : await store.app.wallet.walletEVM.requestHDKeyringByMnemonics<Account['address'][]>(
-          store.importMnemonics.finalMnemonics,
-          'getAccounts',
-          store.importMnemonics.passphrase
-        );
-
-    dispatch(
-      importMnemonicsActions.setField({
-        importedAddresses: [...new Set(importedAccounts.map((address) => address.toLowerCase()))]
-      })
-    );
-  };
-}
-
-export function getImportedAccounts(payload = {}) {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    const { isExistedKeyring, stashKeyringId, finalMnemonics } = store.importMnemonics;
-    const wallet = store.app.wallet;
-    let addresses: string[];
-
-    if (!isExistedKeyring) {
-      addresses = await wallet.walletEVM.requestKeyring(KEYRING_TYPE.HdKeyring, 'getAccounts', stashKeyringId ?? null);
-    } else {
-      addresses = await wallet.walletEVM.requestHDKeyringByMnemonics(
-        finalMnemonics,
-        'getAccounts',
-        store.importMnemonics.passphrase
-      );
-    }
-
-    const accounts = await Promise.all(
-      addresses.map(async (address) => {
-        let index = 0;
-
-        if (!isExistedKeyring) {
-          index = (
-            await wallet.walletEVM.requestKeyring(
-              KEYRING_TYPE.HdKeyring,
-              'getInfoByAddress',
-              stashKeyringId ?? null,
-              address
-            )
-          ).index;
-        } else {
-          index = (
-            await wallet.walletEVM.requestHDKeyringByMnemonics(
-              finalMnemonics,
-              'getInfoByAddress',
-              store.importMnemonics.passphrase,
-              address
-            )
-          ).index;
-        }
-        return {
-          address,
-          index: index + 1
-        };
-      })
-    );
-
-    return accounts;
-  };
-}
-
-export function cleanUpImportedInfoAsync() {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    if (!store.importMnemonics.isExistedKeyring) {
-      store.app.wallet.walletEVM.requestKeyring(
-        KEYRING_TYPE.HdKeyring,
-        'cleanUp',
-        store.importMnemonics.stashKeyringId ?? null
-      );
-    } else {
-      store.app.wallet.walletEVM.requestHDKeyringByMnemonics(
-        store.importMnemonics.finalMnemonics,
-        'cleanUp',
-        store.importMnemonics.passphrase
-      );
-    }
   };
 }
 
@@ -352,51 +235,6 @@ export function clearDraftAddresses() {
       importMnemonicsActions.setField({
         // draftAddressSelection: new Set()
         draftAddressSelection: []
-      })
-    );
-  };
-}
-
-export function confirmAllImportingAccountsAsync() {
-  return async (dispatch: TAppDispatch, getState) => {
-    const store = getState() as AppState;
-    const stashKeyringId = store.importMnemonics.stashKeyringId;
-    const confirmingAccounts = store.importMnemonics.confirmingAccounts;
-    const importedAddresses = store.importMnemonics.importedAddresses;
-    const accountsToImport: ISimpleAccount[] = confirmingAccounts.filter(
-      (account) => !new Set(importedAddresses).has(account.address)
-    );
-
-    if (!store.importMnemonics.isExistedKeyring) {
-      await store.app.wallet.walletEVM.requestKeyring(
-        KEYRING_TYPE.HdKeyring,
-        'activeAccounts',
-        stashKeyringId ?? null,
-        accountsToImport.map((acc) => (acc.index as number) - 1)
-      );
-      await store.app.wallet.walletEVM.addKeyring(stashKeyringId!);
-    } else {
-      await store.app.wallet.walletEVM.activeAndPersistAccountsByMnemonics(
-        store.importMnemonics.finalMnemonics,
-        store.importMnemonics.passphrase,
-        accountsToImport
-      );
-    }
-
-    if (accountsToImport?.length) {
-      const { basePublicKey } = await store.app.wallet.walletEVM.requestKeyring(
-        KEYRING_TYPE.HdKeyring,
-        'getInfoByAddress',
-        stashKeyringId ?? null,
-        accountsToImport[0].address
-      );
-
-      await store.app.wallet.walletEVM.addHDKeyRingLastAddAddrTime(basePublicKey);
-    }
-
-    await Promise.all(
-      accountsToImport.map((account) => {
-        return store.app.wallet.updateAlianName(account.address?.toLowerCase(), account.alianName || '');
       })
     );
   };

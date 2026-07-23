@@ -4,10 +4,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { NETWORK_ID, SUPPORTED_DOMAINS } from '@/shared/constant';
-import { getSatsName } from '@/shared/lib/satsname-utils';
 import type { IKNSDomain } from '@/shared/types';
 import { colors } from '@/ui/theme/colors';
-import { spacing } from '@/ui/theme/spacing';
+import { spacingGap } from '@/ui/theme/spacing';
 import { useWallet } from '@/ui/utils';
 import { isValidAddress } from '@ethereumjs/util';
 
@@ -61,12 +60,12 @@ const $baseContainerStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
-  backgroundColor: '#2a2626',
+  backgroundColor: 'var(--r-neutral-card-1, #262222)',
   paddingLeft: 15.2,
   paddingRight: 15.2,
   paddingTop: 11,
   paddingBottom: 11,
-  borderRadius: 5,
+  borderRadius: 'var(--r-radius-md, 6px)',
   minHeight: '46.5px',
   alignSelf: 'stretch'
 };
@@ -92,9 +91,9 @@ function PasswordInput(props: InputProps) {
         {...rest}
       />
       {type === 'password' && (
-        <Icon icon="eye-slash" style={{ marginLeft: spacing.tiny }} onClick={() => setType('text')} color="textDim" />
+        <Icon icon="eye-slash" style={{ marginLeft: spacingGap.sm }} onClick={() => setType('text')} color="textDim" />
       )}
-      {type === 'text' && <Icon icon="eye" style={{ marginLeft: spacing.tiny }} onClick={() => setType('password')} />}
+      {type === 'text' && <Icon icon="eye" style={{ marginLeft: spacingGap.sm }} onClick={() => setType('password')} />}
     </div>
   );
 }
@@ -107,6 +106,7 @@ function AmountInput(props: InputProps) {
     style: $inputStyleOverride,
     disableDecimal,
     defaultValue,
+    containerStyle,
     ...rest
   } = props;
   const $style = Object.assign({}, $baseInputStyle, $inputStyleOverride, disabled ? { color: colors.textDim } : {});
@@ -136,60 +136,7 @@ function AmountInput(props: InputProps) {
     }
   };
   return (
-    <div style={$baseContainerStyle}>
-      <input
-        placeholder={placeholder || 'Amount'}
-        type={'text'}
-        value={inputValue}
-        onChange={handleInputAmount}
-        style={$style}
-        disabled={disabled}
-        {...rest}
-      />
-    </div>
-  );
-}
-
-export function AmountInputOneLine(props: InputProps) {
-  const {
-    placeholder,
-    onAmountInputChange,
-    disabled,
-    style: $inputStyleOverride,
-    disableDecimal,
-    defaultValue,
-    containerStyle,
-    ...rest
-  } = props;
-  const $style = Object.assign({}, $baseInputStyle, $inputStyleOverride, disabled ? { color: colors.textDim } : {});
-  const [inputValue, setInputValue] = useState(defaultValue ? defaultValue : '');
-  if (!onAmountInputChange) {
-    return <div />;
-  }
-  // const [validAmount, setValidAmount] = useState('');
-  // useEffect(() => {
-  //   onAmountInputChange(validAmount);
-  // }, [validAmount]);
-
-  const handleInputAmount = (e) => {
-    const value = e.target.value;
-    if (disableDecimal) {
-      if (/^[1-9]\d*$/.test(value) || value === '') {
-        // setValidAmount(value);
-        setInputValue(value);
-        onAmountInputChange(value);
-      }
-    } else {
-      if (/^\d*\.?\d{0,8}$/.test(value) || value === '') {
-        // setValidAmount(value);
-        setInputValue(value);
-        onAmountInputChange(value);
-      }
-    }
-  };
-  return (
     <div style={Object.assign({}, $baseContainerStyle, containerStyle)}>
-      <Text text={'text'} preset="regular" style={{ marginLeft: spacing.tiny }} />
       <input
         placeholder={placeholder || 'Amount'}
         type={'text'}
@@ -245,7 +192,7 @@ export function KasAmountInput(props: InputProps) {
   return (
     <div style={$baseContainerStyle}>
       {inputAmountType && inputAmountType == 'usd' && Number(inputValue) > 0 && (
-        <Text text="$" color="textDim" style={{ marginRight: spacing.tiny }} />
+        <Text text="$" color="textDim" style={{ marginRight: spacingGap.sm }} />
       )}
       <input
         placeholder={placeholder || 'Amount'}
@@ -326,69 +273,17 @@ const AddressInput = (props: InputProps) => {
     setInputVal(inputAddress);
 
     resetState();
-
-    const teststr = inputAddress.toLowerCase();
-    const satsname = getSatsName(teststr);
-    if (satsname) {
-      if (SUPPORTED_DOMAINS.includes(satsname.suffix)) {
-        setSearching(true);
-        wallet
-          .queryDomainInfo(encodeURIComponent(inputAddress))
-          .then((inscription) => {
-            resetState();
-            if (!inscription) {
-              setParseError(`${inputAddress} does not exist`);
-              return;
-            }
-            setInscription(inscription);
-            // if (inscription.utxoConfirmation < SAFE_DOMAIN_CONFIRMATION) {
-            //   setParseError(
-            //     `This domain has been transferred or inscribed recently. Please wait for block confirmations (${inscription.utxoConfirmation}/3).`
-            //   );
-            //   return;
-            // }
-
-            const address = inscription.owner || '';
-            setParseAddress(address);
-            setValidAddress(address);
-            setParseName(satsname.suffix);
-          })
-          .catch((err: Error) => {
-            const errMsg = err.message + ' for ' + inputAddress;
-            setFormatError(errMsg);
-          })
-          .finally(() => {
-            setSearching(false);
-          });
-      } else {
-        const names = SUPPORTED_DOMAINS.map((v) => `.${v}`);
-        let str = '';
-        for (let i = 0; i < names.length; i++) {
-          if (i == 0) {
-            // empty
-          } else if (i < names.length - 1) {
-            str += ', ';
-          } else {
-            str += ' and ';
-          }
-          str += `${names[i]}`;
-        }
-        setFormatError(`Currently only ${str} are supported.`);
-        return;
-      }
-    } else {
-      const isValid =
-        ((networkId === NETWORK_ID.mainnet
-          ? inputAddress.toLowerCase().startsWith('kaspa')
-          : inputAddress.toLowerCase().startsWith('kaspatest')) &&
-          (await wallet.isValidKaspaAddr(inputAddress))) ||
-        isValidAddress(inputAddress);
-      if (!isValid) {
-        setFormatError('Recipient address is invalid');
-        return;
-      }
-      setValidAddress(inputAddress);
+    const isValid =
+      ((networkId === NETWORK_ID.mainnet
+        ? inputAddress.toLowerCase().startsWith('kaspa')
+        : inputAddress.toLowerCase().startsWith('kaspatest')) &&
+        (await wallet.isValidKaspaAddr(inputAddress))) ||
+      isValidAddress(inputAddress);
+    if (!isValid) {
+      setFormatError('Recipient address is invalid');
+      return;
     }
+    setValidAddress(inputAddress);
   }, 800);
   if (!addressInputData || !onAddressInputChange) {
     return <div />;

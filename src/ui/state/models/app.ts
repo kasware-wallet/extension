@@ -2,11 +2,8 @@ import type { WalletController } from '@/ui/utils';
 import { createSlice } from '@reduxjs/toolkit';
 
 import type { TAppDispatch } from '..';
-import { bridgeInit } from './bridge';
 import { gasAccountInit } from './gasAccount';
 import { preferenceInit } from './preference';
-import { swapInit } from './swap';
-import { accountInit } from '../accounts/reducer';
 
 export const app = createSlice({
   name: 'app',
@@ -45,11 +42,7 @@ export const { initWallet } = app.actions;
 
 export function initBizStore() {
   return async (dispatch: TAppDispatch) => {
-    dispatch(accountInit());
     dispatch(preferenceInit());
-    dispatch(swapInit());
-    // dispatch(whitelistInit());
-    dispatch(bridgeInit());
     dispatch(gasAccountInit());
   };
 }

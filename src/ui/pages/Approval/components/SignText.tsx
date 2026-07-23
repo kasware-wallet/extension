@@ -31,14 +31,13 @@ export default function SignText({ params: { data, session } }: Props) {
           <WebsiteBar session={session} />
         </Header>
         <Column>
-          <Text text="Signature request" preset="title-bold" textCenter mt="lg" />
+          <Text text="Signature request" preset="title-bold" textCenter />
           <Text
             text="Only sign this message if you fully understand the content and trust the requesting site."
             preset="sub"
             textCenter
-            mt="lg"
           />
-          <Text text="You are signing:" textCenter mt="lg" />
+          <Text text="You are signing:" />
 
           <Card>
             <div

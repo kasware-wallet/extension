@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -35,7 +33,7 @@ export default function ChangePasswordScreen() {
       tools.toastSuccess(t('Success'));
       navigate('WalletTabScreen');
     } catch (err) {
-      tools.toastError((err as any).message);
+      tools.toastError((err as Error).message);
     }
   };
   return (

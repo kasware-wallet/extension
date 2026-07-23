@@ -15,19 +15,27 @@ import { TxType } from '@/shared/types';
 import { constructKRC20TransferJsonStrLowerCase } from '@/shared/utils';
 import { useTools } from '@/ui/components/ActionComponent';
 import { sleepSecond, useWallet } from '@/ui/utils';
-import { chaingeMinterAddresses } from '@/ui/utils2/constants/constants';
+import { chaingeMinterAddresses } from '@/ui/utils/constants';
 
 import type { AppState } from '..';
 import { selectCurrentAccount } from '../accounts/reducer';
 import { accountsActions, selectCurrentKaspaAddress } from '../accounts/reducer';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { selectUtxos, transactionsActions } from './reducer';
+import {
+  selectTransactions,
+  selectUtxos,
+  selectPendingList,
+  selectIncomingTx,
+  selectOrdinalsTx,
+  transactionsActions
+} from './reducer';
 import { selectNetworkId } from '../settings/reducer';
 import { fetchKaspaTxActivities } from '@/ui/utils/hooks/kaspa';
 import { amountToSompi, sompiToAmount } from '@/shared/utils/format';
+import { KRC20_DEPLOY_TX_FEE } from '@/shared/constant/kasplex';
 
 export function useTransactionsState(): AppState['transactions'] {
-  return useAppSelector((state) => state.transactions);
+  return useAppSelector(selectTransactions);
 }
 
 export function usePrepareSendKASCallback() {
@@ -41,12 +49,14 @@ export function usePrepareSendKASCallback() {
       toAddressInfo,
       toAmount,
       priorityFee,
-      payload
+      payload,
+      feeRate
     }: {
       toAddressInfo: ToAddressInfo;
       toAmount: number;
       priorityFee?: number;
       payload?: string;
+      feeRate?: number;
     }) => {
       let _utxos = utxos;
       if (_utxos.length === 0) {
@@ -69,7 +79,8 @@ export function usePrepareSendKASCallback() {
           to: toAddressInfo.address,
           kasUtxos: _utxos,
           priorityFee,
-          payload
+          payload,
+          feeRate
         });
       } else {
         psbtHex = await wallet.prepareSendKAS({
@@ -77,18 +88,21 @@ export function usePrepareSendKASCallback() {
           amount: toAmount,
           kasUtxos: _utxos,
           priorityFee,
-          payload
+          payload,
+          feeRate
         });
       }
       const result: IResultPsbtHex = JSON.parse(psbtHex);
       const rawtx = psbtHex;
       const fee = result.fee;
+      const mass = result.mass;
       dispatch(
         transactionsActions.updateKaspaTx({
           rawtx,
           psbtHex,
           fromAddress,
           priorityFee,
+          feeRate,
           payload
         })
       );
@@ -99,6 +113,7 @@ export function usePrepareSendKASCallback() {
         amount: toAmount,
         priorityFee,
         fee,
+        mass,
         payload
       };
       return rawTxInfo;
@@ -135,6 +150,7 @@ export function usePushKaspaTxCallback() {
         ret.success = true;
         ret.txSeralizedJSON = txSeralizedJSON;
       } catch (e) {
+        log.error('sendKaspa error', e);
         ret.error = (e as Error).message;
         tools.toastError(ret.error);
       } finally {
@@ -148,13 +164,11 @@ export function usePushKaspaTxCallback() {
 }
 
 export function usePendingList() {
-  const transactionsState = useTransactionsState();
-  return transactionsState.pendingList;
+  return useAppSelector(selectPendingList);
 }
 
 export function useIncomingTx() {
-  const transactionsState = useTransactionsState();
-  return transactionsState.incomingTx;
+  return useAppSelector(selectIncomingTx);
 }
 
 export function useFetchUtxosCallback() {
@@ -260,17 +274,19 @@ export function useSafeBalance() {
   }, [utxos]);
 }
 
-export function usePushKasplexTxCallback() {
+export function usePushInscriptionTxCallback() {
   const dispatch = useAppDispatch();
   const wallet = useWallet();
   const { showLoading } = useTools();
+  const account = useAppSelector(selectCurrentAccount);
   return useCallback(
     async (
       inscribeJsonString: string,
       type: TxType,
       destAddr?: string,
       priorityFee = 0,
-      protocol = KASPLEX as TProtocol
+      protocol = KASPLEX as TProtocol,
+      feeRate?: number
     ) => {
       const res = {
         success: false,
@@ -283,7 +299,28 @@ export function usePushKasplexTxCallback() {
         destAddr
       };
       try {
-        const txids = await wallet.signKRC20Tx(inscribeJsonString, type, priorityFee, true, false, protocol);
+        let txids = '';
+        // KRC-20 supports embedding OP data directly via the payload field. reference: https://docs-kasplex.gitbook.io/krc20/technical-overview/data-format#use-transaction-payload
+        if (type === TxType.SIGN_KRC20_TRANSFER || type === TxType.SIGN_KRC20_DEPLOY) {
+          const sendJson = {
+            to: account.address,
+            amount: 2,
+            priorityFee: type === TxType.SIGN_KRC20_DEPLOY ? KRC20_DEPLOY_TX_FEE : 0
+          };
+          const payload = inscribeJsonString;
+          const sendRes = await wallet.sendKaspa(JSON.stringify(sendJson), false, undefined, { payload });
+          const txObj = JSON.parse(sendRes);
+          const result2 = {
+            commitId: '',
+            revealId: txObj.id,
+            commitTxStr: '',
+            revealTxStr: sendRes
+          };
+          txids = JSON.stringify(result2);
+        } else {
+          txids = await wallet.signKRC20Tx(inscribeJsonString, type, priorityFee, protocol, feeRate);
+        }
+
         await sleepSecond(2); // Wait for transaction synchronization
         const txidsObj: ISignKRC20TX = JSON.parse(txids);
         const txidReveal = txidsObj.revealId;
@@ -308,13 +345,12 @@ export function usePushKasplexTxCallback() {
 
       return res;
     },
-    [dispatch, showLoading, wallet]
+    [account.address, dispatch, showLoading, wallet]
   );
 }
 
 export function useOrdinalsTx() {
-  const transactionsState = useTransactionsState();
-  return transactionsState.ordinalsTx;
+  return useAppSelector(selectOrdinalsTx);
 }
 
 export function useEstimateChaingeTransactionFeesCallback() {

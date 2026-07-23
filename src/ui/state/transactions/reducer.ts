@@ -217,3 +217,6 @@ export const selectUtxos = createSelector([selectTransactions], (state) => state
 export const selectKaspaTx = createSelector([selectTransactions], (state) => state.kaspaTx);
 export const selectTxActivities = createSelector([selectTransactions], (state) => state.txActivities);
 export const selectKnsAssets = createSelector([selectTransactions], (state) => state.KNSAssets);
+export const selectPendingList = createSelector([selectTransactions], (state) => state.pendingList);
+export const selectIncomingTx = createSelector([selectTransactions], (state) => state.incomingTx);
+export const selectOrdinalsTx = createSelector([selectTransactions], (state) => state.ordinalsTx);

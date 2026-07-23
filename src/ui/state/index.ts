@@ -1,15 +1,12 @@
 import { load, save } from 'redux-localstorage-simple';
 
-import onStoreInitialized from '@/ui/state/models/_uistore';
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query/react';
 
 import accounts from './accounts/reducer';
 import { updateVersion } from './global/actions';
 import global from './global/reducer';
-import historyReducer from './history/reducer';
 import keyrings from './keyrings/reducer';
-import { accountToDisplayReducer } from './models/accountToDisplay';
 import { addressManagementReducer } from './models/addressManagement';
 import appReducer from './models/app';
 import { appVersionReducer } from './models/appVersion';
@@ -18,7 +15,7 @@ import { chainsReducer } from './models/chains';
 import contactBookReducer from './models/contactBook';
 import { createMnemonicsReducer } from './models/createMnemonics';
 import { customRPCReducer } from './models/customRPC';
-import evmTansactionsReducer from './models/evmTransactions';
+import evmTransactionsReducer from './models/evmTransactions';
 import { gasAccountReducer } from './models/gasAccount';
 import { importMnemonicsReducer } from './models/importMnemonics';
 import { newUserGuideReducer } from './models/newUserGuide';
@@ -30,6 +27,7 @@ import { signReducer } from './models/sign';
 import { swapReducer } from './models/swap';
 import { whitelistReducer } from './models/whitelist';
 import settings from './settings/reducer';
+import tempUi from './temp-ui/reducer';
 import transactions from './transactions/reducer';
 import ui from './ui/reducer';
 
@@ -42,7 +40,8 @@ const store = configureStore({
     global,
     keyrings,
     ui,
-    history: historyReducer,
+    // data in tempUi will not be save locally
+    tempUi,
     // evm below
 
     app: appReducer,
@@ -52,12 +51,11 @@ const store = configureStore({
     preference: preferenceReducer,
     openapi: openapiReducer,
     contactBook: contactBookReducer,
-    accountToDisplay: accountToDisplayReducer,
     createMnemonics: createMnemonicsReducer,
     importMnemonics: importMnemonicsReducer,
     addressManagement: addressManagementReducer,
 
-    evmTransactions: evmTansactionsReducer,
+    evmTransactions: evmTransactionsReducer,
     chains: chainsReducer,
     whitelist: whitelistReducer,
     swap: swapReducer,
@@ -72,7 +70,6 @@ const store = configureStore({
     getDefaultMiddleware({ thunk: true }).concat(save({ states: PERSISTED_KEYS, debounce: 1000 })),
   preloadedState: load({ states: PERSISTED_KEYS, disableWarnings: true })
 });
-onStoreInitialized(store);
 store.dispatch(updateVersion());
 
 setupListeners(store.dispatch);

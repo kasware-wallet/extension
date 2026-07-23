@@ -1,20 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import log from 'loglevel';
 
 import type { IResultPsbtHex, ISignKRC20TX, KasplexData } from '@/shared/types';
 import { TxType } from '@/shared/types';
 import type { KsprTransfer } from '@/shared/types/kspr';
-import { Button, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { Button, Footer, Header, Layout, Row } from '@/ui/components';
+import { TxSuccessLayout, type TxLinkRowProps } from '@/ui/components/TxSuccessLayout';
 import { ViewTx } from '@/ui/components/ViewTx';
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useAppDispatch, useAppSelector } from '@/ui/state/hooks';
 import { selectBlockstreamUrl, selectKasTick, selectNetworkId } from '@/ui/state/settings/reducer';
-import { KRC20MintDeployTabKey, uiActions } from '@/ui/state/ui/reducer';
-import { colors } from '@/ui/theme/colors';
-import { spacing } from '@/ui/theme/spacing';
+import { KRC20MintDeployTabKey, tempUiActions } from '@/ui/state/temp-ui/reducer';
 import { formatLocaleString, shortAddress, useLocationState } from '@/ui/utils';
 import { useKrc20DecName } from '@/ui/utils/hooks/kasplex/fetchKrc20AddressTokenList';
-import { ExportOutlined } from '@ant-design/icons';
 import { useUpdateRecentSendToAddressKaspa } from '@/ui/hooks/wallet';
 import { sompiToAmount } from '@/shared/utils/format';
 import PayloadComp from '../Approval/components/PayloadComp';
@@ -31,7 +30,15 @@ interface LocationState {
 export default function TxSuccessScreen() {
   const { txid, rawtx, txids, type, inscribeJsonString, destAddr } = useLocationState<LocationState>();
   const inscribeObj = useMemo(() => {
-    if (inscribeJsonString && inscribeJsonString.length > 0) return JSON.parse(inscribeJsonString);
+    if (inscribeJsonString && inscribeJsonString.length > 0) {
+      try {
+        return JSON.parse(inscribeJsonString);
+      } catch (e) {
+        log.debug('Failed to parse inscribeJsonString:', e);
+        return undefined;
+      }
+    }
+    return undefined;
   }, [inscribeJsonString]);
   return (
     <Layout>
@@ -55,54 +62,54 @@ export default function TxSuccessScreen() {
     </Layout>
   );
 }
+
 function SendKaspaTxSuccess({ txid, rawtx }: { txid: string; rawtx: string }) {
   const navigate = useNavigate();
   const kasTick = useAppSelector(selectKasTick);
   const { t } = useTranslation();
-  const toAddress = useMemo(() => {
-    if (!rawtx) return '';
-    const result: IResultPsbtHex = JSON.parse(rawtx);
-    return result.to;
+
+  const parsedRawTx = useMemo(() => {
+    if (!rawtx) return null;
+    try {
+      return JSON.parse(rawtx) as IResultPsbtHex;
+    } catch (e) {
+      log.debug('Failed to parse rawtx:', e);
+      return null;
+    }
   }, [rawtx]);
-  const payload = useMemo(() => {
-    if (!rawtx) return '';
-    const result: IResultPsbtHex = JSON.parse(rawtx);
-    return result.payload;
-  }, [rawtx]);
-  const inputAmount = useMemo(() => {
-    const result: IResultPsbtHex = JSON.parse(rawtx);
-    return result.amount;
-  }, [rawtx]);
+
+  const toAddress = parsedRawTx?.to || '';
+  const payload = parsedRawTx?.payload || '';
+  const inputAmount = parsedRawTx?.amount || '0';
+
   useUpdateRecentSendToAddressKaspa(toAddress);
+
+  const extraContent = (
+    <>
+      {payload != undefined && payload.length > 0 && <PayloadComp payload={payload} />}
+      <ViewTx txId={txid} />
+    </>
+  );
 
   return (
     <>
-      <Content style={{ gap: spacing.small }}>
-        <Column justifyCenter mt="xl" gap="xl">
-          <Row justifyCenter mt="xl">
-            <Icon icon="success" size={60} style={{ alignSelf: 'center' }} />
-          </Row>
-          <Text preset="title" text={t('Sent')} textCenter size="xxxl" selectText />
-          <Text
-            text={`${formatLocaleString(inputAmount)} ${kasTick} ${t('was successfully sent to')}`}
-            color="textDim"
-            textCenter
-            selectText
-          />
-          <Text text={shortAddress(toAddress)} color="textDim" textCenter />
-          {payload != undefined && payload.length > 0 && <PayloadComp payload={payload} />}
-          <ViewTx txId={txid} />
-        </Column>
-      </Content>
-      <Footer>
-        <Button
-          full
-          text={t('Done')}
-          onClick={() => {
-            navigate('WalletTabScreen');
-          }}
-        />
-      </Footer>
+      <TxSuccessLayout
+        title={t('Sent')}
+        description={`${formatLocaleString(inputAmount)} ${kasTick} ${t('was successfully sent to')}`}
+        destAddress={shortAddress(toAddress)}
+        extraContent={extraContent}
+        footer={
+          <Footer>
+            <Button
+              full
+              text={t('Done')}
+              onClick={() => {
+                navigate('WalletTabScreen');
+              }}
+            />
+          </Footer>
+        }
+      />
     </>
   );
 }
@@ -120,7 +127,14 @@ function KRC20DeployTxSuccess({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
-  const txIdsObj: ISignKRC20TX = useMemo(() => JSON.parse(txids), [txids]);
+  const txIdsObj: ISignKRC20TX = useMemo(() => {
+    try {
+      return JSON.parse(txids);
+    } catch (e) {
+      log.debug('Failed to parse txids:', e);
+      return { commitId: '', revealId: '' };
+    }
+  }, [txids]);
   const [inputAmount, setInputAmount] = useState('0');
 
   const calculatedAmount = useMemo(() => {
@@ -133,67 +147,47 @@ function KRC20DeployTxSuccess({
   useEffect(() => {
     setInputAmount(calculatedAmount);
   }, [calculatedAmount]);
+
+  const txLinks: TxLinkRowProps[] = [
+    // { label: t('Commit Tx'), txId: txIdsObj?.commitId, blockstreamUrl },
+    // { label: t('Reveal Tx'), txId: txIdsObj?.revealId, blockstreamUrl }
+    { label: t('Tx'), txId: txIdsObj?.revealId, blockstreamUrl }
+  ];
+
   return (
     <>
-      <Content style={{ gap: spacing.small }}>
-        <Column justifyCenter mt="xxl" gap="xl">
-          <Row justifyCenter mt="xxl">
-            <Icon icon="success" size={60} style={{ alignSelf: 'center' }} />
-          </Row>
-          <Text preset="title" text={t('Deployed')} textCenter size="xxxl" selectText />
-          <Text
-            text={`${formatLocaleString(inputAmount)} ${inscribeObj?.tick} ${t('was successfully deployed')}`}
-            color="textDim"
-            textCenter
-            selectText
-          />
-          <Text text={shortAddress(destAddr)} color="textDim" textCenter />
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.commitId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Commit Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.commitId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.revealId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Reveal Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.revealId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-        </Column>
-      </Content>
-      <Footer>
-        <Row full>
-          <Button
-            preset="primary"
-            text={`Mint ${inscribeObj?.tick}`}
-            onClick={() => {
-              dispatch(
-                uiActions.updateKRC20MintDeployTab({
-                  krc20MintDeployTabKey: KRC20MintDeployTabKey.MINT
-                })
-              );
-              navigate('KRC20MintDeployScreen', { tick: inscribeObj?.tick });
-            }}
-            full
-          />
-          <Button
-            full
-            text={t('Done')}
-            onClick={() => {
-              navigate('WalletTabScreen');
-            }}
-          />
-        </Row>
-      </Footer>
+      <TxSuccessLayout
+        title={t('Deployed')}
+        description={`${formatLocaleString(inputAmount)} ${inscribeObj?.tick} ${t('was successfully deployed')}`}
+        destAddress={shortAddress(destAddr)}
+        txLinks={txLinks}
+        footer={
+          <Footer>
+            <Row full>
+              <Button
+                preset="primary"
+                text={`Mint ${inscribeObj?.tick}`}
+                onClick={() => {
+                  dispatch(
+                    tempUiActions.updateKRC20MintDeployTab({
+                      krc20MintDeployTabKey: KRC20MintDeployTabKey.MINT
+                    })
+                  );
+                  navigate('KRC20MintDeployScreen', { tick: inscribeObj?.tick });
+                }}
+                full
+              />
+              <Button
+                full
+                text={t('Done')}
+                onClick={() => {
+                  navigate('WalletTabScreen');
+                }}
+              />
+            </Row>
+          </Footer>
+        }
+      />
     </>
   );
 }
@@ -211,66 +205,58 @@ function KRC20MintTxSuccess({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
-  const txIdsObj: ISignKRC20TX = useMemo(() => JSON.parse(txids), [txids]);
+  const txIdsObj: ISignKRC20TX = useMemo(() => {
+    try {
+      return JSON.parse(txids);
+    } catch (e) {
+      log.debug('Failed to parse txids:', e);
+      return { commitId: '', revealId: '' };
+    }
+  }, [txids]);
+
+  const txLinks: TxLinkRowProps[] = [
+    { label: t('Commit Tx'), txId: txIdsObj?.commitId, blockstreamUrl },
+    { label: t('Reveal Tx'), txId: txIdsObj?.revealId, blockstreamUrl }
+  ];
+
   return (
     <>
-      <Content style={{ gap: spacing.small }}>
-        <Column justifyCenter mt="xxl" gap="xl">
-          <Row justifyCenter mt="xxl">
-            <Icon icon="success" size={60} style={{ alignSelf: 'center' }} />
-          </Row>
-          <Text preset="title" text={t('Minted')} textCenter size="xxxl" selectText />
-          <Text text={`${inscribeObj?.tick} ${t('was successfully minted')}`} color="textDim" textCenter selectText />
-          <Text text={shortAddress(destAddr)} color="textDim" textCenter />
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.commitId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Commit Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.commitId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.revealId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Reveal Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.revealId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-        </Column>
-      </Content>
-      <Footer>
-        <Row full>
-          <Button
-            preset="primary"
-            text="Mint Again"
-            onClick={() => {
-              dispatch(
-                uiActions.updateKRC20MintDeployTab({
-                  krc20MintDeployTabKey: KRC20MintDeployTabKey.MINT
-                })
-              );
-              navigate('KRC20MintDeployScreen', { tick: inscribeObj?.tick });
-            }}
-            full
-          />
-          <Button
-            full
-            text={t('Done')}
-            onClick={() => {
-              navigate('WalletTabScreen');
-            }}
-          />
-        </Row>
-      </Footer>
+      <TxSuccessLayout
+        title={t('Minted')}
+        description={`${inscribeObj?.tick} ${t('was successfully minted')}`}
+        destAddress={shortAddress(destAddr)}
+        txLinks={txLinks}
+        footer={
+          <Footer>
+            <Row full>
+              <Button
+                preset="primary"
+                text="Mint Again"
+                onClick={() => {
+                  dispatch(
+                    tempUiActions.updateKRC20MintDeployTab({
+                      krc20MintDeployTabKey: KRC20MintDeployTabKey.MINT
+                    })
+                  );
+                  navigate('KRC20MintDeployScreen', { tick: inscribeObj?.tick });
+                }}
+                full
+              />
+              <Button
+                full
+                text={t('Done')}
+                onClick={() => {
+                  navigate('WalletTabScreen');
+                }}
+              />
+            </Row>
+          </Footer>
+        }
+      />
     </>
   );
 }
+
 function KRC20TransferTxSuccess({
   txids,
   inscribeObj,
@@ -288,7 +274,14 @@ function KRC20TransferTxSuccess({
     (inscribeObj.tick as string) || (inscribeObj.ca as string)
   );
   const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
-  const txIdsObj: ISignKRC20TX = useMemo(() => JSON.parse(txids), [txids]);
+  const txIdsObj: ISignKRC20TX = useMemo(() => {
+    try {
+      return JSON.parse(txids);
+    } catch (e) {
+      log.debug('Failed to parse txids:', e);
+      return { commitId: '', revealId: '' };
+    }
+  }, [txids]);
   useUpdateRecentSendToAddressKaspa(destAddr);
 
   const calculatedAmount = useMemo(() => {
@@ -298,52 +291,31 @@ function KRC20TransferTxSuccess({
     return '0';
   }, [inscribeObj?.amt, krc20Dec]);
 
+  const txLinks: TxLinkRowProps[] = [
+    // { label: t('Commit Tx'), txId: txIdsObj?.commitId, blockstreamUrl },
+    // { label: t('Reveal Tx'), txId: txIdsObj?.revealId, blockstreamUrl }
+    { label: t('Tx'), txId: txIdsObj?.revealId, blockstreamUrl }
+  ];
+
   return (
     <>
-      <Content style={{ gap: spacing.small }}>
-        <Column justifyCenter mt="xxl" gap="xl">
-          <Row justifyCenter mt="xxl">
-            <Icon icon="success" size={60} style={{ alignSelf: 'center' }} />
-          </Row>
-          <Text preset="title" text={t('Sent')} textCenter size="xxxl" selectText />
-          <Text
-            text={`${formatLocaleString(calculatedAmount)} ${krc20Tick} ${t('was successfully sent to')}`}
-            color="textDim"
-            textCenter
-            selectText
-          />
-          <Text text={shortAddress(destAddr)} color="textDim" textCenter selectText />
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.commitId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Commit Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.commitId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.revealId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Reveal Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.revealId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-        </Column>
-      </Content>
-      <Footer>
-        <Button
-          full
-          text={t('Done')}
-          onClick={() => {
-            navigate('WalletTabScreen');
-          }}
-        />
-      </Footer>
+      <TxSuccessLayout
+        title={t('Sent')}
+        description={`${formatLocaleString(calculatedAmount)} ${krc20Tick} ${t('was successfully sent to')}`}
+        destAddress={shortAddress(destAddr)}
+        txLinks={txLinks}
+        footer={
+          <Footer>
+            <Button
+              full
+              text={t('Done')}
+              onClick={() => {
+                navigate('WalletTabScreen');
+              }}
+            />
+          </Footer>
+        }
+      />
     </>
   );
 }
@@ -365,55 +337,40 @@ function KnsTransferTxSuccess({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
-  const txIdsObj: ISignKRC20TX = useMemo(() => JSON.parse(txids), [txids]);
+  const txIdsObj: ISignKRC20TX = useMemo(() => {
+    try {
+      return JSON.parse(txids);
+    } catch (e) {
+      log.debug('Failed to parse txids:', e);
+      return { commitId: '', revealId: '' };
+    }
+  }, [txids]);
   useUpdateRecentSendToAddressKaspa(destAddr);
+
+  const txLinks: TxLinkRowProps[] = [
+    { label: t('Commit Tx'), txId: txIdsObj?.commitId, blockstreamUrl },
+    { label: t('Reveal Tx'), txId: txIdsObj?.revealId, blockstreamUrl }
+  ];
 
   return (
     <>
-      <Content style={{ gap: spacing.small }}>
-        <Column justifyCenter mt="xxl" gap="xl">
-          <Row justifyCenter mt="xxl">
-            <Icon icon="success" size={60} style={{ alignSelf: 'center' }} />
-          </Row>
-          <Text preset="title" text={t('Sent')} textCenter size="xxxl" selectText />
-          <Text
-            text={`${shortAddress(inscribeObj.id)} ${t('was successfully sent to')}`}
-            color="textDim"
-            textCenter
-            selectText
-          />
-          <Text text={shortAddress(destAddr)} color="textDim" textCenter selectText />
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.commitId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Commit Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.commitId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.revealId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Reveal Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.revealId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-        </Column>
-      </Content>
-      <Footer>
-        <Button
-          full
-          text={t('Done')}
-          onClick={() => {
-            navigate('WalletTabScreen');
-          }}
-        />
-      </Footer>
+      <TxSuccessLayout
+        title={t('Sent')}
+        description={`${shortAddress(inscribeObj.id)} ${t('was successfully sent to')}`}
+        destAddress={shortAddress(destAddr)}
+        txLinks={txLinks}
+        footer={
+          <Footer>
+            <Button
+              full
+              text={t('Done')}
+              onClick={() => {
+                navigate('WalletTabScreen');
+              }}
+            />
+          </Footer>
+        }
+      />
     </>
   );
 }
@@ -430,55 +387,40 @@ function KsprNftTransferTxSuccess({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const blockstreamUrl = useAppSelector(selectBlockstreamUrl);
-  const txIdsObj: ISignKRC20TX = useMemo(() => JSON.parse(txids), [txids]);
+  const txIdsObj: ISignKRC20TX = useMemo(() => {
+    try {
+      return JSON.parse(txids);
+    } catch (e) {
+      log.debug('Failed to parse txids:', e);
+      return { commitId: '', revealId: '' };
+    }
+  }, [txids]);
   useUpdateRecentSendToAddressKaspa(destAddr);
+
+  const txLinks: TxLinkRowProps[] = [
+    { label: t('Commit Tx'), txId: txIdsObj?.commitId, blockstreamUrl },
+    { label: t('Reveal Tx'), txId: txIdsObj?.revealId, blockstreamUrl }
+  ];
 
   return (
     <>
-      <Content style={{ gap: spacing.small }}>
-        <Column justifyCenter mt="xxl" gap="xl">
-          <Row justifyCenter mt="xxl">
-            <Icon icon="success" size={60} style={{ alignSelf: 'center' }} />
-          </Row>
-          <Text preset="title" text={t('Sent')} textCenter size="xxxl" selectText />
-          <Text
-            text={`${inscribeObj.tick}#${inscribeObj.tokenId} ${t('was successfully sent to')}`}
-            color="textDim"
-            textCenter
-            selectText
-          />
-          <Text text={shortAddress(destAddr)} color="textDim" textCenter selectText />
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.commitId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Commit Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.commitId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-          <Row
-            justifyCenter
-            onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${txIdsObj?.revealId}`);
-            }}
-          >
-            <Text preset="regular-bold" text={t('Reveal Tx')} color="aqua" size="md" selectText />
-            <Text preset="regular-bold" text={shortAddress(txIdsObj?.revealId)} color="aqua" size="md" />
-            <ExportOutlined style={{ color: colors.aqua, fontSize: 12 }} />
-          </Row>
-        </Column>
-      </Content>
-      <Footer>
-        <Button
-          full
-          text={t('Done')}
-          onClick={() => {
-            navigate('WalletTabScreen');
-          }}
-        />
-      </Footer>
+      <TxSuccessLayout
+        title={t('Sent')}
+        description={`${inscribeObj.tick}#${inscribeObj.tokenId} ${t('was successfully sent to')}`}
+        destAddress={shortAddress(destAddr)}
+        txLinks={txLinks}
+        footer={
+          <Footer>
+            <Button
+              full
+              text={t('Done')}
+              onClick={() => {
+                navigate('WalletTabScreen');
+              }}
+            />
+          </Footer>
+        }
+      />
     </>
   );
 }

@@ -9,8 +9,13 @@ import {
   OPENAPI_URL_MAINNET,
   OPENAPI_URL_TESTNET_10,
   OPENAPI_URL_TESTNET_11,
-  OPENAPI_URL_TESTNET_12
+  OPENAPI_URL_TESTNET_12,
+  OPENAPI_FALLBACK_MAINNET,
+  OPENAPI_FALLBACK_TESTNET_10,
+  OPENAPI_FALLBACK_TESTNET_11,
+  OPENAPI_FALLBACK_TESTNET_12
 } from '@/shared/constant';
+import { fetchWithRetryAndFallback } from '@/ui/utils/fetchWithRetry';
 
 export const useKaspaTxActivitiesQuery = (kasNetworkId: TNetworkId, kasAddress: string) => {
   const [activities, setActivities] = useState<ITransactionInfo[]>([]);
@@ -47,13 +52,10 @@ export async function fetchKaspaTxActivities(
   networkId: TNetworkId,
   address: string
 ): Promise<ITransactionInfo[] | null> {
-  const host = getKaspaOrgHost(networkId);
-  const response = await fetch(
-    `${host}/addresses/${address}/full-transactions?limit=10&resolve_previous_outpoints=light`
-  );
-  if (!response.ok) {
-    throw new Error('Network response was not ok ' + response.statusText);
-  }
+  const hosts = getKaspaOrgHosts(networkId);
+  const path = `/addresses/${address}/full-transactions?limit=10&resolve_previous_outpoints=light`;
+  const urls = hosts.map((h) => `${h}${path}`);
+  const response = await fetchWithRetryAndFallback(urls);
   const data = await response.json();
   const trans = handleTransactions(data, address);
   return trans;
@@ -72,4 +74,28 @@ export const getKaspaOrgHost = (networkId: TNetworkId) => {
     default:
       return OPENAPI_URL_TESTNET_10;
   }
+};
+
+// Returns primary + fallback hosts for retry logic
+export const getKaspaOrgHosts = (networkId: TNetworkId): string[] => {
+  const primary = getKaspaOrgHost(networkId);
+  let fallback: string | undefined;
+  switch (networkId) {
+    case 'mainnet':
+      fallback = OPENAPI_FALLBACK_MAINNET;
+      break;
+    case 'testnet-10':
+      fallback = OPENAPI_FALLBACK_TESTNET_10;
+      break;
+    case 'testnet-11':
+      fallback = OPENAPI_FALLBACK_TESTNET_11;
+      break;
+    case 'testnet-12':
+      fallback = OPENAPI_FALLBACK_TESTNET_12;
+      break;
+    default:
+      break;
+  }
+  fallback = undefined; // TODO, fallback hosts are not available now.
+  return fallback ? [primary, fallback] : [primary];
 };

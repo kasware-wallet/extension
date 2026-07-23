@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import type { IKNSAsset } from '@/shared/types';
-import { Column, Row, Text } from '@/ui/components';
+import { Column, LoadingSpinner, Row, Text } from '@/ui/components';
 import { Empty } from '@/ui/components/Empty';
 import KnsPreview from '@/ui/components/KnsPreview';
 import { Pagination } from '@/ui/components/Pagination';
@@ -9,8 +9,6 @@ import { useKnsAssetsQuery } from '@/ui/hooks/kns';
 import { useCurrentAccount } from '@/ui/state/accounts/hooks';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
-import { LoadingOutlined } from '@ant-design/icons';
-
 import { useNavigate } from '../../MainRoute';
 
 export function KNSTab() {
@@ -37,7 +35,7 @@ export function KNSTab() {
   if (isLoading || isFetching) {
     return (
       <Column style={{ minHeight: 150 }} itemsCenter justifyCenter>
-        <LoadingOutlined />
+        <LoadingSpinner size="medium" />
       </Column>
     );
   }

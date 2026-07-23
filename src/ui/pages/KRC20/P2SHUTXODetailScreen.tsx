@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useMemo } from 'react';
 
 import type { IP2shOutput } from '@/shared/types';
@@ -65,7 +63,7 @@ export default function P2SHUTXODetailScreen() {
               gap="xs"
               itemsCenter
               onClick={() => {
-                window.open(`${blockstreamUrl}/txs/${p2shOutput?.transaction_id}`);
+                window.open(`${blockstreamUrl}/transactions/${p2shOutput?.transaction_id}`);
               }}
             >
               <div className="text-select">

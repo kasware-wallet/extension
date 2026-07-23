@@ -11,6 +11,7 @@ import { useAppSummary } from '@/ui/state/accounts/hooks';
 import { useAppSelector } from '@/ui/state/hooks';
 import { useEnableKRC20Swap } from '@/ui/state/settings/hooks';
 import { selectNetworkType } from '@/ui/state/settings/reducer';
+import { colors } from '@/ui/theme/colors';
 import { ExpandAltOutlined, RightOutlined } from '@ant-design/icons';
 
 function AppItem({ info, isLive }: { info: AppInfo; isLive: boolean }) {
@@ -38,9 +39,9 @@ function AppItem({ info, isLive }: { info: AppInfo; isLive: boolean }) {
           </Column>
           <Column justifyCenter>
             {isInTab ? (
-              <RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+              <RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
             ) : (
-              <ExpandAltOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+              <ExpandAltOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
             )}
           </Column>
         </Row>
@@ -61,7 +62,7 @@ function AppItem({ info, isLive }: { info: AppInfo; isLive: boolean }) {
           <Text text={info.title} preset="regular-bold" />
         </Column>
         <Column justifyCenter>
-          <RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+          <RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
         </Column>
       </Row>
     </Card>

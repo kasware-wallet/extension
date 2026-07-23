@@ -3,7 +3,7 @@ import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
 import type { WalletController } from '@/ui/utils';
 import { useWallet } from '@/ui/utils';
-import { useQuery_KEY } from '@/ui/utils2/constants/constants';
+import { useQuery_KEY } from '@/ui/utils/constants';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 export const useQueryTokenListPrices = (wallet: WalletController) => {

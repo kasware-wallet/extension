@@ -1,34 +1,25 @@
-import type { TokenItem } from '@kasware-wallet/api/dist/types';
-import type { AddressSortStore, addedToken } from '@/shared/types/preference';
 import type { GasCache } from '@/shared/types/gas';
-import { DARK_MODE_TYPE } from 'consts';
-
-import type { EVM_CHAINS_ENUM } from '@/shared/constant';
+import type { AddressSortStore, addedToken } from '@/shared/types/preference';
 import i18n from '@/ui/utils/i18n';
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
 
 import type { AppState } from '..';
-import { useAppSelector } from '../hooks';
 
 interface PreferenceState {
   externalLinkAck: boolean;
   useLedgerLive: boolean;
   locale: string;
   isDefaultWallet: boolean;
-  lastTimeSendToken: Record<string, TokenItem>;
   walletSavedList: [];
   gasCache: GasCache;
   currentVersion: string;
   firstOpen: boolean;
   pinnedChain: string[];
   addedToken: addedToken;
-  tokenApprovalChain: Record<string, EVM_CHAINS_ENUM>;
-  nftApprovalChain: Record<string, EVM_CHAINS_ENUM>;
-  autoLockTime: number;
+  autoLockMinutes: number;
   hiddenBalance: boolean;
   isShowTestnet: boolean;
   addressSortStore: AddressSortStore;
-  themeMode: DARK_MODE_TYPE;
   reserveGasOnSendToken: boolean;
   isHideEcologyNoticeDict: Record<string | number, boolean>;
   sendTxToKaspa: boolean;
@@ -51,11 +42,10 @@ export const preference = createSlice({
     addedToken: {},
     tokenApprovalChain: {},
     nftApprovalChain: {},
-    autoLockTime: 0,
+    autoLockMinutes: 0,
     hiddenBalance: false,
     isShowTestnet: false,
     addressSortStore: {} as AddressSortStore,
-    themeMode: DARK_MODE_TYPE.dark,
     reserveGasOnSendToken: false,
     isHideEcologyNoticeDict: {},
     sendTxToKaspa: true
@@ -64,13 +54,7 @@ export const preference = createSlice({
   reducers: {
     setField(state, action: { payload: Partial<typeof state> }) {
       const { payload } = action;
-      return Object.keys(payload || {}).reduce(
-        (accu, key) => {
-          accu[key] = payload[key];
-          return accu;
-        },
-        { ...state }
-      );
+      Object.assign(state, payload || {});
     }
   }
 });
@@ -79,8 +63,6 @@ export const { actions: preferenceActions, reducer: preferenceReducer } = prefer
 export const selectPreferenceState = (state: AppState) => state.preference;
 export const selectPinnedChainEnum = createSelector([selectPreferenceState], (state) => state.pinnedChain);
 export const selectIsShowTestnet = createSelector([selectPreferenceState], (state) => state.isShowTestnet);
-export const selectTokenApprovalChain = createSelector([selectPreferenceState], (state) => state.tokenApprovalChain);
-export const selectThemeMode = createSelector([selectPreferenceState], (state) => state.themeMode);
 export const selectHiddenBalance = createSelector([selectPreferenceState], (state) => state.hiddenBalance);
 export const selectAddressSortStore = createSelector([selectPreferenceState], (state) => state.addressSortStore);
 export const selectIsReserveGasOnSendToken = createSelector(
@@ -148,129 +130,25 @@ export const getTokenApprovalChain = createAsyncThunk(
   'preference/getTokenApprovalChain',
   async (address: string, thunkApi) => {
     const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
 
     address = address.toLowerCase();
     const chain = await store.app.wallet.walletEVM.getTokenApprovalChain(address);
 
-    dispatch(
-      preferenceActions.setField({
-        tokenApprovalChain: {
-          ...store.preference.tokenApprovalChain,
-          [address]: chain
-        }
-      })
-    );
-
     return chain;
   }
 );
 
-export const setTokenApprovalChain = createAsyncThunk(
-  'preference/setTokenApprovalChain',
-  async (
-    {
-      address,
-      chain
-    }: {
-      address: string;
-      chain: EVM_CHAINS_ENUM;
-    },
-    thunkApi
-  ) => {
-    const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
-
-    await store.app.wallet.walletEVM.setTokenApprovalChain(address, chain);
-
-    dispatch(getTokenApprovalChain(address));
-
-    return chain;
-  }
-);
-
-export const setNFTApprovalChain = createAsyncThunk(
-  'preference/setNFTApprovalChain',
-  async (
-    {
-      address,
-      chain
-    }: {
-      address: string;
-      chain: EVM_CHAINS_ENUM;
-    },
-    thunkApi
-  ) => {
-    const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
-
-    await store.app.wallet.walletEVM.setNFTApprovalChain(address, chain);
-
-    dispatch(getPreference('nftApprovalChain'));
-
-    return null;
-  }
-);
-
-export const addPinnedChain = createAsyncThunk(
-  'preference/addPinnedChain',
-  async (chain: EVM_CHAINS_ENUM, thunkApi) => {
-    const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
-
-    if (store.preference.pinnedChain.includes(chain)) {
-      return;
-    }
-    await store.app.wallet.walletEVM.saveChain(chain);
-    dispatch(getPreference('pinnedChain'));
-
-    return null;
-  }
-);
-
-export const removePinnedChain = createAsyncThunk(
-  'preference/removePinnedChain',
-  async (chain: EVM_CHAINS_ENUM, thunkApi) => {
-    const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
-
-    const list = store.preference.pinnedChain.filter((item) => item !== chain);
-    await store.app.wallet.walletEVM.updateChain(list);
-    dispatch(getPreference('pinnedChain'));
-
-    return null;
-  }
-);
-
-export const updatePinnedChainList = createAsyncThunk(
-  'preference/updatePinnedChainList',
-  async (chains: EVM_CHAINS_ENUM[], thunkApi) => {
-    const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
-
-    dispatch(
-      preferenceActions.setField({
-        pinnedChain: chains
-      })
-    );
-    await store.app.wallet.walletEVM.updateChain(chains);
-    dispatch(getPreference('pinnedChain'));
-
-    return null;
-  }
-);
-
-export const setAutoLockTime = createAsyncThunk('preference/setAutoLockTime', async (time: number, thunkApi) => {
+export const setAutoLockMinutes = createAsyncThunk('preference/setAutoLockMinutes', async (time: number, thunkApi) => {
   const store = thunkApi.getState() as AppState;
   const dispatch = thunkApi.dispatch;
 
   dispatch(
     preferenceActions.setField({
-      autoLockTime: time
+      autoLockMinutes: time
     })
   );
-  await store.app.wallet.walletEVM.setAutoLockTime(time);
-  dispatch(getPreference('autoLockTime'));
+  await store.app.wallet.walletEVM.setAutoLockMinutes(time);
+  dispatch(getPreference('autoLockMinutes'));
 
   return null;
 });
@@ -342,24 +220,6 @@ export const switchLocale = createAsyncThunk('preference/switchLocale', async (l
 
   return null;
 });
-
-export const switchThemeMode = createAsyncThunk(
-  'preference/switchThemeMode',
-  async (themeMode: DARK_MODE_TYPE, thunkApi) => {
-    const store = thunkApi.getState() as AppState;
-    const dispatch = thunkApi.dispatch;
-
-    dispatch(
-      preferenceActions.setField({
-        themeMode
-      })
-    );
-    await store.app.wallet.walletEVM.setThemeMode(themeMode);
-    dispatch(getPreference('themeMode'));
-
-    return null;
-  }
-);
 
 export const setIsReserveGasOnSendToken = createAsyncThunk(
   'preference/setIsReserveGasOnSendToken',

@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 import { EventEmitter } from 'events';
 
-import { browserTabsCreate, browserTabsOnRemoved, browserTabsOnUpdated } from './browser';
+import { browserTabsCreate, browserTabsOnRemoved, browserTabsOnUpdated } from '../../shared/webapi/browser';
 
 const tabEvent = new EventEmitter();
 

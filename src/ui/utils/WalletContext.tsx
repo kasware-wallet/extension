@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
 import type { WalletController as KaspaWalletControllerClass } from '@/background/controller/wallet';
 
 import type { OpenApiService } from '@kasware-wallet/api';
@@ -30,7 +30,7 @@ export type WalletController = Object.Merge<
   }
 >;
 
-export const useCommonPopupViewState = () => {
+const useCommonPopupViewState = () => {
   const [componentName, setComponentName] = useState<CommonPopupComponentName | false>();
   const [visible, setVisible] = useState(false);
   const [title, setTitle] = useState<ReactNode>('Sign');
@@ -51,10 +51,10 @@ export const useCommonPopupViewState = () => {
     setVisible(true);
   };
 
-  const closePopup = () => {
+  const closePopup = useCallback(() => {
     setVisible(false);
     setComponentName(undefined);
-  };
+  }, []);
 
   const activeApprovalPopup = () => {
     if (componentName === 'Approval' && visible === false) {
@@ -86,30 +86,33 @@ export const useCommonPopupViewState = () => {
   };
 };
 
-const WalletContext = createContext<{
-  wallet: WalletController;
-  commonPopupView: ReturnType<typeof useCommonPopupViewState>;
-} | null>(null);
+// Separate contexts to avoid unnecessary re-renders when unrelated values change
+const WalletInstanceContext = createContext<WalletController | null>(null);
+const CommonPopupViewContext = createContext<ReturnType<typeof useCommonPopupViewState> | null>(null);
 
 const WalletProvider = ({ children, wallet }: { children?: ReactNode; wallet: WalletController }) => {
   const commonPopupView = useCommonPopupViewState();
 
-  return <WalletContext.Provider value={{ wallet, commonPopupView }}>{children}</WalletContext.Provider>;
+  return (
+    <WalletInstanceContext.Provider value={wallet}>
+      <CommonPopupViewContext.Provider value={commonPopupView}>{children}</CommonPopupViewContext.Provider>
+    </WalletInstanceContext.Provider>
+  );
 };
 
 const useWallet = () => {
-  const { wallet } = useContext(WalletContext) as {
-    wallet: WalletController;
-  };
-
+  const wallet = useContext(WalletInstanceContext);
+  if (!wallet) {
+    throw new Error('useWallet must be used within WalletProvider');
+  }
   return wallet;
 };
 
 const useCommonPopupView = () => {
-  const { commonPopupView } = useContext(WalletContext) as unknown as {
-    commonPopupView: ReturnType<typeof useCommonPopupViewState>;
-  };
-
+  const commonPopupView = useContext(CommonPopupViewContext);
+  if (!commonPopupView) {
+    throw new Error('useCommonPopupView must be used within WalletProvider');
+  }
   return commonPopupView;
 };
 

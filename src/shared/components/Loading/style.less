@@ -1,0 +1,28 @@
+.kasware-loading {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  &-image {
+    margin-bottom: 12px;
+    width: 36px;
+    height: 36px;
+  }
+  &-text {
+    text-align: center;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--r-neutral-body, #D3D8E0);
+  }
+}
+
+@keyframes spining {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

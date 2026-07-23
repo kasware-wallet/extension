@@ -11,8 +11,9 @@ import { selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
 import { useAppSelector } from '@/ui/state/hooks';
 
 import { colors } from '@/ui/theme/colors';
-import { formatLocaleString, useWallet } from '@/ui/utils';
-import { DeleteOutlined, EllipsisOutlined, LoadingOutlined, LockOutlined } from '@ant-design/icons';
+import { formatLocaleString, useWallet, getTokenIdentifier } from '@/ui/utils';
+import { DeleteOutlined, EllipsisOutlined, LockOutlined } from '@ant-design/icons';
+import { LoadingSpinner } from '@/ui/components';
 import { useLocation } from 'react-router-dom';
 
 import type { IKrc20MarketInfo } from '@/ui/hooks/kasplex';
@@ -148,10 +149,7 @@ export default function UnlockKRC20TokenScreen() {
   const kasNetworkId = useAppSelector(selectNetworkId);
   const [selectedOrder, setSelectedOrder] = useState<IKrc20MarketInfo | null>(null);
   const [unlockedTokenPopupVisible, setUnlockedTokenPopupVisible] = useState(false);
-  const { name: tokenName } = useKrc20DecName(
-    kasNetworkId,
-    krc20Token.tokenType == 'KRC20Issue' ? (krc20Token.ca as string) : (krc20Token.tick as string)
-  );
+  const { name: tokenName } = useKrc20DecName(kasNetworkId, getTokenIdentifier(krc20Token));
 
   const wallet = useWallet();
 
@@ -164,7 +162,7 @@ export default function UnlockKRC20TokenScreen() {
   const { isLoading, listOrders, isError, error, refetch } = useKrc20MarketInfoQuery(
     kasNetworkId,
     currentAddress,
-    krc20Token?.tokenType == 'KRC20Issue' ? (krc20Token?.ca as string) : (krc20Token?.tick as string)
+    getTokenIdentifier(krc20Token)
   );
   useEffect(() => {
     if (listOrders != null && listOrders.length > 0) {
@@ -182,9 +180,7 @@ export default function UnlockKRC20TokenScreen() {
       />
       {isLoading && (
         <Row justifyCenter>
-          <Icon>
-            <LoadingOutlined />
-          </Icon>
+          <LoadingSpinner size="medium" />
         </Row>
       )}
 

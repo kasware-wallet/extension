@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { getCurrentConnectSite as getCurrentConnectSiteEVM } from '@/evm/ui/utils';
 import { ADDRESS_TYPES, DISCORD_URL, GITHUB_URL, KEYRING_TYPE, TELEGRAM_URL, TWITTER_URL } from '@/shared/constant';
+import { PATH_UNLOCK_SCREEN } from '@/shared/constant/route-path';
 import { NetworkType } from '@/shared/types';
 import { Card, Column, Content, Footer, Header, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
-import { Button } from '@/ui/components/Button';
 import { Icon } from '@/ui/components/Icon';
 import { NavTabBar } from '@/ui/components/NavTabBar';
 import { getCurrentTab, useExtensionIsInTab, useOpenExtensionInTab } from '@/ui/features/browser/tabs';
@@ -16,10 +15,10 @@ import { useAppSelector } from '@/ui/state/hooks';
 import { useCurrentKeyring } from '@/ui/state/keyrings/hooks';
 import { useVersionInfo } from '@/ui/state/settings/hooks';
 import { selectNetworkId, selectNetworkType } from '@/ui/state/settings/reducer';
+import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
 import { useWallet } from '@/ui/utils';
 import { ExpandAltOutlined, RightOutlined } from '@ant-design/icons';
-import { PATH_UNLOCK_SCREEN } from '@/shared/constant/route-path';
 
 interface Setting {
   label?: string;
@@ -51,11 +50,8 @@ export default function SettingsTabScreen() {
     const run = async () => {
       const res = await getCurrentTab();
       if (!res) return;
-      const siteEVM = await getCurrentConnectSiteEVM(wallet);
       const site = await wallet.getCurrentConnectedSite(res.id as number);
-      if (siteEVM && siteEVM.isConnected == true) {
-        setConnected(siteEVM.isConnected);
-      } else if (site && site.isConnected == true) {
+      if (site && site.isConnected == true) {
         setConnected(site.isConnected);
       }
       const listContacts = await wallet.listContact();
@@ -71,24 +67,8 @@ export default function SettingsTabScreen() {
     return currentKeyring.hdPath !== '' && item.hdPath !== currentKeyring.hdPath;
   }, [currentKeyring]);
   const SettingList: Setting[] = [
-    // {
-    //   label: 'Manage Wallet',
-    //   value: '',
-    //   desc: '',
-    //   action: 'manage-wallet',
-    //   route: '/settings/manage-wallet',
-    //   right: true
-    // },
-    // {
-    //   label: 'Address Type',
-    //   value: 'Taproot',
-    //   desc: '',
-    //   action: 'addressType',
-    //   route: '/settings/address-type',
-    //   right: true
-    // },
     {
-      label: 'Expand View',
+      label: t('Expand View'),
       value: '',
       desc: t('Expand View'),
       action: 'expand-view',
@@ -125,14 +105,6 @@ export default function SettingsTabScreen() {
       desc: '',
       action: 'networkType',
       route: '/settings/network-type',
-      right: true
-    },
-    {
-      label: t('EVM Network'),
-      value: '',
-      desc: '',
-      action: 'evmNetworkType',
-      route: '/custom-testnet',
       right: true
     },
     {
@@ -221,28 +193,29 @@ export default function SettingsTabScreen() {
             {toRenderSettings.map((item) => {
               if (!item.label) {
                 return (
-                  <Row key={item.action} mb="xs">
-                    <Button
-                      full
-                      style={{ height: 50 }}
-                      text={item.desc}
-                      RightAccessory={
-                        item.action == 'expand-view' ? <ExpandAltOutlined style={{ color: '#AAA' }} /> : undefined
+                  <Card
+                    classname="card-select"
+                    key={item.action}
+                    mb="xs"
+                    onClick={() => {
+                      if (item.action == 'expand-view') {
+                        openExtensionInTab();
+                        return;
                       }
-                      onClick={() => {
-                        if (item.action == 'expand-view') {
-                          openExtensionInTab();
-                          return;
-                        }
-                        if (item.action == 'lock-wallet') {
-                          wallet.lockWallet();
-                          navigate(PATH_UNLOCK_SCREEN);
-                          return;
-                        }
-                        navigate(item.route);
-                      }}
-                    />
-                  </Row>
+                      if (item.action == 'lock-wallet') {
+                        wallet.lockWallet();
+                        navigate(PATH_UNLOCK_SCREEN);
+                        return;
+                      }
+                      navigate(item.route);
+                    }}
+                  >
+                    <Row mb="xs">
+                      <Column justifyCenter gap="sm">
+                        <Text text={item.desc} preset="regular-bold" />
+                      </Column>
+                    </Row>
+                  </Card>
                 );
               }
               return (
@@ -276,10 +249,10 @@ export default function SettingsTabScreen() {
 
                     <Column justifyCenter>
                       {item.right && item.action !== 'expand-view' && (
-                        <RightOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+                        <RightOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
                       )}
                       {item.right && item.action == 'expand-view' && (
-                        <ExpandAltOutlined style={{ transform: 'scale(1.2)', color: '#AAA' }} />
+                        <ExpandAltOutlined style={{ transform: 'scale(1.2)', color: colors.icon_tertiary }} />
                       )}
                     </Column>
                   </Row>

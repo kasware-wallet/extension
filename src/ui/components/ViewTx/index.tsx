@@ -14,8 +14,9 @@ export const ViewTx = ({ txId }: { txId: string }) => {
     <Row
       justifyCenter
       onClick={() => {
-        window.open(`${blockstreamUrl}/txs/${txId}`);
-      }}>
+        window.open(`${blockstreamUrl}/transactions/${txId}`);
+      }}
+    >
       <ExportOutlined style={{ color: colors.aqua, fontSize: 10 }} />
       <Text preset="regular-bold" text={t('View transaction')} color="aqua" size="lg" />
     </Row>

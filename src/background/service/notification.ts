@@ -1,5 +1,4 @@
 /* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ethErrors } from 'eth-rpc-errors';
 import { EthereumProviderError } from 'eth-rpc-errors/dist/classes';
@@ -7,6 +6,7 @@ import Events from 'events';
 
 import { winMgr } from '@/background/webapi';
 import { IS_CHROME, IS_LINUX } from '@/shared/constant';
+import { browserRemoveBadge, browserSetBadge } from '../../shared/webapi/browser';
 
 interface Approval {
   data: {
@@ -59,6 +59,7 @@ class NotificationService extends Events {
     }
     this.approval = null;
     this.emit('resolve', data);
+    browserRemoveBadge();
   };
 
   rejectApproval = async (err?: string, stay = false, isInternal = false) => {
@@ -71,6 +72,7 @@ class NotificationService extends Events {
 
     await this.clear(stay);
     this.emit('reject', err);
+    browserRemoveBadge();
   };
 
   // currently it only support one approval at the same time
@@ -89,6 +91,7 @@ class NotificationService extends Events {
       };
 
       this.openNotification(winProps);
+      browserSetBadge('1');
     });
   };
 
@@ -119,6 +122,13 @@ class NotificationService extends Events {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.notifiWindowId = winId!;
     });
+  };
+  // remove notification window -- Shawn 2025-01-19
+  removeNotifiWindow = () => {
+    if (this.notifiWindowId) {
+      winMgr.remove(this.notifiWindowId);
+      this.notifiWindowId = 0;
+    }
   };
 }
 

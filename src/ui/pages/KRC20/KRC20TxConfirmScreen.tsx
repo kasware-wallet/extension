@@ -7,12 +7,13 @@ import { useLocation } from 'react-router-dom';
 import type { TProtocol, TTokenType } from '@/shared/types';
 import { TxType } from '@/shared/types';
 import { Header } from '@/ui/components';
+import { colors } from '@/ui/theme/colors';
 import { selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
-import { useOrdinalsTx, usePushKasplexTxCallback } from '@/ui/state/transactions/hooks';
+import { useOrdinalsTx, usePushInscriptionTxCallback } from '@/ui/state/transactions/hooks';
 import { useWallet } from '@/ui/utils';
-import { LoadingOutlined } from '@ant-design/icons';
+import { LoadingSpinner } from '@/ui/components';
 
 import { SignPsbt } from '../Approval/components';
 import { useNavigate } from '../MainRoute';
@@ -24,16 +25,15 @@ export default function KRC20TxConfirmScreen() {
   const networkId = useAppSelector(selectNetworkId);
   const currentAddress = useAppSelector(selectCurrentKaspaAddress);
   const navigate = useNavigate();
-  const pushKasplexTx = usePushKasplexTxCallback();
+  const pushInscriptionTx = usePushInscriptionTxCallback();
   const { state } = useLocation();
-  const { inscribeJsonString, type, tokenType, destAddr, priorityFee, protocol } = state as {
+  const { inscribeJsonString, type, tokenType, destAddr, protocol, feeRate } = state as {
     inscribeJsonString: string;
     type: TxType;
     tokenType: TTokenType;
-    priorityFee: number;
-    isRBF: boolean;
     protocol: TProtocol;
     destAddr?: string;
+    feeRate?: number;
   };
   const [title, setTitle] = useState('KRC20 TX Confirm');
   useEffect(() => {
@@ -43,10 +43,10 @@ export default function KRC20TxConfirmScreen() {
 
   return (
     <Layout>
-      <Content style={{ backgroundColor: '#1C1919' }} className="overflow-auto">
+      <Content style={{ backgroundColor: colors.bg5 }} className="overflow-auto">
         {ordinalsTx.sending ? (
-          <div className="flex flex-col items-strech mx-5 text-6xl mt-60 gap-3_75 text-primary">
-            <LoadingOutlined />
+          <div className="flex flex-col items-stretch mx-5 text-6xl mt-60 gap-3_75 text-primary">
+            <LoadingSpinner size="xxlarge" color={colors.primary} />
             <span className="text-2xl text-white text-center">{t('Sending')}</span>
           </div>
         ) : (
@@ -66,10 +66,7 @@ export default function KRC20TxConfirmScreen() {
             }}
             handleConfirm={() => {
               wallet.updateKRC20History(networkId, currentAddress, inscribeJsonString);
-              // dispatch(
-              //   uiActions.updateKRC20History({ networkId, deploy: op?.deploy, mint: op?.mint, transfer: op?.transfer })
-              // );
-              pushKasplexTx(inscribeJsonString, type, destAddr, priorityFee, protocol).then(
+              pushInscriptionTx(inscribeJsonString, type, destAddr, 0, protocol, feeRate).then(
                 ({ success, txids, error, type, inscribeJsonString, destAddr }) => {
                   if (success) {
                     navigate('TxSuccessScreen', { txids, type, inscribeJsonString, destAddr });

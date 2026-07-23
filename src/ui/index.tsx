@@ -1,44 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import message from 'antd/lib/message';
-import ReactDOM from 'react-dom/client';
-import { Provider } from 'react-redux';
-
-import browser from '@/shared/webapi/browser';
-import '@/evm/ui/style/index.less';
-import { updateChainStore } from '@/utils/chain';
 import { KASPA_EVENTS } from '@/shared/constant';
 import eventBus from '@/shared/eventBus';
 import { Message } from '@/shared/utils';
 import '@/shared/utils/logger';
-import AccountUpdater from '@/ui/state/accounts/updater';
+import browser from '@/shared/webapi/browser';
+import AccountUpdater from '@/ui/components/updater';
 import '@/ui/styles/global.less';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import message from 'antd/lib/message';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
 
+import type { WalletController } from '@/ui/utils';
 import { ActionComponentProvider } from './components/ActionComponent';
 import AsyncMainRoute from './pages/MainRoute';
 import store from './state';
 import { initBizStore, initWallet } from './state/models/app';
-import { chainsActions, chainsInit } from './state/models/chains';
+import { chainsActions } from './state/models/chains';
 import { getUITypeName, WalletProvider } from './utils';
 import i18n from './utils/i18n';
-import type { WalletController } from '@/ui/utils';
-
-// disabled sentry
-// Sentry.init({
-//   dsn: 'https://15ca58bf532f4234a2f400cd11edfa2f@o4504750033403904.ingest.sentry.io/4505044300201984',
-//   integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
-//   // Performance Monitoring
-//   tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
-//   // Session Replay
-//   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-//   replaysOnErrorSampleRate: 1.0 // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
-// });
-
-// import 'default-passive-events'
-
-// const AsyncMainRoute = lazy(() => import('./pages/MainRoute'));
+import { initLocalStorageProvider } from './utils/localStorageProvider';
 
 message.config({
   maxCount: 1
@@ -79,7 +62,6 @@ const { PortMessage } = Message;
 
 const portMessageChannel = new PortMessage();
 
-// portMessageChannel.connect('popup');
 portMessageChannel.connect(getUITypeName());
 
 const wallet = new Proxy(
@@ -210,29 +192,31 @@ const persister = createSyncStoragePersister({
   storage: window.localStorage
 });
 
+// Initialize localStorage provider for background service worker
+initLocalStorageProvider();
+
 store.dispatch(initWallet({ wallet }));
 eventBus.addEventListener('syncChainList', (params) => {
   store.dispatch(chainsActions.setField(params));
-  updateChainStore(params);
 });
 
 store.dispatch(initBizStore());
 
-store.dispatch(chainsInit());
-
-await wallet.getLocale().then(async (locale: string | undefined) => {
-  await i18n.changeLanguage(locale);
-  const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
-  root.render(
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
-      <Provider store={store}>
-        <WalletProvider wallet={wallet}>
-          <ActionComponentProvider>
-            <AccountUpdater />
-            <AsyncMainRoute />
-          </ActionComponentProvider>
-        </WalletProvider>
-      </Provider>
-    </PersistQueryClientProvider>
-  );
-});
+wallet
+  .getLocale()
+  .then(async (locale: string | undefined) => {
+    await i18n.changeLanguage(locale);
+  })
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(
+  <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+    <Provider store={store}>
+      <WalletProvider wallet={wallet}>
+        <ActionComponentProvider>
+          <AccountUpdater />
+          <AsyncMainRoute />
+        </ActionComponentProvider>
+      </WalletProvider>
+    </Provider>
+  </PersistQueryClientProvider>
+);

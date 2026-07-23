@@ -3,11 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate as useNavigateOrigin } from 'react-router-dom';
 
 import type { ConnectedSite } from '@/shared/types/permission';
-import { FallbackSiteLogo } from '@/evm/ui/component';
-import { TooltipWithMagnetArrow } from '@/evm/ui/component/Tooltip/TooltipWithMagnetArrow';
-import { Divide } from '@/evm/ui/views/Approval/components/Divide';
-import { CurrentConnection } from '@/evm/ui/views/Dashboard/components/CurrentConnection';
-import { findChainByEnum } from '@/utils/chain';
 import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { Empty } from '@/ui/components/Empty';
 import { useWallet } from '@/ui/utils';
@@ -73,16 +68,9 @@ export default function ConnectedSitesScreen() {
       />
       <Content>
         <Column>
-          {state?.type == 'EVM' && (
-            <>
-              <CurrentConnection />
-              <Divide />
-            </>
-          )}
           {state?.type == 'KASPA' && currentConnectedSite !== undefined && (
             <>
               <Item key={currentConnectedSite.origin} item={currentConnectedSite} onRemove={handleRemove} />
-              <Divide />
             </>
           )}
           {sites.length > 0 ? (
@@ -105,19 +93,14 @@ function Item({ item, onRemove }: { item: ConnectedSite; onRemove: (origin: stri
         )}</text></svg>`,
         name: item.chain
       };
-    } else {
-      return findChainByEnum(item.chain);
-    }
+    } 
   }, [item.chain]);
   return (
     <Card>
       <Row full justifyBetween itemsCenter>
         <Row itemsCenter>
           <div className="logo">
-            <FallbackSiteLogo url={item.icon} origin={item.origin} width="32px" />
-            <TooltipWithMagnetArrow title={chainItem?.name} className="rectangle w-[max-content]">
               <img className="connect-chain" src={chainItem?.logo} alt={chainItem?.name} />
-            </TooltipWithMagnetArrow>
           </div>
 
           <Text text={item.origin} preset="sub" />

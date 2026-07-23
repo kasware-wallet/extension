@@ -10,14 +10,12 @@ import { t } from 'i18next';
 import log from 'loglevel';
 import qs from 'qs';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useApproval as useApprovalEVM } from '@/evm/ui/utils';
 import { useNavigate, useNavigateOrigin } from '../../MainRoute';
 
 export default function UnlockScreen() {
   const wallet = useWallet();
   const navigate = useNavigate();
   const navigateOrigin = useNavigateOrigin();
-  const [, resolveApproval] = useApprovalEVM();
   const [password, setPassword] = useState('');
   const [disabled, setDisabled] = useState(true);
   const UIType = getUiType();
@@ -45,9 +43,7 @@ export default function UnlockScreen() {
       if (UIType.isNotification) {
         if (query.from === '/connect-approval') {
           navigateOrigin('/approval-evm?ignoreOtherWallet=1', { replace: true });
-        } else {
-          resolveApproval();
-        }
+        } 
       }
     } catch (e) {
       log.debug(e);

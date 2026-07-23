@@ -1,33 +1,29 @@
 import compareVersions from 'compare-versions';
 import { useCallback } from 'react';
 
-import { NETWORK_ID, VERSION, type EVM_CHAINS_ENUM } from '@/shared/constant';
+import { VERSION } from '@/shared/constant';
+import type { CURRENCIES, INetworkType, TNetworkId } from '@/shared/types';
 import { NetworkType } from '@/shared/types';
-import type { CURRENCIES, TNetworkId } from '@/shared/types';
-import type { INetworkType } from '@/shared/types';
 import { useQueryConfigJSON } from '@/ui/hooks/kasware';
 import { useWallet } from '@/ui/utils';
 import i18n from '@/ui/utils/i18n';
 
+import { getIntersection } from '@/shared/utils/arrayUtils';
+import { createSelector } from '@reduxjs/toolkit';
 import type { AppState } from '..';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { selectNetworkId, selectNetworkType, selectSettings, settingsActions } from './reducer';
-import { createSelector } from '@reduxjs/toolkit';
-import { DEX_SUPPORT_CHAINS } from '@kasware-wallet/swap';
-import { isCustomTestnet } from '@/utils/chain';
-import { getIntersection } from '@/shared/utils/arrayUtils';
-import { useSupportedDEXList } from '../models/swap';
+import { selectNetworkId, selectNetworkType, selectSettings as selectSettingsState, settingsActions } from './reducer';
 
 export function useSettingsState(): AppState['settings'] {
-  return useAppSelector((state) => state.settings);
+  return useAppSelector(selectSettingsState);
 }
 
-const selectLocale = createSelector(selectSettings, (settings) => settings.locale);
+const selectLocale = createSelector(selectSettingsState, (settings) => settings.locale);
 export function useLocale() {
   return useAppSelector(selectLocale);
 }
 
-const selectCurrency = createSelector(selectSettings, (settings) => settings.currency);
+const selectCurrency = createSelector(selectSettingsState, (settings) => settings.currency);
 export function useCurrency() {
   return useAppSelector(selectCurrency);
 }
@@ -38,7 +34,6 @@ export function useChangeLocaleCallback() {
   return useCallback(
     async (locale: string) => {
       await wallet.setLocale(locale);
-      // await addResourceBundle(locale);
       i18n.changeLanguage(locale);
       dispatch(
         settingsActions.updateSettings({
@@ -83,12 +78,12 @@ export function useChangeCurrencyCallback() {
 //   return accountsState.networkId as TNetworkId;
 // }
 
-const selectAutoLockMinutes = createSelector(selectSettings, (settings) => settings.autoLockMinutes);
+const selectAutoLockMinutes = createSelector(selectSettingsState, (settings) => settings.autoLockMinutes);
 export function useAutoLockMinutes() {
   return useAppSelector(selectAutoLockMinutes);
 }
 
-const selectRpcLinks = createSelector(selectSettings, (settings) => settings.rpcLinks);
+const selectRpcLinks = createSelector(selectSettingsState, (settings) => settings.rpcLinks);
 export function useRpcLinks() {
   return useAppSelector(selectRpcLinks);
 }
@@ -185,12 +180,8 @@ export function useEnableBridge() {
   const versionConfig = configJSON.data?.versionConfig;
 
   const networkId = useAppSelector(selectNetworkId);
-  const testnetList = useAppSelector((store) => store.chains.testnetList);
-  const chainList =
-    networkId === NETWORK_ID.mainnet
-      ? testnetList.filter((chain) => !isCustomTestnet(chain))
-      : testnetList.filter(isCustomTestnet);
-  const chainIds = chainList?.map((chain) => chain.id);
+  const testnetList = useAppSelector((state) => state.chains.testnetList);
+  const chainIds = testnetList?.map((chain) => chain.id);
   const enabled =
     versionConfig?.evmBridgeEnabled || versionConfig?.kaspaL2BridgeEnabled || versionConfig?.krcL2BridgeEnabled;
   const bridgeChainList = [
@@ -199,23 +190,6 @@ export function useEnableBridge() {
     ...(versionConfig?.krcL2BridgeEnabled ? configJSON.data?.krcL2BridgeChainList || [] : [])
   ];
   return enabled && bridgeChainList && getIntersection(chainIds, bridgeChainList)?.length > 0;
-}
-export function useDexSupportChains() {
-  const networkId = useAppSelector(selectNetworkId);
-  // const configJSON = useQueryConfigJSON();
-  // const evmDexList = networkId === NETWORK_ID.mainnet ? configJSON.data?.evmMainnetDexList : configJSON.data?.evmTestnetDexList;
-  const evmDexList = useSupportedDEXList();
-
-  const testnetList = useAppSelector((store) => store.chains.testnetList);
-  const chainList =
-    networkId === NETWORK_ID.mainnet
-      ? testnetList.filter((chain) => !isCustomTestnet(chain))
-      : testnetList.filter(isCustomTestnet);
-  const chainEnums = chainList?.map((chain) => chain.enum);
-  if (chainEnums?.length <= 0 || !evmDexList || evmDexList?.length <= 0) return [];
-
-  const supportedChains: EVM_CHAINS_ENUM[] = evmDexList?.flatMap((dex) => DEX_SUPPORT_CHAINS[dex]) || [];
-  return getIntersection(chainEnums, supportedChains);
 }
 export function useEnableKRC20Swap() {
   const walletConfig = useWalletConfig();

@@ -1,7 +1,7 @@
 import { Switch } from '@headlessui/react';
 import React from 'react';
 import { formatNumberAbbreviated, formatNumberWithDecimal } from '../utils';
-import type { KaspaToken, Token } from '../utils2/interfaces';
+import type { KaspaToken, Token } from '../utils/types';
 import CryptoImage from './CryptoImage';
 
 export const NO_DATA_SYMBOL = '-';

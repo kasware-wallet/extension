@@ -1,13 +1,10 @@
-// import moment from 'moment';
-
 import { TxType } from '@/shared/types';
 import { Button, Column, Content, Header, Layout, Row, Text } from '@/ui/components';
-import { useTools } from '@/ui/components/ActionComponent';
+import { Section } from './Section';
 import { useKsprNftMetadataQuery } from '@/ui/hooks/KsprNft/fetchKsprNft';
 import { useCacheKrc721StreamUrl } from '@/ui/state/settings/hooks';
-import { useResetUiTxCreateScreen } from '@/ui/state/ui/hooks';
-import type { ColorTypes } from '@/ui/theme/colors';
-import { copyToClipboard, useLocationState } from '@/ui/utils';
+import { useResetUiTxCreateScreenCallback } from '@/ui/state/temp-ui/hooks';
+import { useLocationState } from '@/ui/utils';
 import log from 'loglevel';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +18,7 @@ export default function KsprDetailScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { tokenId, tick } = useLocationState<LocationState>();
-  const resetUiTxCreateScreen = useResetUiTxCreateScreen();
+  const resetUiTxCreateScreen = useResetUiTxCreateScreenCallback();
   const cacheKrc721StreamUrl = useCacheKrc721StreamUrl();
   const { data } = useKsprNftMetadataQuery(tick, tokenId);
   log.debug('data', data);
@@ -90,41 +87,6 @@ export default function KsprDetailScreen() {
         </Column>
       </Content>
     </Layout>
-  );
-}
-
-function Section({
-  value,
-  title,
-  link,
-  valueColor
-}: {
-  value: string | number;
-  title: string;
-  link?: string;
-  valueColor?: ColorTypes;
-}) {
-  const tools = useTools();
-  return (
-    <Column>
-      <Text text={title} preset="sub" />
-      <Text
-        text={value}
-        preset={link ? 'link' : 'regular'}
-        size="xs"
-        color={valueColor || undefined}
-        wrap
-        onClick={() => {
-          if (link) {
-            window.open(link);
-          } else {
-            copyToClipboard(value).then(() => {
-              tools.toastSuccess('Copied');
-            });
-          }
-        }}
-      />
-    </Column>
   );
 }
 

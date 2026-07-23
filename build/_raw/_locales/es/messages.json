@@ -1,0 +1,473 @@
+{
+  "Copy__address": {
+    "message": "Copiar dirección"
+  },
+  "Edit__Name": {
+    "message": "Editar nombre"
+  },
+  "New__account": {
+    "message": "Nueva cuenta"
+  },
+  "Your__transaction__has__been__successfully__sent": {
+    "message": "Su transacción no ha sido enviada exitosamente"
+  },
+  "Export__Private__Key": {
+    "message": "Exportar clave privada"
+  },
+  "Save__it__somewhere__safe__and__secret": {
+    "message": "Guárdalo en un lugar seguro y secreto."
+  },
+  "Discover__address": {
+    "message": "Descubrir dirección"
+  },
+  "Change__Password": {
+    "message": "Cambiar la contraseña"
+  },
+  "Receive": {
+    "message": "Recibir"
+  },
+  "shortName": {
+    "message": "Kasware"
+  },
+  "appName": {
+    "message": "KasWare®"
+  },
+  "Switch__Language": {
+    "message": "Cambiar idioma"
+  },
+  "Reject__All": {
+    "message": "Rechazar todo"
+  },
+  "From__single__private__key": {
+    "message": "Desde una única clave privada"
+  },
+  "24__words": {
+    "message": "24 palabras"
+  },
+  "From__seed__phrase": {
+    "message": "De frase semilla"
+  },
+  "Restore__Wallet": {
+    "message": "Restaurar billetera"
+  },
+  "12__words": {
+    "message": "12 palabras"
+  },
+  "With__seed__phrase": {
+    "message": "Con frase semilla"
+  },
+  "Create__Wallet": {
+    "message": "Crear billetera"
+  },
+  "Create__Single__Wallet": {
+    "message": "Crear billetera única"
+  },
+  "Invalid__PrivateKey": {
+    "message": "Clave privada no válida"
+  },
+  "Copied__address": {
+    "message": "Dirección copiada"
+  },
+  "HEX__Private__Key": {
+    "message": "Clave privada hexagonal"
+  },
+  "Change__Wallet__Name": {
+    "message": "Cambiar nombre de billetera"
+  },
+  "Reset": {
+    "message": "Reiniciar"
+  },
+  "Change__Network__URL": {
+    "message": "Cambiar URL de red"
+  },
+  "Remove__Contact": {
+    "message": "Remover contacto"
+  },
+  "Change__Contact__Name": {
+    "message": "Cambiar nombre de contacto"
+  },
+  "Change__Account__Name": {
+    "message": "Cambiar nombre de cuenta"
+  },
+  "Address__type__changed": {
+    "message": "Tipo de dirección cambiado"
+  },
+  "Address__Type": {
+    "message": "Tipo de dirección"
+  },
+  "First__Open__Source__Chrome__wallet__for__Kaspa__in__the__world__Simple__and__reliable": {
+    "message": "Primera billetera Chrome de código abierto para Kaspa en el mundo Simple y confiable"
+  },
+  "Address": {
+    "message": "DIRECCIÓN"
+  },
+  "You__may__increase__transfer__amount": {
+    "message": "Puedes aumentar el monto de la transferencia"
+  },
+  "Done": {
+    "message": "Hecho"
+  },
+  "History": {
+    "message": "Historia"
+  },
+  "safe__to__send": {
+    "message": "seguro para enviar"
+  },
+  "Unconfirmed": {
+    "message": "Inconfirmado"
+  },
+  "Priority__Fee__Rate": {
+    "message": "Tasa de tarifa de prioridad"
+  },
+  "Optional": {
+    "message": "Opcional"
+  },
+  "Balance": {
+    "message": "Balance"
+  },
+  "My__account": {
+    "message": "Mi cuenta"
+  },
+  "Contacts": {
+    "message": "Contactos"
+  },
+  "Recent": {
+    "message": "Reciente"
+  },
+  "NO__DATA": {
+    "message": "SIN DATOS"
+  },
+  "no__contacts__yet": {
+    "message": "aún no hay contactos"
+  },
+  "Connected__Sites": {
+    "message": "Sitios conectados"
+  },
+  "Not__connected": {
+    "message": "No conectado"
+  },
+  "Connected": {
+    "message": "Conectado"
+  },
+  "Lock__Now": {
+    "message": "Bloquear ahora"
+  },
+  "Expand__View": {
+    "message": "Ampliar vista"
+  },
+  "Network": {
+    "message": "Red"
+  },
+  "Accelerating__Kaspa__adoption": {
+    "message": "Acelerando la adopción de Kaspa"
+  },
+  "No__contacts": {
+    "message": "Sin contactos"
+  },
+  "My__Contacts": {
+    "message": "Mis contactos"
+  },
+  "Activity": {
+    "message": "Actividad"
+  },
+  "Latest__Transactions": {
+    "message": "Últimas transacciones"
+  },
+  "Success": {
+    "message": "Éxito"
+  },
+  "Switch__Account": {
+    "message": "Cambiar cuenta"
+  },
+  "Japanese__Yen": {
+    "message": "Yen japonés"
+  },
+  "British__Pound": {
+    "message": "Libra británica"
+  },
+  "Import__an__existing__account": {
+    "message": "Importar una cuenta existente"
+  },
+  "English": {
+    "message": "Inglés"
+  },
+  "Login": {
+    "message": "Acceso"
+  },
+  "You__will__use__this__to__unlock__your__wallet": {
+    "message": "Usarás esto para desbloquear tu billetera."
+  },
+  "Show__Private__Key": {
+    "message": "Mostrar clave privada"
+  },
+  "Spanish": {
+    "message": "Español"
+  },
+  "Recipient": {
+    "message": "Recipiente"
+  },
+  "Confirm__payment": {
+    "message": "Confirmar pago"
+  },
+  "I__saved__My__Secret__Recovery__Phrase": {
+    "message": "Guardé mi frase secreta de recuperación"
+  },
+  "If__you__ever__change__browsers__or__move__computers": {
+    "message": "Si alguna vez cambia de navegador o mueve computadoras"
+  },
+  "appDescription": {
+    "message": "La billetera más completa y orientada a la seguridad para Kaspa, con soporte para redes KRC20, KNS, KRC721 y L2."
+  },
+  "Password_must_contain_at_least_5_characters": {
+    "message": "Contraseña_debe_contener_al_menos_5_caracteres"
+  },
+  "This__is__an__imported__account": {
+    "message": "Esta es una cuenta importada."
+  },
+  "Successfully__imported": {
+    "message": "Importado exitosamente"
+  },
+  "Canadian__Dollar": {
+    "message": "Dolar canadiense"
+  },
+  "Send": {
+    "message": "Enviar"
+  },
+  "Back": {
+    "message": "Atrás"
+  },
+  "Add__New__Account": {
+    "message": "Agregar nueva cuenta"
+  },
+  "Chinese": {
+    "message": "Chino"
+  },
+  "Create__a__new__wallet": {
+    "message": "Crear una nueva billetera"
+  },
+  "Create__a__new__account": {
+    "message": "Crea una cuenta nueva"
+  },
+  "Current__Password": {
+    "message": "Contraseña actual"
+  },
+  "Your__transaction__has__not__been__successfully__sent": {
+    "message": "Su transacción ha sido enviada exitosamente"
+  },
+  "Next": {
+    "message": "Próximo"
+  },
+  "Amount": {
+    "message": "Cantidad"
+  },
+  "Import__wallet": {
+    "message": "Importar billetera"
+  },
+  "Get__Started": {
+    "message": "Empezar"
+  },
+  "Password": {
+    "message": "Contraseña"
+  },
+  "Import__Private__Key": {
+    "message": "Importar clave privada"
+  },
+  "Language": {
+    "message": "Idioma"
+  },
+  "Show__Secret__Recovery__Phrase": {
+    "message": "Mostrar frase secreta de recuperación"
+  },
+  "Deposit": {
+    "message": "Depósito"
+  },
+  "Do__NOT__share__it__with__anyone": {
+    "message": "NO lo compartas con nadie"
+  },
+  "View__on__Block__Explorer": {
+    "message": "Ver en el Explorador de bloques"
+  },
+  "Create__Account": {
+    "message": "Crear una cuenta"
+  },
+  "Copied": {
+    "message": "copiado"
+  },
+  "Clipboard__cleared__for__security": {
+    "message": "Portapapeles borrado por seguridad"
+  },
+  "Change__your__lockscreen__password": {
+    "message": "Cambia la contraseña de tu pantalla de bloqueo"
+  },
+  "US__Dollar": {
+    "message": "Dólar estadounidense"
+  },
+  "Detected__multiple__requests__from__this__Dapp": {
+    "message": "Se han detectado múltiples solicitudes desde esta Dapp"
+  },
+  "Cancel__current__transaction": {
+    "message": "Cancelar la transacción actual"
+  },
+  "Block__Dapp__from__sending__requests__for__1__minute": {
+    "message": "Bloquear a la Dapp para que no envíe solicitudes durante 1 minuto"
+  },
+  "Do__you__want__to__delete": {
+    "message": "¿Quieres borrarlo"
+  },
+  "Related__tokens__will__be__removed__from__the__list__of__tokens": {
+    "message": "Los tokens relacionados se eliminarán de la lista de tokens."
+  },
+  "Transaction__Data": {
+    "message": "Datos de la transacción"
+  },
+  "Reserve__Gas": {
+    "message": "Reservar Gas"
+  },
+  "Instant": {
+    "message": "Instantáneo"
+  },
+  "Fast": {
+    "message": "Rápido"
+  },
+  "Normal": {
+    "message": "Normal"
+  },
+  "Do__Not__Reserve__Gas": {
+    "message": "No reservar Gas"
+  },
+  "Collection": {
+    "message": "Colección"
+  },
+  "Chain": {
+    "message": "Cadena"
+  },
+  "Last__Price": {
+    "message": "Último precio"
+  },
+  "Purchase__Date": {
+    "message": "Fecha de compra"
+  },
+  "Only__ERC721__and__ERC1155__NFTs__are__supported__for__now": {
+    "message": "Solo se admiten NFTs ERC721 y ERC1155 por ahora"
+  },
+  "Your__balance__is": {
+    "message": "Tu saldo es "
+  },
+  "Only__one__NFT__of__ERC721__can__be__sent__at__a__time": {
+    "message": "Solo se puede enviar un NFT de ERC721 a la vez"
+  },
+  "No__transactions__found": {
+    "message": "No se encontraron transacciones"
+  },
+  "No__transactions": {
+    "message": "No se encontraron transacciones"
+  },
+  "You__can__select__NFT__from__All__and__add__to__Starred": {
+    "message": "Puedes seleccionar NFT desde \"Todos\" y agregarlos a \"Destacados\""
+  },
+  "No__Starred__NFT": {
+    "message": "No hay NFTs destacados"
+  },
+  "No__NFT": {
+    "message": "No hay NFTs"
+  },
+  "Canceled__a__pending__transaction": {
+    "message": "Cancelaste una transacción pendiente"
+  },
+  "Contract__Interaction": {
+    "message": "Interacción de contrato"
+  },
+  "Contract__address__must__be__specified": {
+    "message": "Debe especificar una dirección de contrato"
+  },
+  "The__specified__address__is__invalid": {
+    "message": "La dirección especificada no es válida"
+  },
+  "transactions__need_to_sign": {
+    "message": "Las transacciones necesitan ser firmadas"
+  },
+  "View": {
+    "message": "Ver"
+  },
+  "View__first_one": {
+    "message": "Ver el primer"
+  },
+  "No__Transactions": {
+    "message": "No hay transacciones"
+  },
+  "No__quotes__available__for__this__chain__yet": {
+    "message": "Aún no hay cotizaciones disponibles para esta cadena"
+  },
+  "Please__use__a__third__party__Dapp__to__proceed": {
+    "message": "Por favor, use una aplicación descentralizada (Dapp) de terceros para continuar"
+  },
+  "View__Dapp__Options": {
+    "message": "Ver opciones de Dapp"
+  },
+  "Select__a__Dapp": {
+    "message": "Seleccionar una Dapp"
+  },
+  "No__Dapps__available": {
+    "message": "No hay Dapps disponibles"
+  },
+  "Please__contact__the__official__team__of__this__chain__for__support": {
+    "message": "Por favor, contacta al equipo oficial de esta cadena para obtener soporte"
+  },
+  "Not__supported__on__this__chain": {
+    "message": "No es compatible con esta cadena"
+  },
+  "No__Dapp__available__on__this__chain": {
+    "message": "No hay Dapps disponibles en esta cadena"
+  },
+  "Swap__on__Dapp": {
+    "message": "Intercambiar en Dapp"
+  },
+  "Bridge__on__Dapp": {
+    "message": "Cambiar en Dapp"
+  },
+  "Not__supported": {
+    "message": "No compatible"
+  },
+  "No__chains": {
+    "message": "No hay cadenas"
+  },
+  "Search__by__Name__or__Address": {
+    "message": "Buscar por Nombre o Dirección"
+  },
+  "Add__to__my__token__list": {
+    "message": "Añadir a mi lista de tokens"
+  },
+  "Gas__Token": {
+    "message": "Token de Gas"
+  },
+  "FDV": {
+    "message": "FDV"
+  },
+  "Edit": {
+    "message": "Editar"
+  },
+  "Delete": {
+    "message": "Eliminar"
+  },
+  "Speed__Up": {
+    "message": "Acelerar"
+  },
+  "Fee": {
+    "message": "Comision"
+  },
+  "Add__Transaction__Fee__RBF": {
+    "message": "Agregar comision de transaccion (RBF)"
+  },
+  "Enter__additional__fee": {
+    "message": "Ingrese comision adicional"
+  },
+  "New__Total__Fee": {
+    "message": "Nueva comision total"
+  },
+  "Please__enter__a__valid__fee__amount": {
+    "message": "Por favor ingrese un monto de comision valido"
+  },
+  "Transaction__fee__added__successfully": {
+    "message": "Comision de transaccion agregada con exito!"
+  }
+}

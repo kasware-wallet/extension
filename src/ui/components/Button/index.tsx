@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react';
 import React, { useState } from 'react';
 
+import { Loading3QuartersOutlined } from '@ant-design/icons';
 import { colors } from '@/ui/theme/colors';
-import { spacing } from '@/ui/theme/spacing';
+import { spacingGap } from '@/ui/theme/spacing';
 
 import { Column } from '../Column';
 import type { IconTypes } from '../Icon';
@@ -56,22 +57,23 @@ export interface ButtonProps {
   icon?: IconTypes;
   disabled?: boolean;
   full?: boolean;
+  loading?: boolean;
 }
 
 const $baseViewStyle: CSSProperties = {
   display: 'flex',
   minHeight: 36,
-  borderRadius: 4,
+  borderRadius: 'var(--r-radius-sm, 4px)',
   justifyContent: 'center',
   alignItems: 'center',
   flexDirection: 'row',
-  // paddingVertical: spacing.small,
-  // paddingHorizontal: spacing.small,
+  // paddingVertical: spacingGap.lg,
+  // paddingHorizontal: spacingGap.lg,
   overflow: 'hidden',
   cursor: 'pointer',
   alignSelf: 'stretch',
-  paddingLeft: spacing.small,
-  paddingRight: spacing.small
+  paddingLeft: spacingGap.lg,
+  paddingRight: spacingGap.lg
 };
 
 const $viewPresets = {
@@ -94,14 +96,14 @@ const $viewPresets = {
     height: '75px',
     justifyContent: 'space-between',
 
-    paddingTop: spacing.medium,
-    paddingBottom: spacing.medium
+    paddingTop: spacingGap.xl,
+    paddingBottom: spacingGap.xl
   } as CSSProperties)
 };
 
 const $hoverViewPresets: Record<Presets, CSSProperties> = {
   default: {
-    backgroundColor: '#383535'
+    backgroundColor: colors.bg4
   },
   primary: {
     backgroundColor: colors.aqua_dark
@@ -110,7 +112,7 @@ const $hoverViewPresets: Record<Presets, CSSProperties> = {
     backgroundColor: colors.red_dark
   },
   bar: {
-    backgroundColor: '#383535'
+    backgroundColor: colors.bg4
   }
 };
 
@@ -123,8 +125,8 @@ const $baseTextStyle: CSSProperties = {
   flexGrow: 0,
   zIndex: 2,
   color: colors.white,
-  paddingLeft: spacing.tiny,
-  paddingRight: spacing.tiny
+  paddingLeft: spacingGap.sm,
+  paddingRight: spacingGap.sm
 };
 
 const $textPresets: Record<Presets, CSSProperties> = {
@@ -141,9 +143,10 @@ const $pressedTextPresets: Record<Presets, CSSProperties> = {
   bar: { opacity: 0.9 }
 };
 
-const $rightAccessoryStyle: CSSProperties = { marginLeft: spacing.extraSmall, zIndex: 1 };
-const $leftAccessoryStyle: CSSProperties = { marginRight: spacing.extraSmall, zIndex: 1 };
+const $rightAccessoryStyle: CSSProperties = { marginLeft: spacingGap.md, zIndex: 1 };
+const $leftAccessoryStyle: CSSProperties = { marginRight: spacingGap.md, zIndex: 1 };
 const $baseDisabledViewStyle: CSSProperties = { cursor: 'not-allowed', opacity: 0.5 };
+const $baseLoadingViewStyle: CSSProperties = { cursor: 'wait', opacity: 0.7 };
 export function Button(props: ButtonProps) {
   const {
     text,
@@ -160,6 +163,7 @@ export function Button(props: ButtonProps) {
     disabled,
     full,
     title,
+    loading,
     ...rest
   } = props;
 
@@ -169,8 +173,9 @@ export function Button(props: ButtonProps) {
     {},
     $viewPresets[preset],
     $viewStyleOverride,
-    hover && !disabled ? $hoverViewPresets[preset] : {},
+    hover && !disabled && !loading ? $hoverViewPresets[preset] : {},
     disabled ? $baseDisabledViewStyle : {},
+    loading && !disabled ? $baseLoadingViewStyle : {},
     full ? { flex: 1 } : {}
   );
   const $textStyle = Object.assign({}, $textPresets[preset], $textStyleOverride);
@@ -186,12 +191,15 @@ export function Button(props: ButtonProps) {
         style={$viewStyle}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        onClick={disabled ? undefined : onClick}
+        onClick={disabled || loading ? undefined : onClick}
         title={title}
       >
         <Row>
           {LeftAccessory && <div style={$leftAccessoryStyle}>{LeftAccessory}</div>}
-          {icon && <Icon icon={icon} color={'white'} style={{ marginRight: spacing.tiny }} />}
+          {icon && <Icon icon={icon} color={'white'} style={{ marginRight: spacingGap.sm }} />}
+          {loading ? (
+            <Loading3QuartersOutlined className="animate-spin" style={{ marginRight: spacingGap.sm }} />
+          ) : null}
           <Column justifyCenter gap="zero">
             {text && <Text text={text} style={$textStyle} />}
             {subText && <Text text={subText} style={$subTextStyle} />}
@@ -208,13 +216,14 @@ export function Button(props: ButtonProps) {
   return (
     <div
       style={$viewStyle}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled || loading ? undefined : onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       title={title}
     >
       {LeftAccessory && <div style={$leftAccessoryStyle}>{LeftAccessory}</div>}
-      {icon && <Icon icon={icon} style={{ marginRight: spacing.tiny }} />}
+      {icon && <Icon icon={icon} style={{ marginRight: spacingGap.sm }} />}
+      {loading ? <Loading3QuartersOutlined className="animate-spin" style={{ marginRight: spacingGap.sm }} /> : null}
       {text && <Text style={$textStyle} text={text} preset="regular-bold" />}
       {children}
       {RightAccessory && <div style={$rightAccessoryStyle}>{RightAccessory}</div>}
@@ -233,7 +242,8 @@ export function ButtonColumn(props: ButtonProps) {
     icon,
     disabled,
     full,
-    title
+    title,
+    loading
   } = props;
 
   const preset: Presets = props.preset || 'default';
@@ -242,8 +252,9 @@ export function ButtonColumn(props: ButtonProps) {
     {},
     $viewPresets[preset],
     $viewStyleOverride,
-    hover && !disabled ? $hoverViewPresets[preset] : {},
+    hover && !disabled && !loading ? $hoverViewPresets[preset] : {},
     disabled ? $baseDisabledViewStyle : {},
+    loading && !disabled ? $baseLoadingViewStyle : {},
     full ? { flex: 1 } : {},
     { padding: '10px 0px' },
     { flexDirection: 'column' },
@@ -255,13 +266,14 @@ export function ButtonColumn(props: ButtonProps) {
   return (
     <div
       style={$viewStyle}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled || loading ? undefined : onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       title={title}
     >
       {LeftAccessory && <div>{LeftAccessory}</div>}
       {icon && <Icon icon={icon} />}
+      {loading ? <Loading3QuartersOutlined className="animate-spin" /> : null}
       {text && <Text style={$textStyle} text={text} preset="regular-bold" />}
       {children}
     </div>

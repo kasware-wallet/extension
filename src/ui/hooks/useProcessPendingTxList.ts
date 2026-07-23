@@ -19,9 +19,14 @@ export default function useProcessPendingTxList() {
   const [lastPendingTxId, setLastPendingTxId] = useState<string | undefined>();
   const transactionInfos = useAppSelector(selectTxActivities);
   useEffect(() => {
-    wallet.getPendingTxDatas(currentAddress).then((res) => {
-      dispatch(transactionsActions.setPendingList(res));
-    });
+    wallet
+      .getPendingTxDatas(currentAddress)
+      .then((res) => {
+        dispatch(transactionsActions.setPendingList(res));
+      })
+      .catch((e) => {
+        log.debug('Failed to get pending tx datas:', e);
+      });
   }, [currentAddress, dispatch, wallet, kasNetworkId]);
   useEffect(() => {
     for (let i = 0; i < transactionInfos.length; i++) {
@@ -34,11 +39,17 @@ export default function useProcessPendingTxList() {
   }, [transactionInfos, dispatch]);
   useEffect(() => {
     const pendingTransactionHandler = (e: string) => {
-      const res: { sendKasInfo?: ITxInfo; retrieveInfo?: ITxInfo; commitInfo?: ITxInfo; revealInfo?: ITxInfo } =
-        JSON.parse(e);
-      const res2 = res?.sendKasInfo || res?.retrieveInfo || res?.commitInfo || res?.revealInfo;
-      if (res2 != undefined && res2.motherAddress == currentAddress) {
-        dispatch(transactionsActions.addToPendingList(res2));
+      try {
+        const parsed = JSON.parse(e);
+        if (typeof parsed !== 'object' || parsed === null) return;
+        const res: { sendKasInfo?: ITxInfo; retrieveInfo?: ITxInfo; commitInfo?: ITxInfo; revealInfo?: ITxInfo } =
+          parsed;
+        const res2 = res?.sendKasInfo || res?.retrieveInfo || res?.commitInfo || res?.revealInfo;
+        if (res2 !== undefined && res2.motherAddress === currentAddress) {
+          dispatch(transactionsActions.addToPendingList(res2));
+        }
+      } catch (err) {
+        log.debug('Failed to parse pending transaction event:', err);
       }
     };
     const processorUtxoChangeHandler = (e: string[]) => {

@@ -1,12 +1,10 @@
 import type { ICurrencyItem } from '@/shared/types';
 import { CURRENCIES } from '@/shared/types';
-import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { Card, Column, Content, Header, Icon, Layout, LoadingSpinner, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { useReloadAccounts } from '@/ui/state/accounts/hooks';
 import { useChangeCurrencyCallback, useCurrency } from '@/ui/state/settings/hooks';
-import { colors } from '@/ui/theme/colors';
-import { fontSizes } from '@/ui/theme/font';
-import { CheckCircleFilled, LoadingOutlined } from '@ant-design/icons';
+import { CheckCircleFilled } from '@ant-design/icons';
 import VirtualList from 'rc-virtual-list';
 import { forwardRef, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -30,31 +28,16 @@ export default function CurrencyTypeScreen() {
       />
       <Content>
         <Column>
-          <Row justifyCenter>
-            {loading && (
-              <Icon>
-                <LoadingOutlined
-                  style={{
-                    fontSize: fontSizes.icon,
-                    color: colors.grey
-                  }}
-                />
-              </Icon>
-            )}
-          </Row>
+          <Row justifyCenter>{loading && <LoadingSpinner size="medium" />}</Row>
         </Column>
         <VirtualList
-          // data={items}
           data={items}
           data-id="list"
           itemHeight={30}
           itemKey={(item) => item.id}
-          // disabled={animating}
           style={{
             boxSizing: 'border-box'
           }}
-          // onSkipRender={onAppear}
-          // onItemRemove={onAppear}
         >
           {(item, index) => <ForwardMyItem currency={currency} item={item} setLoading={setLoading} key={index} />}
         </VirtualList>

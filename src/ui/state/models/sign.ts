@@ -1,4 +1,4 @@
-import type { TokenItem } from '@kasware-wallet/api/dist/types';
+import type { TokenItem } from '@kasware-wallet/api';
 import { createSelector, createSlice } from '@reduxjs/toolkit';
 import type { AppState, TAppDispatch } from '..';
 
@@ -22,13 +22,7 @@ export const sign = createSlice({
   reducers: {
     setField(state, action: { payload: Partial<typeof state> }) {
       const { payload } = action;
-      return Object.keys(payload).reduce(
-        (accu, key) => {
-          accu[key] = payload[key];
-          return accu;
-        },
-        { ...state }
-      );
+      Object.assign(state, payload || {});
     },
     setTokenDetail(state, action: { payload: SignState['tokenDetail'] }) {
       const { payload } = action;

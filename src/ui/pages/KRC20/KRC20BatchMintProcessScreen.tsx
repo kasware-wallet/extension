@@ -9,33 +9,26 @@ import eventBus from '@/shared/eventBus';
 import type { IKRC20TokenInfo, IKRC20TokenInfoIssue, KasplexData } from '@/shared/types';
 import { Button, Column, Content, Footer, Header, Icon, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
-import { FeeRateBar, PriorityFeeType } from '@/ui/components/FeeRateBar';
-import { useAccountBalance, useFetchInscriptionsCallback } from '@/ui/state/accounts/hooks';
+import { useFetchInscriptionsCallback } from '@/ui/state/accounts/hooks';
 import { selectAccountInscriptions, selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
-import { useRpcStatus } from '@/ui/state/global/hooks';
 import { useAppDispatch, useAppSelector } from '@/ui/state/hooks';
 import { selectKasTick, selectNetworkId } from '@/ui/state/settings/reducer';
-import { usePendingList, useReplaceTransactionCallback } from '@/ui/state/transactions/hooks';
 import { transactionsActions } from '@/ui/state/transactions/reducer';
-import { useFeeRateOption, useKRC20History } from '@/ui/state/ui/hooks';
-import { KRC20MintDeployTabKey, uiActions } from '@/ui/state/ui/reducer';
-import { colors } from '@/ui/theme/colors';
-import { formatLocaleString, shortAddress, sleepSecond, useWallet } from '@/ui/utils';
-import { LoadingOutlined } from '@ant-design/icons';
-
+import { KRC20MintDeployTabKey, tempUiActions } from '@/ui/state/temp-ui/reducer';
+import { formatLocaleString, shortAddress, useWallet } from '@/ui/utils';
+import { LoadingSpinner } from '@/ui/components';
 import { useNavigate } from '../MainRoute';
 import { sompiToAmount } from '@/shared/utils/format';
 
 export default function KRC20BatchMintProcessScreen() {
+  const wallet = useWallet();
   const kasTick = useAppSelector(selectKasTick);
   const [searchParams] = useSearchParams();
   const inscribeJsonString = searchParams.get('inscribeJsonString');
   const times = searchParams.get('times') ? Number(searchParams.get('times')) : 0;
   const networkId = searchParams.get('networkId');
   const sourceAddr = searchParams.get('sourceAddr');
-  const priorityFee = searchParams.get('priorityFee') ? Number(searchParams.get('priorityFee')) : 0;
   const { t } = useTranslation();
-  const handleReplaceTransaction = useReplaceTransactionCallback();
   const tools = useTools();
   const currentAddress = useAppSelector(selectCurrentKaspaAddress);
   const navigate = useNavigate();
@@ -44,11 +37,7 @@ export default function KRC20BatchMintProcessScreen() {
   const [isComplete, setIsComplete] = useState<boolean>(false);
   const [balanceAmount, setBalanceAmount] = useState<string>('');
   const [startCancel, setStartCancel] = useState(false);
-  const krc20History = useKRC20History();
   const currentNetworkId = useAppSelector(selectNetworkId);
-  const [pending, setPending] = useState<boolean>(false);
-  const [isNewTxFee, setIsNewTxFee] = useState<boolean>(false);
-  const fRO = useFeeRateOption();
   const handleCancel = async () => {
     setStartCancel(true);
     await wallet.setBatchMintStatus(false);
@@ -56,75 +45,56 @@ export default function KRC20BatchMintProcessScreen() {
     setStartCancel(false);
     let arr: string[] = [];
     if (networkId) {
-      arr = [
-        krc20History[networkId]?.mintArr,
-        krc20History[networkId]?.deployArr,
-        krc20History[networkId]?.transferArr
-      ].flatMap((arr2) => arr2 || []);
+      arr = [].flatMap((arr2) => arr2 || []);
     }
-    if (fRO[PriorityFeeType.AVG]?.feeRate && fRO[PriorityFeeType.AVG].feeRate <= 1) {
-      wallet.onSearchAndRetrieve(arr);
-    } else {
-      log.debug('feeRate is larger than 1. User needs to retrieve txs manually.');
-    }
+    wallet.onSearchAndRetrieve(arr);
   };
 
   const krc20Tick = useMemo(() => {
     if (inscribeJsonString) {
-      const json: KasplexData<'mint'> = JSON.parse(inscribeJsonString);
-      const tick = json?.tick;
-      return tick;
+      try {
+        const json: KasplexData<'mint'> = JSON.parse(inscribeJsonString);
+        const tick = json?.tick;
+        return tick;
+      } catch (e) {
+        log.debug('Failed to parse inscribeJsonString:', e);
+        return '';
+      }
     }
     return '';
   }, [inscribeJsonString]);
 
-  const handleProcess = async () => {
-    if (currentNetworkId !== networkId) {
-      handleCancel().then(() => {
-        tools.toastError('network type changed');
-        setError('network type changed');
-      });
-    } else {
-      try {
-        if (inscribeJsonString) {
-          wallet.signKRC20BatchMintCommit(inscribeJsonString, times, priorityFee);
-          wallet.signKRC20BatchMintReveal(inscribeJsonString, times, priorityFee);
-        } else {
-          tools.toastError('inscribeJsonString is empty');
-          setError('inscribeJsonString is empty');
+  // Single-stage payload mint mode - no commit/reveal split
+  useEffect(() => {
+    const handleProcess = async () => {
+      if (currentNetworkId !== networkId) {
+        handleCancel().then(() => {
+          tools.toastError('network type changed');
+          setError('network type changed');
+        });
+      } else {
+        try {
+          if (inscribeJsonString) {
+            wallet.signKRC20BatchMintPayload(inscribeJsonString, times);
+          } else {
+            tools.toastError('inscribeJsonString is empty');
+            setError('inscribeJsonString is empty');
+          }
+        } catch (e) {
+          log.debug((e as Error).message);
+          setError((e as Error).message);
         }
-      } catch (e) {
-        log.debug((e as Error).message);
-        setError((e as Error).message);
       }
-    }
-  };
-
-  const handleInitPendingTxs = async () => {
-    if (sourceAddr) {
-      const res = await wallet.getPendingTxDatas(sourceAddr);
-      for (let i = 0; i < res.length; i++) {
-        const txId = res[i].transaction_id;
-        const txFee = 0.001 + priorityFee;
-        await handleReplaceTransaction(txId, txFee);
-      }
-    }
-  };
-  useEffect(() => {
+    };
     handleProcess();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    try {
-      handleInitPendingTxs();
-    } catch (e) {
-      log.debug(e);
-    }
-  }, []);
   useEffect(() => {
     wallet.getPendingTxDatas(currentAddress).then((res) => {
       dispatch(transactionsActions.setPendingList(res));
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -137,8 +107,9 @@ export default function KRC20BatchMintProcessScreen() {
     return () => {
       window.removeEventListener('beforeunload', handleTabClose);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const wallet = useWallet();
+
   const [signPercent, setSignPercent] = useState<{ percent: number; msg: string }>({ percent: 0, msg: '' });
   const successCountRef = useRef(0);
   const failedCountRef = useRef(0);
@@ -148,49 +119,31 @@ export default function KRC20BatchMintProcessScreen() {
     const tempItems = accountInscriptions?.list;
     return tempItems.find((item) => item.tick === krc20Tick);
   }, [accountInscriptions?.list, krc20Tick]);
-  const rpcStatus = useRpcStatus();
-  const [txFee, setTxFee] = useState(0);
-  const accountBalance = useAccountBalance();
-  const [currentPriorityFee, setCurrentPriorityFee] = useState(priorityFee);
-  const [newPriorityFee, setNewPriorityFee] = useState(0);
-  const pendingList = usePendingList();
 
-  useEffect(() => {
-    const fetchTxFee = async () => {
-      const fee = await wallet
-        .getTxFee(currentAddress, currentAddress, currentAddress, 20, 0, accountBalance.amount == '20' ? true : false)
-        .catch((err) => {
-          console.error('fetchTxFee error', err);
-          setTxFee(0.0001);
-        });
-      if (fee) {
-        setTxFee(fee);
-      } else {
-        setTxFee(0.0001);
-      }
-    };
-    fetchTxFee();
-  }, [currentAddress, rpcStatus]);
   const handleBatchMintProcess = (e: string) => {
-    const obj: { successCount?: number; failedCount?: number; error?: string } = JSON.parse(e);
-    if (obj?.successCount && obj?.successCount > 0) {
-      successCountRef.current++;
-      if (successCountRef.current >= times) handleCancel();
-      fetchInscription()
-        .finally()
-        .catch((e) => {
-          log.debug(e.message);
+    try {
+      const obj: { successCount?: number; failedCount?: number; error?: string } = JSON.parse(e);
+      if (obj?.successCount && obj?.successCount > 0) {
+        successCountRef.current++;
+        if (successCountRef.current >= times) handleCancel();
+        fetchInscription()
+          .finally()
+          .catch((e) => {
+            log.debug(e.message);
+          });
+      }
+      if (obj?.failedCount && obj?.failedCount > 0) {
+        failedCountRef.current++;
+      }
+      if (obj?.error != undefined) {
+        const error = obj.error;
+        handleCancel().then(() => {
+          tools.toastError(error);
+          setError(error);
         });
-    }
-    if (obj?.failedCount && obj?.failedCount > 0) {
-      failedCountRef.current++;
-    }
-    if (obj?.error != undefined) {
-      const error = obj.error;
-      handleCancel().then(() => {
-        tools.toastError(error);
-        setError(error);
-      });
+      }
+    } catch (err) {
+      log.debug('Failed to parse batch mint process event:', err);
     }
   };
   const handleBatchMintProcessRef = useRef(handleBatchMintProcess);
@@ -212,55 +165,18 @@ export default function KRC20BatchMintProcessScreen() {
   };
 
   const signKRC20ProcessHandler = (e: string) => {
-    const res: { percent: number; msg: string } = JSON.parse(e);
-    setSignPercent(res);
+    try {
+      const res: { percent: number; msg: string } = JSON.parse(e);
+      setSignPercent(res);
+    } catch (err) {
+      log.debug('Failed to parse sign KRC20 process event:', err);
+    }
   };
   const fetchBalance = async (sourceAddr: string) => {
     const balance = await wallet.getAddressBalance(sourceAddr);
     setBalanceAmount(balance.amount);
   };
 
-  const handleUpdate = async () => {
-    if (newPriorityFee <= 0) return;
-    setPending(true);
-    log.debug('handle update');
-    // network is congested and need rbf to free utxos
-    if (successCountRef.current == 0) {
-      const res = pendingList.filter((e) => e.mode == 'commit');
-      if (res.length > 0) {
-        for (const e of res) {
-          await handleReplaceTransaction(e.transaction_id, newPriorityFee);
-        }
-      }
-      const res2 = pendingList.filter((e) => e.mode == 'sendkas');
-      if (res2.length > 0) {
-        for (const e of res2) {
-          await handleReplaceTransaction(e.transaction_id, newPriorityFee);
-        }
-        await sleepSecond(3);
-        if (inscribeJsonString) await wallet.signKRC20BatchMintCommit(inscribeJsonString, times, newPriorityFee);
-      }
-      if (res2.length == 0 && res.length == 0) {
-        if (inscribeJsonString) await wallet.signKRC20BatchMintCommit(inscribeJsonString, times, newPriorityFee);
-      }
-    }
-
-    try {
-      setCurrentPriorityFee(newPriorityFee);
-      await wallet.setBatchMintPriorityFee(newPriorityFee);
-      setIsNewTxFee(true);
-      for (const e of pendingList) {
-        const oldId = e.transaction_id;
-        await handleReplaceTransaction(oldId, newPriorityFee);
-      }
-    } catch (e) {
-      tools.toastError((e as Error).message ? (e as Error).message : JSON.stringify(e));
-    }
-
-    await sleepSecond(5);
-    setIsNewTxFee(false);
-    setPending(false);
-  };
   useEffect(() => {
     eventBus.addEventListener('signkrc20process', signKRC20ProcessHandler);
     return () => {
@@ -275,6 +191,7 @@ export default function KRC20BatchMintProcessScreen() {
     return () => {
       eventBus.removeEventListener('processor-balance-event', processorBalanceHandler);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -282,6 +199,7 @@ export default function KRC20BatchMintProcessScreen() {
     return () => {
       eventBus.removeEventListener('batchmintkrc20process', handleBatchMintProcess);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -336,45 +254,6 @@ export default function KRC20BatchMintProcessScreen() {
               style={{ wordWrap: 'break-word' }}
             />
           </Row>
-          <Row justifyBetween fullX itemsCenter py="sm">
-            <Text text={'Current upper limit tx fee:'} color="textDim" />
-            <Text
-              text={`${new BigNumber(currentPriorityFee).plus(txFee).decimalPlaces(8).toNumber()} ${kasTick}`}
-              color={isNewTxFee ? 'green' : 'textDim'}
-              style={{ wordWrap: 'break-word' }}
-            />
-          </Row>
-
-          <Column mt="md" style={{ borderWidth: '1px', borderColor: colors.grey }}>
-            <FeeRateBar
-              txFee={txFee}
-              defaultIndex={PriorityFeeType.CUSTOM}
-              onChange={(val) => {
-                setNewPriorityFee(val - txFee > 0 ? Number(new BigNumber(val).minus(txFee).decimalPlaces(8)) : 0);
-              }}
-            />
-            <Row justifyCenter fullX itemsCenter py="md">
-              {' '}
-              <Text
-                mt="md"
-                mb="md"
-                color="white"
-                text={`${t('Upper limit tx fee:')} ${new BigNumber(newPriorityFee)
-                  .plus(txFee)
-                  .decimalPlaces(8)
-                  .toNumber()} ${kasTick}`}
-                textCenter
-              />{' '}
-              {pending == false && (
-                <Button disabled={false} text={t('Update')} preset="primary" onClick={handleUpdate} />
-              )}
-              {pending == true && (
-                <Button disabled={true} preset="default">
-                  <LoadingOutlined style={{ color: '#AAA' }} />
-                </Button>
-              )}
-            </Row>
-          </Column>
 
           {isComplete == true && error.length == 0 && (
             <Row justifyCenter mt="xl">
@@ -388,9 +267,7 @@ export default function KRC20BatchMintProcessScreen() {
           )}
           {startCancel && (
             <Row justifyCenter>
-              <Icon>
-                <LoadingOutlined />
-              </Icon>
+              <LoadingSpinner size="medium" />
             </Row>
           )}
         </Column>
@@ -425,7 +302,7 @@ export default function KRC20BatchMintProcessScreen() {
               text="Mint Again"
               onClick={() => {
                 dispatch(
-                  uiActions.updateKRC20MintDeployTab({
+                  tempUiActions.updateKRC20MintDeployTab({
                     // eslint-disable-next-line no-undef
                     krc20MintDeployTabKey: KRC20MintDeployTabKey.MINT
                   })
@@ -460,21 +337,22 @@ function TokenInfo({
   const [tokenInfo, setTokenInfo] = useState<IKRC20TokenInfo | IKRC20TokenInfoIssue>();
   const wallet = useWallet();
   const [infoArray, setInfoArray] = useState<Array<{ name: string; value: string }>>([]);
-  const fetchKRC20Info = async () => {
-    if (tick) {
-      try {
-        const tokenInfos = await wallet.getKRC20TokenInfo(tick);
-        if (tokenInfos && Array.isArray(tokenInfos) && tokenInfos.length > 0) {
-          setTokenInfo(tokenInfos[0]);
-        }
-      } catch (e) {
-        log.debug(e);
-      }
-    }
-  };
+
   useEffect(() => {
+    const fetchKRC20Info = async () => {
+      if (tick) {
+        try {
+          const tokenInfos = await wallet.getKRC20TokenInfo(tick);
+          if (tokenInfos && Array.isArray(tokenInfos) && tokenInfos.length > 0) {
+            setTokenInfo(tokenInfos[0]);
+          }
+        } catch (e) {
+          log.debug(e);
+        }
+      }
+    };
     fetchKRC20Info();
-  }, [successCount]);
+  }, [successCount, tick, wallet]);
 
   useEffect(() => {
     if (tokenInfo) {
@@ -514,6 +392,7 @@ function TokenInfo({
       }
       setInfoArray(infoA);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenInfo]);
 
   return (

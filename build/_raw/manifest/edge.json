@@ -1,7 +1,12 @@
 {
   "externally_connectable": {
-    "matches": ["https://kasware.xyz/*"],
-    "ids": ["*"]
+    "matches": [
+      "https://*.kasware.xyz/*",
+      "https://*.kasware.io/*"
+    ],
+    "ids": [
+      "*"
+    ]
   },
   "minimum_chrome_version": "66"
 }

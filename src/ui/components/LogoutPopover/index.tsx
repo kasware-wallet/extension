@@ -1,7 +1,6 @@
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useWallet } from '@/ui/utils';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Icon } from '../Icon';
 
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import Checkbox from 'antd/es/checkbox';
@@ -11,6 +10,7 @@ import { Column } from '../Column';
 import { Popover } from '../Popover';
 import { Row } from '../Row';
 import { Text } from '../Text';
+import { colors } from '@/ui/theme/colors';
 
 export const LogoutPopover = ({ onClose }: { onClose: () => void }) => {
   const wallet = useWallet();
@@ -34,7 +34,7 @@ export const LogoutPopover = ({ onClose }: { onClose: () => void }) => {
   return (
     <Popover onClose={onClose}>
       <Column itemsCenter classname="flex flex-none items-center justify-around">
-        <FontAwesomeIcon icon={faTrashCan} color="#CC3333" size="lg" />
+        <Icon icon="trash-can" color="danger_muted" size={24} />
         <div className="pb-[10px] space-y-[10px]">
           <Row>
             <Checkbox

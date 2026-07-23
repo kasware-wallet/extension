@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import type { KsprTokenResponse } from '@/ui/utils2/interfaces';
+import type { KsprTokenResponse } from '@/ui/utils/types';
 import { useQuery } from '@tanstack/react-query';
 
 /**

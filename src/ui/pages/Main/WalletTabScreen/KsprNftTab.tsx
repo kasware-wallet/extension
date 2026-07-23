@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Column, Row, Text } from '@/ui/components';
+import { Column, Grid, LoadingSpinner, Row, Text } from '@/ui/components';
 import { Empty } from '@/ui/components/Empty';
 import KsprNftPreview from '@/ui/components/KsprNftPreview';
 import { Pagination } from '@/ui/components/Pagination';
@@ -9,8 +9,6 @@ import useKsprNftQuery from '@/ui/hooks/KsprNft/fetchKsprNft';
 import { selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
-import { LoadingOutlined } from '@ant-design/icons';
-
 import { useNavigate } from '../../MainRoute';
 
 // const address = 'kaspa:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e';
@@ -52,7 +50,7 @@ export function KsprNftTab() {
   if (isLoading || isFetching) {
     return (
       <Column style={{ minHeight: 150 }} itemsCenter justifyCenter>
-        <LoadingOutlined />
+        <LoadingSpinner size="medium" />
       </Column>
     );
   }
@@ -71,8 +69,8 @@ export function KsprNftTab() {
   }
 
   return (
-    <Column>
-      <Row style={{ flexWrap: 'wrap' }} gap="sm" justifyCenter>
+    <Column px="lg" py="md">
+      <Grid columns={3} gap="md" style={{ justifyItems: 'center' }}>
         {currentNfts?.map((data) => (
           <KsprNftPreview
             key={data.tokenId + data.tick + data.buri}
@@ -84,7 +82,7 @@ export function KsprNftTab() {
             }}
           />
         ))}
-      </Row>
+      </Grid>
       <Row justifyCenter mt="lg">
         <Pagination
           pagination={pagination}

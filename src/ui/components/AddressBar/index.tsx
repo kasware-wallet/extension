@@ -6,6 +6,7 @@ import { selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
 import { copyToClipboard, shortAddress } from '@/ui/utils';
+import { colors } from '@/ui/theme/colors';
 import { CopyOutlined } from '@ant-design/icons';
 
 import { useTools } from '../ActionComponent';
@@ -26,9 +27,10 @@ export function AddressBar({ length = 6, showEvmAddress = true }) {
           copyToClipboard(address).then(() => {
             tools.toastSuccess(t('Copied'));
           });
-        }}>
+        }}
+      >
         <Text text={shortAddress(address, length)} color="textDim" style={{ wordWrap: 'break-word' }} />
-        <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+        <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
       </Row>
       {showEvmAddress == true && <DisplayAddress address={toChecksumHexAddress(account.evmAddress)} length={length} />}
     </>
@@ -47,9 +49,10 @@ export function DisplayAddress({ address, length }) {
         copyToClipboard(address).then(() => {
           tools.toastSuccess(t('Copied'));
         });
-      }}>
+      }}
+    >
       <Text text={shortAddress(address, length)} color="textDim" style={{ wordWrap: 'break-word' }} />
-      <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+      <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
     </Row>
   );
 }

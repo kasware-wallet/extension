@@ -11,7 +11,7 @@ import {
   browserWindowsOnRemoved,
   browserWindowsRemove,
   browserWindowsUpdate
-} from './browser';
+} from '../../shared/webapi/browser';
 
 const event = new EventEmitter();
 

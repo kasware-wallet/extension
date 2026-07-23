@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { t } from 'i18next';
 import log from 'loglevel';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { IKRC20List } from '@/shared/types';
 import { constructKRC20ListJsonStrLowerCase, constructKRC20SendJsonStrLowerCase } from '@/shared/utils';
@@ -23,8 +21,9 @@ import { selectKasTick, selectNetworkId } from '@/ui/state/settings/reducer';
 import { colors } from '@/ui/theme/colors';
 import { fontSizes } from '@/ui/theme/font';
 import { formatLocaleString, useApproval, useWallet } from '@/ui/utils';
-import { ArrowDownOutlined, LoadingOutlined } from '@ant-design/icons';
+import { ArrowDownOutlined } from '@ant-design/icons';
 import { sompiToAmount } from '@/shared/utils/format';
+import { LoadingView, ScammerView } from '../common';
 
 interface Props {
   header?: React.ReactNode;
@@ -73,7 +72,7 @@ function SignTxDetails({
 
   const title = useMemo(() => {
     return `Create ${krc20Tick?.toUpperCase()} Order`;
-  }, []);
+  }, [krc20Tick]);
 
   const prettyInscribeJsonString = useMemo(() => {
     const jsonStr = constructKRC20ListJsonStrLowerCase(krc20Tick, krc20Amount, decimal);
@@ -95,19 +94,11 @@ function SignTxDetails({
       const content = `Inscription: list ${krc20Amount} ${krc20Tick?.toUpperCase()} on chain`;
       setPayload(content);
     }
-  }, [krc20Tick, krc20Amount, decimal, account.pubkey, keyring.addressType]);
+  }, [krc20Tick, krc20Amount, decimal, account.pubkey, keyring.addressType, wallet]);
 
   return (
     <Column gap="sm">
       <Text text={title} preset="sub" color="textDim" selectText />
-      {/* <Row itemsCenter>
-        <Text text={'Type:'} preset="default" color="textDim" />
-        <Text text={`Create ${krc20Tick} Order`} style={{ wordWrap: 'break-word' }} />
-      </Row>
-      <Row itemsCenter>
-        <Text text={'Inscription Protocol:'} preset="default" color="textDim" />
-        <Text text={'kasplex'} style={{ wordWrap: 'break-word' }} />
-      </Row> */}
       <Row itemsCenter justifyCenter>
         <Text
           text={`lock ${formatLocaleString(krc20Amount)} ${krc20Tick?.toUpperCase()} and ${formatLocaleString(
@@ -154,26 +145,12 @@ function SignTxDetails({
         <Text text={t('to') as string} textCenter color="textDim" preset="sub" selectText />
         <AddressText addressInfo={{ address: p2shAddress, domain: '' }} textCenter />
       </Row>
-      {/* <Text
-        style={{ userSelect: 'text' }}
-        text={`2 ${kasTick} is locked. Will return to you after the order is completed.`}
-        color="textDim"
-        preset="sub"
-      /> */}
 
       {priorityFee != undefined && priorityFee > 0 && (
         <Column justifyCenter mt="sm">
           <Text text={`${priorityFee} ${kasTick} ${t('priority fee')}`} preset="sub" textCenter selectText />
         </Column>
       )}
-      {/* <Text
-        selectText
-        mt="md"
-        mb="md"
-        text={`0.1% of ${kasTick} will be deducted as a service fee when order is completed.`}
-        preset="xsub"
-        color="textDim"
-      /> */}
     </Column>
   );
 }
@@ -226,27 +203,35 @@ function SignTxDetailsBuyKRC20Token({
 
   useEffect(() => {
     if (!txJsonString || txJsonString?.length <= 0) return;
-    const txJson = JSON.parse(txJsonString);
-    const id = txJson?.inputs[0]?.transactionId;
-    fetchKRC20HistoryFromID(id);
+    try {
+      const txJson = JSON.parse(txJsonString);
+      const id = txJson?.inputs[0]?.transactionId;
+      fetchKRC20HistoryFromID(id);
+    } catch (e: any) {
+      setError(e?.message ? e?.message : JSON.stringify(e));
+    }
   }, [txJsonString]);
 
   useEffect(() => {
     if (!txJsonString || txJsonString?.length <= 0) return;
 
     const getOutputs = async () => {
-      const txJson = JSON.parse(txJsonString);
-      const outputs1: any[] = [];
-      for (const item of txJson.outputs) {
-        const amount = sompiToAmount(item.value, 8);
-        const address = await wallet.addressFromScriptPublicKey(item?.scriptPublicKey, networkId);
-        outputs1.unshift({ address, amount });
+      try {
+        const txJson = JSON.parse(txJsonString);
+        const outputs1: any[] = [];
+        for (const item of txJson.outputs) {
+          const amount = sompiToAmount(item.value, 8);
+          const address = await wallet.addressFromScriptPublicKey(item?.scriptPublicKey, networkId);
+          outputs1.unshift({ address, amount });
+        }
+        const outputs2 = extraOutput ? extraOutput : ([] as any[]);
+        setOutputs([...outputs1, ...outputs2]);
+      } catch (e: any) {
+        setError(e?.message ? e?.message : JSON.stringify(e));
       }
-      const outputs2 = extraOutput ? extraOutput : ([] as any[]);
-      setOutputs([...outputs1, ...outputs2]);
     };
     getOutputs();
-  }, [txJsonString, extraOutput]);
+  }, [txJsonString, extraOutput, wallet, networkId]);
 
   useEffect(() => {
     if (krc20Tick?.length > 0) {
@@ -316,9 +301,6 @@ function SignTxDetailsBuyKRC20Token({
         );
       })}
 
-      {/* <Column justifyCenter>
-        <Text text={`${txInfo.txFee} ${kasTick} ${t('transaction fee')}`} preset="sub" textCenter />
-      </Column> */}
       {priorityFee != undefined && priorityFee > 0 && (
         <Column justifyCenter>
           <Text text={`${priorityFee} ${kasTick} ${t('priority fee')}`} preset="sub" textCenter selectText />
@@ -343,7 +325,6 @@ function SignTxDetailsCancelKRC20Order({
   const address = useAccountAddress();
   const kasTick = useAppSelector(selectKasTick);
   const wallet = useWallet();
-  // const [krc20Tick, setkrc20Tick] = useState<string>('');
   const [krc20Amount, setkrc20Amount] = useState<string>('0');
   const [error, setError] = useState<string>('');
   const [payload, setPayload] = useState<string>('Inscription:');
@@ -353,28 +334,29 @@ function SignTxDetailsCancelKRC20Order({
   }, [krc20Tick]);
 
   const outputs = useMemo(() => {
-    // const pskt = Transaction.deserializeFromSafeJSON(txJsonString) as Transaction;
     if (!txJsonString || txJsonString?.length <= 0) return;
     const txJson = JSON.parse(txJsonString);
     const amount = sompiToAmount(txJson.inputs[0].utxo?.amount, 8);
-    // const scriptPubkey = txJson.outputs[0].scriptPublicKey;
     const outputs = [{ address: address, amount }];
     return outputs;
-  }, [txJsonString]);
+  }, [address, txJsonString]);
 
-  const fetchKRC20HistoryFromID = async (id: string, decimal: string) => {
-    if (!id || id?.length <= 0) return;
-    try {
-      const history = (await wallet.getKRC20HistoryFromID(id)) as IKRC20List;
-      if (history) {
-        // setkrc20Tick(history?.tick?.toUpperCase());
-        const amt = sompiToAmount(history?.amt, decimal);
-        setkrc20Amount(amt);
+  const fetchKRC20HistoryFromID = useCallback(
+    async (id: string, decimal: string) => {
+      if (!id || id?.length <= 0) return;
+      try {
+        const history = (await wallet.getKRC20HistoryFromID(id)) as IKRC20List;
+        if (history) {
+          // setkrc20Tick(history?.tick?.toUpperCase());
+          const amt = sompiToAmount(history?.amt, decimal);
+          setkrc20Amount(amt);
+        }
+      } catch (e: any) {
+        setError(e?.message ? e?.message : JSON.stringify(e));
       }
-    } catch (e: any) {
-      setError(e?.message ? e?.message : JSON.stringify(e));
-    }
-  };
+    },
+    [wallet]
+  );
 
   useEffect(() => {
     let selectedId = '';
@@ -388,7 +370,7 @@ function SignTxDetailsCancelKRC20Order({
       return;
     }
     fetchKRC20HistoryFromID(selectedId, decimal);
-  }, [txJsonString, sendCommitTxId, decimal]);
+  }, [txJsonString, sendCommitTxId, decimal, fetchKRC20HistoryFromID]);
   const prettyInscribeJsonString = useMemo(() => {
     const jsonStr = constructKRC20SendJsonStrLowerCase(krc20Tick);
     if (jsonStr?.length > 0) {
@@ -448,28 +430,7 @@ function SignTxDetailsCancelKRC20Order({
         );
       })}
 
-      {/* <Column justifyCenter>
-        <Text text={`${txInfo.txFee} ${kasTick} ${t('transaction fee')}`} preset="sub" textCenter />
-      </Column> */}
-      {/* {priorityFee && priorityFee > 0 && (
-        <Column justifyCenter>
-          <Text text={`${priorityFee} ${kasTick} ${t('priority fee')}`} preset="sub" textCenter />
-        </Column>
-      )} */}
       {error?.length > 0 && <Text text={error} color="error" selectText />}
-    </Column>
-  );
-}
-
-function Section({ title, children }: { title: string; children?: React.ReactNode }) {
-  return (
-    <Column>
-      <Text text={title} preset="bold" />
-      <Card>
-        <Row full justifyBetween itemsCenter>
-          {children}
-        </Row>
-      </Card>
     </Column>
   );
 }
@@ -481,15 +442,6 @@ interface TxInfo {
   }[];
   txFee: number;
   isScammer: boolean;
-  // changedBalance: number;
-  // rawtx: string;
-  // psbtHex: string;
-  // toSignInputs: ToSignInput[];
-  // txError: string;
-  // decodedPsbt: DecodedPsbt;
-  // isScammer: boolean;
-  // inscribeJsonString: string;
-  // destAddr?: string;
 }
 
 const initTxInfo = {
@@ -521,10 +473,6 @@ export default function KRC20Order({
 
   const [txInfo, setTxInfo] = useState<TxInfo>(initTxInfo);
 
-  const [errors, setErrors] = useState<string[]>([]);
-
-  const kasTick = useAppSelector(selectKasTick);
-
   const wallet = useWallet();
   const [loading, setLoading] = useState(true);
   const tools = useTools();
@@ -536,29 +484,30 @@ export default function KRC20Order({
   const fetchInscription = useFetchInscriptionsCallback();
   const dispatch = useAppDispatch();
   const [decimal, setDecimal] = useState<string>('8');
-  const handleFetchInscription = async () => {
-    fetchInscription()
-      .finally()
-      .catch((e) => {
-        log.debug(e.message);
-        dispatch(
-          accountsActions.setInscriptions({
-            address: currentAccount.address,
-            list: []
-          })
-        );
-      });
+  const handleFetchInscription = () => {
+    fetchInscription().catch((e) => {
+      log.debug(e.message);
+      dispatch(
+        accountsActions.setInscriptions({
+          address: currentAccount.address,
+          list: []
+        })
+      );
+    });
   };
 
-  const fetchKRC20Info = async (tick: string) => {
-    const tokenInfos = await wallet.getKRC20TokenInfo(tick).catch((e) => {
-      log.debug(e);
-      tools.toastError((e as any).message);
-    });
-    if (tokenInfos && Array.isArray(tokenInfos) && tokenInfos.length > 0) {
-      setDecimal(tokenInfos[0].dec);
-    }
-  };
+  const fetchKRC20Info = useCallback(
+    async (tick: string) => {
+      const tokenInfos = await wallet.getKRC20TokenInfo(tick).catch((e) => {
+        log.debug(e);
+        tools.toastError((e as any).message);
+      });
+      if (tokenInfos && Array.isArray(tokenInfos) && tokenInfos.length > 0) {
+        setDecimal(tokenInfos[0].dec);
+      }
+    },
+    [tools, wallet]
+  );
 
   useEffect(() => {
     const index = accountInscriptions?.list.findIndex((item) => item.tick?.toLowerCase() === krc20Tick?.toLowerCase());
@@ -568,16 +517,17 @@ export default function KRC20Order({
     } else if (krc20Tick && krc20Tick?.length > 0) {
       fetchKRC20Info(krc20Tick);
     }
-  }, [krc20Tick, accountInscriptions?.list]);
+  }, [krc20Tick, accountInscriptions?.list, fetchKRC20Info]);
 
   useEffect(() => {
-    if (type == 'signBuyKRC20Token' || type == 'signCancelKRC20Order') setContent('Sign');
+    if (type === 'signBuyKRC20Token' || type === 'signCancelKRC20Order') setContent('Sign');
   }, [type]);
 
   useEffect(() => {
     // init();
     handleFetchInscription();
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!handleCancel) {
@@ -588,7 +538,7 @@ export default function KRC20Order({
 
   if (!handleConfirm) {
     handleConfirm = () => {
-      if (type == 'createKRC20Order') {
+      if (type === 'createKRC20Order') {
         resolveApproval({
           krc20Tick,
           krc20Amount,
@@ -596,13 +546,13 @@ export default function KRC20Order({
           psktExtraOutput,
           priorityFee
         });
-      } else if (type == 'buyKRC20Token' || type == 'signBuyKRC20Token') {
+      } else if (type === 'buyKRC20Token' || type === 'signBuyKRC20Token') {
         resolveApproval({
           txJsonString,
           extraOutput,
           priorityFee
         });
-      } else if (type == 'cancelKRC20Order' || type == 'signCancelKRC20Order') {
+      } else if (type === 'cancelKRC20Order' || type === 'signCancelKRC20Order') {
         resolveApproval({
           krc20Tick,
           txJsonString,
@@ -614,7 +564,7 @@ export default function KRC20Order({
 
   const networkFee = useMemo(() => txInfo.txFee, [txInfo.txFee]);
   const detailsComponent = useMemo(() => {
-    if (type == 'createKRC20Order') {
+    if (type === 'createKRC20Order') {
       return (
         <SignTxDetails
           decimal={decimal}
@@ -624,11 +574,11 @@ export default function KRC20Order({
           priorityFee={priorityFee}
         />
       );
-    } else if (type == 'buyKRC20Token' || type == 'signBuyKRC20Token') {
+    } else if (type === 'buyKRC20Token' || type === 'signBuyKRC20Token') {
       return (
         <SignTxDetailsBuyKRC20Token txJsonString={txJsonString} extraOutput={extraOutput} priorityFee={priorityFee} />
       );
-    } else if (type == 'cancelKRC20Order' || type == 'signCancelKRC20Order') {
+    } else if (type === 'cancelKRC20Order' || type === 'signCancelKRC20Order') {
       return (
         <SignTxDetailsCancelKRC20Order
           decimal={decimal}
@@ -638,46 +588,10 @@ export default function KRC20Order({
         />
       );
     }
-  }, [
-    type,
-    decimal,
-    krc20Tick,
-    krc20Amount,
-    kasAmount,
-    priorityFee,
-    txJsonString,
-    sendCommitTxId,
-    txInfo,
-    extraOutput
-  ]);
-  const canChanged = useMemo(() => {
-    return true;
-  }, [txInfo]);
-
-  const isValid = useMemo(() => {
-    return true;
-  }, [txInfo]);
-
-  // const isValidData = useMemo(() => {
-  //   if (txInfo.psbtHex === '') {
-  //     return false;
-  //   }
-  //   return true;
-  // }, [txInfo.psbtHex]);
-  const hasHighRisk = useMemo(() => {
-    return false;
-  }, [txInfo]);
+  }, [type, decimal, krc20Tick, krc20Amount, kasAmount, priorityFee, txJsonString, sendCommitTxId, extraOutput]);
 
   if (loading) {
-    return (
-      <Layout>
-        <Content itemsCenter justifyCenter>
-          <Icon size={fontSizes.xxxl} color="gold">
-            <LoadingOutlined />
-          </Icon>
-        </Content>
-      </Layout>
-    );
+    return <LoadingView />;
   }
 
   if (!header && session) {
@@ -689,57 +603,14 @@ export default function KRC20Order({
   }
 
   if (txInfo.isScammer) {
-    return (
-      <Layout>
-        <Content>
-          <Column>
-            <Text text="Phishing Detection" preset="title-bold" textCenter mt="xxl" />
-            <Text text="Malicious behavior and suspicious activity have been detected." mt="md" />
-            <Text
-              text="Your access to this page has been restricted by KasWare Wallet as it might be unsafe."
-              mt="md"
-            />
-          </Column>
-        </Content>
-
-        <Footer>
-          <Row full>
-            <Button text="Reject (blocked by KasWare Wallet)" preset="danger" onClick={handleCancel} full />
-          </Row>
-        </Footer>
-      </Layout>
-    );
+    return <ScammerView onCancel={handleCancel} />;
   }
 
   return (
     <Layout>
       {header}
       <Content>
-        <Column gap="xxs">
-          {detailsComponent}
-
-          {canChanged == false && (
-            <Section title="Transaction Fee:">
-              <Text text={networkFee} />
-              <Text text={kasTick} color="textDim" />
-            </Section>
-          )}
-
-          {canChanged == false && (
-            <Section title="Network Fee Rate:">
-              {/* <Text text={txInfo.decodedPsbt.feeRate.toString()} /> */}
-              <Text text={''} />
-              <Text text="sat/vB" color="textDim" />
-            </Section>
-          )}
-          {errors &&
-            errors.map((error, index) => {
-              if (errors.length == 1) {
-                return <Text key={index} text={`${error}`} color="error" mt="md" />;
-              }
-              return <Text key={index} text={`${index + 1}: ${error}`} color="error" />;
-            })}
-        </Column>
+        <Column gap="xxs">{detailsComponent}</Column>
       </Content>
 
       <Footer>
@@ -757,28 +628,18 @@ export default function KRC20Order({
         </Column>
         <Row full>
           <Button preset="default" text="Reject" onClick={handleCancel} full />
-          {hasHighRisk == false && (
-            <Button
-              preset="primary"
-              text={content}
-              onClick={() => {
-                setLoading(true);
-                handleConfirm();
-              }}
-              disabled={disabled}
-              full
-            />
-          )}
+          <Button
+            preset="primary"
+            text={content}
+            onClick={() => {
+              setLoading(true);
+              handleConfirm();
+            }}
+            disabled={disabled}
+            full
+          />
         </Row>
       </Footer>
-      {/* {isWarningVisible && (
-        <WarningPopover
-          risks={txInfo.decodedPsbt.risks}
-          onClose={() => {
-            setIsWarningVisible(false);
-          }}
-        />
-      )} */}
     </Layout>
   );
 }

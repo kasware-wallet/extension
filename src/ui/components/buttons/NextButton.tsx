@@ -1,5 +1,5 @@
 import { Button } from '@/ui/components';
-import Spinner from '@/ui/components/loaders/Spinner';
+import { Spinner } from '@/ui/components/loaders/Spinner';
 import React from 'react';
 
 interface NextButtonProps {

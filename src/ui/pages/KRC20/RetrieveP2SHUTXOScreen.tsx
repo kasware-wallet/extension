@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { TabsProps } from 'antd';
 import { Checkbox, Drawer, Tabs } from 'antd';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
@@ -29,8 +28,8 @@ import { useExtensionIsInTab, useOpenExtensionInTab } from '@/ui/features/browse
 import { selectAccountBalance, selectCurrentKaspaAddress } from '@/ui/state/accounts/reducer';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectBlockstreamUrl, selectKasTick, selectNetworkId } from '@/ui/state/settings/reducer';
-import { useKRC20History } from '@/ui/state/ui/hooks';
 import { fontSizes } from '@/ui/theme/font';
+import { colors } from '@/ui/theme/colors';
 import { formatLocaleString, shortAddress, useLocationState, useWallet } from '@/ui/utils';
 import useKRC20TokenInfo from '@/ui/utils/hooks/useKRC20TokenInfo';
 import { ExpandAltOutlined, HistoryOutlined } from '@ant-design/icons';
@@ -53,7 +52,6 @@ export default function RetrieveP2SHUTXOScreen() {
   const [txIds, setTxIds] = useState<string[]>([]);
   const [retrieveSuccessAmt, setRetrieveSuccessAmt] = useState('');
   const navigateOrigin = useNavigateOrigin();
-  const krc20History = useKRC20History();
   const currentAddress = useAppSelector(selectCurrentKaspaAddress);
   const networkId = useAppSelector(selectNetworkId);
 
@@ -63,11 +61,7 @@ export default function RetrieveP2SHUTXOScreen() {
       if (inscribeJsonStrings && inscribeJsonStrings.length > 0) {
         arr = arr.concat(inscribeJsonStrings);
       } else {
-        arr = [
-          krc20History[networkId]?.mintArr,
-          krc20History[networkId]?.deployArr,
-          krc20History[networkId]?.transferArr
-        ].flatMap((arr2) => arr2 || []);
+        arr = [].flatMap((arr2) => arr2 || []);
       }
       const str3 = await wallet.getKRC20HistoryLocalStorage(networkId, currentAddress);
       arr = arr.concat(str3);
@@ -178,7 +172,7 @@ export default function RetrieveP2SHUTXOScreen() {
         }
       />
       <Content>
-        <Tabs centered size={'small'} defaultActiveKey="mint" items={tabItems as unknown as any[]} />
+        <Tabs centered size={'small'} defaultActiveKey="mint" items={tabItems} />
         <Row fullX mt="xl">
           <Button
             full
@@ -245,10 +239,11 @@ function DeployKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (s
 
   return (
     <>
-      <Row justifyBetween itemsCenter mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Text text={'Ticker'} preset="regular" color="textDim" my="sm" mx="md" selectText />
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             placeholder="XXXX"
             onChange={(e) => {
@@ -258,12 +253,13 @@ function DeployKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (s
         </Column>
       </Row>
 
-      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Column fullX>
           <Text text={'Max Supply'} preset="regular" color="textDim" my="sm" mx="md" fullX selectText />
         </Column>
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             preset="amount"
             placeholder={'1000000'}
@@ -279,12 +275,13 @@ function DeployKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (s
         </Column>
       </Row>
 
-      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Column fullX>
           <Text text={'Amount per mint'} preset="regular" color="textDim" my="sm" mx="md" fullX selectText />
         </Column>
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             preset="amount"
             placeholder={'10000'}
@@ -300,7 +297,7 @@ function DeployKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (s
         </Column>
       </Row>
 
-      <Row itemsCenter mt="md" mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }} fullX>
+      <Row itemsCenter mt="md" mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }} fullX>
         <Column>
           <Text
             text={'Pre-allocation amount  (Optional)'}
@@ -314,6 +311,7 @@ function DeployKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (s
         </Column>
         <Column full justifyCenter>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             preset="amount"
             placeholder={'1000'}
@@ -334,7 +332,7 @@ function DeployKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (s
           />
         </Column>
       </Row>
-      <Row itemsCenter mt="md" mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }} fullX>
+      <Row itemsCenter mt="md" mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }} fullX>
         <Column>
           <Text
             text={'Decimal  (Optional)'}
@@ -348,6 +346,7 @@ function DeployKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (s
         </Column>
         <Column full justifyCenter>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             disableDecimal
             preset="amount"
@@ -361,7 +360,7 @@ function DeployKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (s
             }}
             onBlur={() => {
               if (dec?.toString()) {
-                setDec(pre);
+                setDec(dec);
               } else {
                 setDec(undefined);
               }
@@ -386,10 +385,11 @@ function MintKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (jso
 
   return (
     <>
-      <Row justifyBetween itemsCenter style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Text text={'Ticker'} preset="regular" color="textDim" my="sm" mx="md" selectText />
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             placeholder="XXXX"
             onChange={(e) => {
@@ -413,10 +413,11 @@ function SendKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (jso
 
   return (
     <>
-      <Row justifyBetween itemsCenter style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Text text={'Ticker'} preset="regular" color="textDim" my="sm" mx="md" />
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             placeholder="XXXX"
             onChange={(e) => {
@@ -449,10 +450,11 @@ function TransferKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: 
 
   return (
     <>
-      <Row justifyBetween itemsCenter mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Text text={'Ticker'} preset="regular" color="textDim" my="sm" mx="md" selectText />
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             placeholder="XXXX"
             onChange={(e) => {
@@ -461,10 +463,11 @@ function TransferKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: 
           ></Input>
         </Column>
       </Row>
-      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Text text={'Amount'} preset="regular" color="textDim" my="sm" mx="md" selectText />
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             placeholder="1000"
             onChange={(e) => {
@@ -473,10 +476,11 @@ function TransferKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: 
           ></Input>
         </Column>
       </Row>
-      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Text text={'Recipient'} preset="regular" color="textDim" my="sm" mx="md" selectText />
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             placeholder="Address"
             onChange={(e) => {
@@ -502,10 +506,11 @@ function ListKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (jso
 
   return (
     <>
-      <Row justifyBetween itemsCenter mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Text text={'Ticker'} preset="regular" color="textDim" my="sm" mx="md" selectText />
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             placeholder="XXXX"
             onChange={(e) => {
@@ -514,10 +519,11 @@ function ListKRC20Tab({ setInscribeJsonStrings }: { setInscribeJsonStrings: (jso
           ></Input>
         </Column>
       </Row>
-      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: '#2a2626', borderRadius: 5 }}>
+      <Row justifyBetween itemsCenter mt="md" mb="sm" style={{ backgroundColor: colors.black_dark, borderRadius: 5 }}>
         <Text text={'Amount'} preset="regular" color="textDim" my="sm" mx="md" selectText />
         <Column full>
           <Input
+            containerStyle={{ backgroundColor: 'transparent' }}
             style={{ textAlign: 'right' }}
             placeholder="1000"
             onChange={(e) => {
@@ -736,7 +742,7 @@ function P2SHUTXODetail({
           gap="xs"
           itemsCenter
           onClick={() => {
-            window.open(`${blockstreamUrl}/txs/${p2shOutput?.transaction_id}`);
+            window.open(`${blockstreamUrl}/transactions/${p2shOutput?.transaction_id}`);
           }}
         >
           <div className="text-select">
@@ -775,11 +781,11 @@ function P2SHUTXODetail({
               onClick={() => {
                 if (isInTab) {
                   navigateOrigin(
-                    `/krc20/batchmintprocess?inscribeJsonString=${inscribeJsonString}&times=${times}&priorityFee=0&sourceAddr=${currentAddress}&networkId=${networkId}`
+                    `/krc20/batchmintprocess?inscribeJsonString=${inscribeJsonString}&times=${times}&feeRate=1&sourceAddr=${currentAddress}&networkId=${networkId}`
                   );
                 } else {
                   openExtensionInTab(
-                    `#/krc20/batchmintprocess?inscribeJsonString=${inscribeJsonString}&times=${times}&priorityFee=0&sourceAddr=${currentAddress}&networkId=${networkId}`
+                    `#/krc20/batchmintprocess?inscribeJsonString=${inscribeJsonString}&times=${times}&feeRate=1&sourceAddr=${currentAddress}&networkId=${networkId}`
                   );
                 }
               }}

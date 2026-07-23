@@ -8,7 +8,7 @@ export const isValidUrl = (url: string) => {
 };
 
 export function isValidWsUrl(url) {
-  if (typeof url !== 'string') return false; // Check if it's a string first
+  if (typeof url !== 'string') return false; // First check if it's a string
   try {
     const parsedUrl = new URL(url);
     // Protocol must be ws or wss

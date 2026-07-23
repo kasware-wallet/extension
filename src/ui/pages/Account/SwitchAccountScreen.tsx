@@ -6,7 +6,7 @@ import eventBus from '@/shared/eventBus';
 import { toChecksumHexAddress } from '@/shared/modules/hexstring-utils';
 import type { Account, IScannedGroup } from '@/shared/types';
 import { AddressType } from '@/shared/types';
-import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { Card, Column, Content, Header, Icon, Layout, LoadingSpinner, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { HideAccountPopover } from '@/ui/components/HideAccountPopover';
 import { useCurrentAccount, useFetchBalancesQuery, useReloadAccounts } from '@/ui/state/accounts/hooks';
@@ -23,7 +23,6 @@ import {
   EditOutlined,
   EllipsisOutlined,
   KeyOutlined,
-  LoadingOutlined,
   MergeCellsOutlined,
   PlusCircleOutlined,
   SearchOutlined,
@@ -384,9 +383,7 @@ export default function SwitchAccountScreen() {
       />
       {(loading || isLoadingBalances) && (
         <Row justifyCenter>
-          <Icon>
-            <LoadingOutlined />
-          </Icon>
+          <LoadingSpinner size="medium" />
         </Row>
       )}
       <Content style={{ gap: '2px' }}>

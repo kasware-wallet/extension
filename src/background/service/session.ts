@@ -67,6 +67,7 @@ const broadcastEvent = (ev, data?, origin?) => {
     try {
       session.pushMessage?.(ev, data);
     } catch (e) {
+      console.error(e);
       if (sessionMap.has(session.key)) {
         deleteSession(session.key);
       }

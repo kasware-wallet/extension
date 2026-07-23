@@ -1,16 +1,12 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import type { Account } from '@/shared/types';
+import { colors } from '@/ui/theme/colors';
 import { formatLocaleString, shortAddress } from '@/ui/utils';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { Button } from '../Button';
-import { Card } from '../Card';
-import { Column } from '../Column';
-import { Popover } from '../Popover';
-import { Row } from '../Row';
-import { Text } from '../Text';
+import { Column, Icon, Row, Text } from '..';
+import { ConfirmationPopover } from '../ConfirmationPopover';
 
 export const HideAccountPopover = ({
   account,
@@ -23,72 +19,67 @@ export const HideAccountPopover = ({
   onClose: () => void;
   onConfirm: () => void;
 }) => {
+  const { t } = useTranslation();
+
   const displayAddress = useMemo(() => {
-    const address = account.address;
-    return shortAddress(address);
-  }, []);
+    return shortAddress(account.address);
+  }, [account.address]);
+
+  const eyeIcon = (
+    <div
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: '50%',
+        alignItems: 'center',
+        display: 'flex',
+        flexDirection: 'row',
+        backgroundColor: colors.orange,
+        justifyContent: 'center'
+      }}
+    >
+      <Icon icon="eye-slash" size={20} color="white" />
+    </div>
+  );
+
   return (
-    <Popover onClose={onClose}>
-      <Column justifyCenter itemsCenter>
-        <div
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: '1.5rem',
-            alignItems: 'center',
-            display: 'flex',
-            flexDirection: 'row',
-            backgroundColor: '#CC3333',
-            justifyContent: 'center'
-          }}
-        >
-          <FontAwesomeIcon icon={faTrashCan} style={{ height: '1rem' }} />
-        </div>
+    <ConfirmationPopover
+      onClose={onClose}
+      confirmText={t('Hide')}
+      confirmPreset="primary"
+      onConfirm={onConfirm}
+      icon={eyeIcon}
+      cardWidth={300}
+    >
+      <Column gap="lg">
+        <Text text={t('Hide Account')} preset="title-bold" textCenter />
 
-        <Card preset="style2" style={{ width: 300 }}>
-          <Column my="xl">
-            <Row>
-              <Text text="Name: " textCenter />
-              <Text text={account.alianName} textCenter />
-            </Row>
-            <Row>
-              <Text text="Balance: " textCenter />
-              <Text text={formatLocaleString(amount)} textCenter />
-            </Row>
-            <Row>
-              <Text text="Address: " textCenter />
-              <Text text={displayAddress} textCenter />
-            </Row>
-            {/* <Text text={account.alianName} textCenter />
-            <Text text={displayAddress} preset="sub" textCenter /> */}
-          </Column>
-        </Card>
-        {/* <Text
-          text="Please pay attention to whether you have backed up the mnemonic/private key to prevent asset loss"
-          textCenter
-        /> */}
+        <Column gap="sm" style={{ backgroundColor: colors.bg5, borderRadius: 8, padding: '12px 16px' }}>
+          <Row justifyBetween>
+            <Text text={t('Name')} preset="sub" />
+            <Text text={account.alianName || '-'} preset="regular-bold" />
+          </Row>
 
-        {/* <Text text="This action is not reversible." color="danger" /> */}
-        <Row full>
-          <Button
-            text="Cancel"
-            full
-            onClick={() => {
-              if (onClose) {
-                onClose();
-              }
-            }}
-          />
-          <Button
-            text="Hide"
-            preset="primary"
-            full
-            onClick={() => {
-              onConfirm();
-            }}
+          <Row justifyBetween>
+            <Text text={t('Balance')} preset="sub" />
+            <Text text={`${formatLocaleString(amount)} KAS`} preset="regular-bold" />
+          </Row>
+
+          <Row justifyBetween>
+            <Text text={t('Address')} preset="sub" />
+            <Text text={displayAddress} preset="regular-bold" />
+          </Row>
+        </Column>
+
+        <Row itemsCenter gap="sm" style={{ backgroundColor: 'rgba(255, 123, 33, 0.1)', borderRadius: 8, padding: 10 }}>
+          <Icon icon="info" size={14} color="orange" />
+          <Text
+            text={t('You can restore this account later using your seed phrase or private key.')}
+            preset="xsub"
+            wrap
           />
         </Row>
       </Column>
-    </Popover>
+    </ConfirmationPopover>
   );
 };

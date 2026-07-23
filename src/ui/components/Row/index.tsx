@@ -1,11 +1,7 @@
-import type { CSSProperties } from 'react';
-import React from 'react';
-
 import { spacingGap } from '@/ui/theme/spacing';
-
+import type { CSSProperties } from 'react';
 import type { BaseViewProps } from '../BaseView';
 import { BaseView } from '../BaseView';
-import './index.less';
 
 export type RowProps = BaseViewProps;
 
@@ -16,7 +12,8 @@ const $rowStyle = {
 } as CSSProperties;
 
 export function Row(props: RowProps) {
-  const { style: $styleOverride, ...rest } = props;
+  const { style: $styleOverride, classname, ...rest } = props;
   const $style = Object.assign({}, $rowStyle, $styleOverride);
-  return <BaseView style={$style} {...rest} classname="row-container" />;
+  const $classname = ['row-container', classname].filter(Boolean).join(' ');
+  return <BaseView style={$style} {...rest} classname={$classname} />;
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tabs, Tooltip } from 'antd';
 import BigNumber from 'bignumber.js';
 import type { CSSProperties } from 'react';
@@ -8,21 +7,23 @@ import { useLocation } from 'react-router-dom';
 
 import type { IKRC20ByAddress, IKRC20TokenIntro } from '@/shared/types';
 import { TxType } from '@/shared/types';
-import { Card, Column, Content, Header, Icon, Layout, Row, Text } from '@/ui/components';
+import { Card, Column, Content, Header, Icon, Layout, MiddleCard, Row, Text } from '@/ui/components';
 import { useNavigate } from '@/ui/pages/MainRoute';
 import { useEnableBridge, useEnableKRC20Swap } from '@/ui/state/settings/hooks';
-import { useResetUiTxCreateScreen } from '@/ui/state/ui/hooks';
+import { useResetUiTxCreateScreenCallback } from '@/ui/state/temp-ui/hooks';
 import { fontSizes } from '@/ui/theme/font';
 import { formatLocaleString } from '@/ui/utils';
 
 import { ProfileImage } from '../components/CryptoImage';
 import { selectAccountBalance } from '../state/accounts/reducer';
-import { historyActions } from '../state/history/reducer';
+import { globalActions } from '../state/global/reducer';
 import { useAppSelector } from '../state/hooks';
 import { selectNetworkId } from '../state/settings/reducer';
 import { useKaspaPrice } from '../utils/hooks/price/usePrice';
-import { KASActivityTab } from './Main/WalletTabScreen';
+import KASActivityTab from '../components/KASActivityTab';
 import { ButtonColumn } from '../components/Button';
+
+type InfoItem = { name: string; value: string };
 
 const $noBreakStyle: CSSProperties = {
   whiteSpace: 'nowrap',
@@ -34,7 +35,7 @@ export default function KaspaTokenScreen() {
   const { state } = useLocation();
   const networkId = useAppSelector(selectNetworkId);
   const accountBalance = useAppSelector((s) => selectAccountBalance(s, undefined));
-  const resetUiTxCreateScreen = useResetUiTxCreateScreen();
+  const resetUiTxCreateScreen = useResetUiTxCreateScreenCallback();
   const { krc20Token } = state as {
     krc20Token: IKRC20ByAddress;
     logoUrl: string;
@@ -171,24 +172,24 @@ export default function KaspaTokenScreen() {
               preset="default"
               icon="bridge"
               onClick={() => {
-                historyActions.updateMostRecentOverviewPage('/main');
+                globalActions.updateMostRecentOverviewPage('/main');
                 navigate('BridgeScreen');
               }}
               full
             />
           )}
-          {enableSwap == true && (
+          {/* {enableSwap == true && (
             <ButtonColumn
               text={t('Swap')}
               preset="default"
               icon="swap"
               onClick={() => {
-                historyActions.updateMostRecentOverviewPage('/kaspa/token');
+                globalActions.updateMostRecentOverviewPage('/kaspa/token');
                 navigate('KRC20SwapScreen');
               }}
               full
             />
-          )}
+          )} */}
         </Row>
         <Tabs size={'small'} defaultActiveKey="0" items={tabItems} />
       </Content>
@@ -200,10 +201,10 @@ function TokenInfo({ tokenIntro }: { tokenIntro: IKRC20TokenIntro | undefined })
   const [price, setPrice] = useState(0);
   const kasPrice = useKaspaPrice();
 
-  const [infoArray, setInfoArray] = useState<any[]>([]);
-  const [tokenWebs, setTokenWebs] = useState<any[]>([]);
+  const [infoArray, setInfoArray] = useState<InfoItem[]>([]);
+  const [tokenWebs, setTokenWebs] = useState<InfoItem[]>([]);
   useEffect(() => {
-    const infoA: any[] = [];
+    const infoA: InfoItem[] = [];
     infoA.push({
       name: 'Price',
       value: price == 0 ? '-' : price >= 0.001 ? '$' + price.toLocaleString('en-US') : '$' + price.toString()
@@ -227,7 +228,7 @@ function TokenInfo({ tokenIntro }: { tokenIntro: IKRC20TokenIntro | undefined })
 
   useEffect(() => {
     if (tokenIntro) {
-      const infoA: any[] = [];
+      const infoA: InfoItem[] = [];
       if (tokenIntro?.website && tokenIntro?.website.length > 0) {
         infoA.push({
           name: 'Website',
@@ -282,22 +283,7 @@ function TokenInfo({ tokenIntro }: { tokenIntro: IKRC20TokenIntro | undefined })
         tokenWebs.length > 0 &&
         tokenWebs.map((info, index) => {
           return (
-            <Card
-              py="xs"
-              mt="xs"
-              mb="zero"
-              key={index}
-              classname="card-select"
-              full
-              justifyBetween
-              style={{
-                minHeight: 40,
-                borderTopLeftRadius: 0,
-                borderTopRightRadius: 0,
-                borderBottomLeftRadius: 0,
-                borderBottomRightRadius: 0
-              }}
-            >
+            <MiddleCard mt="xs" key={index}>
               <Row justifyBetween full itemsCenter py="sm">
                 <Text text={info.name} preset="sub" />
                 <Row
@@ -311,7 +297,7 @@ function TokenInfo({ tokenIntro }: { tokenIntro: IKRC20TokenIntro | undefined })
                   <Icon icon="link" size={fontSizes.xxs} color="blue" />
                 </Row>
               </Row>
-            </Card>
+            </MiddleCard>
           );
         })}
 
@@ -319,27 +305,12 @@ function TokenInfo({ tokenIntro }: { tokenIntro: IKRC20TokenIntro | undefined })
         infoArray.length > 0 &&
         infoArray.map((info, index) => {
           return (
-            <Card
-              py="sm"
-              mt="xxs"
-              mb="zero"
-              key={index}
-              classname="card-select"
-              full
-              justifyBetween
-              style={{
-                minHeight: 40,
-                borderTopLeftRadius: 0,
-                borderTopRightRadius: 0,
-                borderBottomLeftRadius: 0,
-                borderBottomRightRadius: 0
-              }}
-            >
+            <MiddleCard mt="xs" key={index}>
               <Row justifyBetween full itemsCenter py="sm">
                 <Text text={info.name} preset="sub" />
                 <Text text={info.value} />
               </Row>
-            </Card>
+            </MiddleCard>
           );
         })}
     </Column>

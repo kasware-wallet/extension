@@ -1,0 +1,467 @@
+{
+  "Copy__address": {
+    "message": "Копировать адрес"
+  },
+  "Edit__Name": {
+    "message": "Изменить имя"
+  },
+  "New__account": {
+    "message": "Новый аккаунт"
+  },
+  "Your__transaction__has__been__successfully__sent": {
+    "message": "Ваша транзакция успешно отправлена"
+  },
+  "Export__Private__Key": {
+    "message": "Экспортировать закрытый ключ"
+  },
+  "Save__it__somewhere__safe__and__secret": {
+    "message": "Сохраните его где-нибудь в безопасном и секретном месте."
+  },
+  "Discover__address": {
+    "message": "Узнать адрес"
+  },
+  "Change__Password": {
+    "message": "Изменить пароль"
+  },
+  "Receive": {
+    "message": "Получать"
+  },
+  "shortName": {
+    "message": "КасВэр"
+  },
+  "appName": {
+    "message": "KasWare Кошелек"
+  },
+  "Switch__Language": {
+    "message": "Переключить язык"
+  },
+  "Reject__All": {
+    "message": "Отклонить все"
+  },
+  "From__single__private__key": {
+    "message": "Из одного закрытого ключа"
+  },
+  "24__words": {
+    "message": "24 слова"
+  },
+  "From__seed__phrase": {
+    "message": "Из исходной фразы"
+  },
+  "Restore__Wallet": {
+    "message": "Восстановить кошелек"
+  },
+  "12__words": {
+    "message": "12 слов"
+  },
+  "With__seed__phrase": {
+    "message": "С исходной фразой"
+  },
+  "Create__Wallet": {
+    "message": "Создать кошелек"
+  },
+  "Create__Single__Wallet": {
+    "message": "Создать единый кошелек"
+  },
+  "Invalid__PrivateKey": {
+    "message": "Неверный приватный ключ"
+  },
+  "Copied__address": {
+    "message": "Скопированный адрес"
+  },
+  "HEX__Private__Key": {
+    "message": "Шестнадцатеричный закрытый ключ"
+  },
+  "Change__Wallet__Name": {
+    "message": "Изменить имя кошелька"
+  },
+  "Reset": {
+    "message": "Перезагрузить"
+  },
+  "Change__Network__URL": {
+    "message": "Изменить URL-адрес сети"
+  },
+  "Remove__Contact": {
+    "message": "Удалить контакт"
+  },
+  "Change__Contact__Name": {
+    "message": "Изменить имя контакта"
+  },
+  "Change__Account__Name": {
+    "message": "Изменить имя учетной записи"
+  },
+  "Address__type__changed": {
+    "message": "Тип адреса изменен"
+  },
+  "Address__Type": {
+    "message": "Тип адреса"
+  },
+  "First__Open__Source__Chrome__wallet__for__Kaspa__in__the__world__Simple__and__reliable": {
+    "message": "Первый в мире кошелек Chrome с открытым исходным кодом для Kaspa. Простой и надежный."
+  },
+  "Address": {
+    "message": "Адрес"
+  },
+  "You__may__increase__transfer__amount": {
+    "message": "Вы можете увеличить сумму перевода"
+  },
+  "Done": {
+    "message": "Сделанный"
+  },
+  "History": {
+    "message": "История"
+  },
+  "safe__to__send": {
+    "message": "безопасно отправлять"
+  },
+  "Unconfirmed": {
+    "message": "Неподтвержденный"
+  },
+  "Priority__Fee__Rate": {
+    "message": "Ставка комиссии за приоритет"
+  },
+  "Optional": {
+    "message": "Необязательный"
+  },
+  "Balance": {
+    "message": "Баланс"
+  },
+  "My__account": {
+    "message": "Мой счет"
+  },
+  "Contacts": {
+    "message": "Контакты"
+  },
+  "Recent": {
+    "message": "Недавний"
+  },
+  "NO__DATA": {
+    "message": "НЕТ ДАННЫХ"
+  },
+  "no__contacts__yet": {
+    "message": "контактов пока нет"
+  },
+  "Connected__Sites": {
+    "message": "Подключенные сайты"
+  },
+  "Not__connected": {
+    "message": "Не подключено"
+  },
+  "Connected": {
+    "message": "Подключено"
+  },
+  "Lock__Now": {
+    "message": "Заблокировать сейчас"
+  },
+  "Expand__View": {
+    "message": "Развернуть вид"
+  },
+  "Network": {
+    "message": "Сеть"
+  },
+  "Accelerating__Kaspa__adoption": {
+    "message": "Ускорение внедрения Kaspa"
+  },
+  "No__contacts": {
+    "message": "Нет контактов"
+  },
+  "My__Contacts": {
+    "message": "Мои контакты"
+  },
+  "Activity": {
+    "message": "Активность"
+  },
+  "Latest__Transactions": {
+    "message": "Последние транзакции"
+  },
+  "Success": {
+    "message": "Успех"
+  },
+  "Switch__Account": {
+    "message": "Сменить аккаунт"
+  },
+  "Japanese__Yen": {
+    "message": "Японская иена"
+  },
+  "British__Pound": {
+    "message": "Британский фунт"
+  },
+  "Import__an__existing__account": {
+    "message": "Импортировать существующую учетную запись"
+  },
+  "English": {
+    "message": "Английский"
+  },
+  "Login": {
+    "message": "Авторизоваться"
+  },
+  "You__will__use__this__to__unlock__your__wallet": {
+    "message": "Вы будете использовать это, чтобы разблокировать свой кошелек"
+  },
+  "Show__Private__Key": {
+    "message": "Показать закрытый ключ"
+  },
+  "Spanish": {
+    "message": "испанский"
+  },
+  "Recipient": {
+    "message": "Получатель"
+  },
+  "Confirm__payment": {
+    "message": "Подтвердить платеж"
+  },
+  "I__saved__My__Secret__Recovery__Phrase": {
+    "message": "Я сохранил свою секретную фразу восстановления."
+  },
+  "If__you__ever__change__browsers__or__move__computers": {
+    "message": "Если вы когда-нибудь поменяете браузер или переместите компьютер"
+  },
+  "appDescription": {
+    "message": "Самый многофункциональный и безопасный кошелек для Kaspa — с поддержкой сетей KRC20, KNS, KRC721 и L2."
+  },
+  "Password_must_contain_at_least_5_characters": {
+    "message": "Пароль_должен_содержать_минимум_5_символов"
+  },
+  "This__is__an__imported__account": {
+    "message": "Это импортированный аккаунт"
+  },
+  "Successfully__imported": {
+    "message": "Успешно импортировано"
+  },
+  "Canadian__Dollar": {
+    "message": "Канадский доллар"
+  },
+  "Send": {
+    "message": "Отправлять"
+  },
+  "Back": {
+    "message": "Назад"
+  },
+  "Add__New__Account": {
+    "message": "Добавить новую учетную запись"
+  },
+  "Chinese": {
+    "message": "китайский"
+  },
+  "Create__a__new__wallet": {
+    "message": "Создать новый кошелек"
+  },
+  "Create__a__new__account": {
+    "message": "Создать новую учетную запись"
+  },
+  "Current__Password": {
+    "message": "Текущий пароль"
+  },
+  "Your__transaction__has__not__been__successfully__sent": {
+    "message": "Ваша транзакция не была успешно отправлена"
+  },
+  "Next": {
+    "message": "Следующий"
+  },
+  "Amount": {
+    "message": "Количество"
+  },
+  "Import__wallet": {
+    "message": "Импортировать кошелек"
+  },
+  "Get__Started": {
+    "message": "Начать"
+  },
+  "Password": {
+    "message": "Пароль"
+  },
+  "Import__Private__Key": {
+    "message": "Импортировать закрытый ключ"
+  },
+  "Language": {
+    "message": "Язык"
+  },
+  "Show__Secret__Recovery__Phrase": {
+    "message": "Показать секретную фразу восстановления"
+  },
+  "Deposit": {
+    "message": "Депозит"
+  },
+  "Do__NOT__share__it__with__anyone": {
+    "message": "НЕ делитесь этим ни с кем"
+  },
+  "View__on__Block__Explorer": {
+    "message": "Просмотр в обозревателе блоков"
+  },
+  "Create__Account": {
+    "message": "Зарегистрироваться"
+  },
+  "Copied": {
+    "message": "Скопировано"
+  },
+  "Clipboard__cleared__for__security": {
+    "message": "Буфер обмена очищен для безопасности"
+  },
+  "Change__your__lockscreen__password": {
+    "message": "Измените пароль экрана блокировки"
+  },
+  "US__Dollar": {
+    "message": "Доллар США"
+  },
+  "Detected__multiple__requests__from__this__Dapp": {
+    "message": "Обнаружено несколько запросов от этого Dapp"
+  },
+  "Cancel__current__transaction": {
+    "message": "Отменить текущее подключение"
+  },
+  "Block__Dapp__from__sending__requests__for__1__minute": {
+    "message": "Заблокировать отправку запросов от Dapp на 1 мин"
+  },
+  "Do__you__want__to__delete": {
+    "message": "Вы хотите удалить"
+  },
+  "Related__tokens__will__be__removed__from__the__list__of__tokens": {
+    "message": "Tokens связанные будут удалены из списка токенов."
+  },
+  "Transaction__Data": {
+    "message": "Данные транзакции"
+  },
+  "Reserve__Gas": {
+    "message": "Резервировать газ"
+  },
+  "Instant": {
+    "message": "Мгновенный"
+  },
+  "Fast": {
+    "message": "Быстрый"
+  },
+  "Normal": {
+    "message": "Обычный"
+  },
+  "Do__Not__Reserve__Gas": {
+    "message": "Не резервировать газ"
+  },
+  "Collection": {
+    "message": "Коллекция"
+  },
+  "Chain": {
+    "message": "Ран"
+  },
+  "Last__Price": {
+    "message": "Последняя цена"
+  },
+  "Purchase__Date": {
+    "message": "Дата покупки"
+  },
+  "Only__ERC721__and__ERC1155__NFTs__are__supported__for__now": {
+    "message": "Только NFTы ERC721 и ERC1155 поддерживаются на данный момент"
+  },
+  "Your__balance__is": {
+    "message": "Ваш баланс составляет"
+  },
+  "Only__one__NFT__of__ERC721__can__be__sent__at__a__time": {
+    "message": "Только 1 NFT из ERC721 может быть отправлен за раз"
+  },
+  "No__transactions__found": {
+    "message": "Не найдено ни одной транзакции"
+  },
+  "No__transactions": {
+    "message": "Нет транзакций"
+  },
+  "You__can__select__NFT__from__All__and__add__to__Starred": {
+    "message": "Вы можете выбрать NFT из \"Все\" и добавить в \"Звездные\""
+  },
+  "No__Starred__NFT": {
+    "message": "Нет звездных NFT"
+  },
+  "No__NFT": {
+    "message": "Нет NFT"
+  },
+  "Canceled__a__pending__transaction": {
+    "message": "Отменена ожидающая транзакция"
+  },
+  "Contract__Interaction": {
+    "message": "Интеракция с контрактом"
+  },
+  "Contract__address__must__be__specified": {
+    "message": "Мuss eine Kontruktadresse angegeben werden"
+  },
+  "The__specified__address__is__invalid": {
+    "message": "Указанный адрес недействителен"
+  },
+  "transactions__need_to_sign": {
+    "message": "Транзакции требуют подписи"
+  },
+  "View": {
+    "message": "Просмотр"
+  },
+  "View__first_one": {
+    "message": "Просмотр первого"
+  },
+  "No__Transactions": {
+    "message": "Нет транзакций"
+  },
+  "No__quotes__available__for__this__chain__yet": {
+    "message": "Нет доступных котировок для этой цепочки"
+  },
+  "Please__use__a__third__party__Dapp__to__proceed": {
+    "message": "Пожалуйста, используйте стороннюю Dapp для продолжения"
+  },
+  "View__Dapp__Options": {
+    "message": "Просмотр опций Dapp"
+  },
+  "Select__a__Dapp": {
+    "message": "Выберите Dapp"
+  },
+  "No__Dapps__available": {
+    "message": "Нет доступных Dapps"
+  },
+  "Please__contact__the__official__team__of__this__chain__for__support": {
+    "message": "Пожалуйста, свяжитесь с официальной командой этой цепочки для поддержки"
+  },
+  "Not__supported__on__this__chain": {
+    "message": "Не поддерживается на этой цепочке"
+  },
+  "No__Dapp__available__on__this__chain": {
+    "message": "Нет доступных Dapps на этой цепочке"
+  },
+  "Swap__on__Dapp": {
+    "message": "Intercambiar en Dapp"
+  },
+  "Bridge__on__Dapp": {
+    "message": "Cambiar en Dapp"
+  },
+  "Not__supported": {
+    "message": "Не поддерживается"
+  },
+  "No__chains": {
+    "message": "Нет цепочек"
+  },
+  "Search__by__Name__or__Address": {
+    "message": "Поиск по имени или адресу"
+  },
+  "Add__to__my__token__list": {
+    "message": "Добавить в список токенов"
+  },
+  "Edit": {
+    "message": "Редактировать"
+  },
+  "Delete": {
+    "message": "Удалить"
+  },
+  "Speed__Up": {
+    "message": "Ускорить"
+  },
+  "Fee": {
+    "message": "Комиссия"
+  },
+  "Add__Transaction__Fee__RBF": {
+    "message": "Добавить комиссию за транзакцию (RBF)"
+  },
+  "Enter__additional__fee": {
+    "message": "Введите дополнительную комиссию"
+  },
+  "New__Total__Fee": {
+    "message": "Новая общая комиссия"
+  },
+  "Please__enter__a__valid__fee__amount": {
+    "message": "Пожалуйста, введите действительную сумму комиссии"
+  },
+  "Transaction__fee__added__successfully": {
+    "message": "Комиссия за транзакцию успешно добавлена!"
+  }
+}

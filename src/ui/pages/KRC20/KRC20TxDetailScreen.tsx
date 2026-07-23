@@ -29,6 +29,7 @@ import { EndCard, MiddleCard, StartCard } from '@/ui/components/Card';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectBlockstreamUrl, selectKasTick } from '@/ui/state/settings/reducer';
 import { fontSizes } from '@/ui/theme/font';
+import { colors } from '@/ui/theme/colors';
 import { copyToClipboard, formatLocaleString, shortAddress } from '@/ui/utils';
 import { CopyOutlined } from '@ant-design/icons';
 import { sompiToAmount } from '@/shared/utils/format';
@@ -173,7 +174,7 @@ function DeployTxInfo({ deployInfo, token }: { deployInfo: IKRC20Deploy | IKRC20
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -257,7 +258,7 @@ function MintTxInfo({ mintInfo, token }: { mintInfo: IKRC20Mint; token: IToken }
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -345,7 +346,7 @@ function BlacklistTxInfo({ transferInfo }: { transferInfo: IKRC20Blacklist }) {
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap selectText />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -426,7 +427,7 @@ function BurnTxInfo({ transferInfo, token }: { transferInfo: IKRC20BurnIssue | I
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap selectText />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -507,7 +508,7 @@ function ChownTxInfo({ transferInfo, token }: { transferInfo: IKRC20Chown | IKRC
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap selectText />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -594,7 +595,7 @@ function IssueTxInfo({ transferInfo, token }: { transferInfo: IKRC20Issue; token
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap selectText />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -688,7 +689,7 @@ function TransferTxInfo({
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -780,7 +781,7 @@ function ListTxInfo({ transferInfo, token }: { transferInfo: IKRC20List | IKRC20
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -807,7 +808,7 @@ function ListTxInfo({ transferInfo, token }: { transferInfo: IKRC20List | IKRC20
           //           text={info.value}
           //           onClick={() => {
           //             // setFeeDrawerVisible(true);
-          //             window.open(`${blockstreamUrl}/txs/${utxoTxid}`);
+          //             window.open(`${blockstreamUrl}/transactions/${utxoTxid}`);
           //           }}
           //         />
           //       </Row>
@@ -907,7 +908,7 @@ function SendTxInfo({ transferInfo, token }: { transferInfo: IKRC20Send | IKRC20
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -1035,7 +1036,7 @@ function CommonTxInfo({ transferInfo }: { transferInfo: TKRC20History | TKRC20Hi
                     }}
                   >
                     <Text text={shortAddress(info.value, 8)} wrap selectText />
-                    <CopyOutlined style={{ color: '#888', fontSize: 14 }} />
+                    <CopyOutlined style={{ color: colors.icon_secondary, fontSize: 14 }} />
                   </Row>
                 </Row>
               </MiddleCard>
@@ -1057,7 +1058,7 @@ function CommonTxInfo({ transferInfo }: { transferInfo: TKRC20History | TKRC20Hi
             gap="xs"
             itemsCenter
             onClick={() => {
-              window.open(`${blockstreamUrl}/txs/${revealTx}`);
+              window.open(`${blockstreamUrl}/transactions/${revealTx}`);
             }}
           >
             <Text preset="link" text={shortAddress(revealTx, 12)} selectText />

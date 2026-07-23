@@ -1,0 +1,467 @@
+{
+  "Copy__address": {
+    "message": "複製地址"
+  },
+  "Edit__Name": {
+    "message": "編輯名稱"
+  },
+  "New__account": {
+    "message": "新帳號"
+  },
+  "Your__transaction__has__been__successfully__sent": {
+    "message": "您的交易發送成功"
+  },
+  "Export__Private__Key": {
+    "message": "匯出金鑰"
+  },
+  "Save__it__somewhere__safe__and__secret": {
+    "message": "把它保存在安全且秘密的地方"
+  },
+  "Discover__address": {
+    "message": "發現地址"
+  },
+  "Change__Password": {
+    "message": "修改密碼"
+  },
+  "Receive": {
+    "message": "接收"
+  },
+  "shortName": {
+    "message": "KasWare"
+  },
+  "appName": {
+    "message": "KasWare Wallet"
+  },
+  "Switch__Language": {
+    "message": "切換語言"
+  },
+  "Reject__All": {
+    "message": "拒絕所有"
+  },
+  "From__single__private__key": {
+    "message": "用單一私鑰"
+  },
+  "24__words": {
+    "message": "24個字"
+  },
+  "From__seed__phrase": {
+    "message": "用助記詞"
+  },
+  "Restore__Wallet": {
+    "message": "恢復錢包"
+  },
+  "12__words": {
+    "message": "12個字"
+  },
+  "With__seed__phrase": {
+    "message": "使用助記詞"
+  },
+  "Create__Wallet": {
+    "message": "創建錢包"
+  },
+  "Create__Single__Wallet": {
+    "message": "創建單地址錢包"
+  },
+  "Invalid__PrivateKey": {
+    "message": "密鑰無效"
+  },
+  "Copied__address": {
+    "message": "地址已複製"
+  },
+  "HEX__Private__Key": {
+    "message": "HEX格式私鑰"
+  },
+  "Change__Wallet__Name": {
+    "message": "修改錢包名稱"
+  },
+  "Reset": {
+    "message": "重置"
+  },
+  "Change__Network__URL": {
+    "message": "修改網路URL"
+  },
+  "Remove__Contact": {
+    "message": "移除聯絡人"
+  },
+  "Change__Contact__Name": {
+    "message": "修改聯絡人名稱"
+  },
+  "Change__Account__Name": {
+    "message": "修改帳戶名稱"
+  },
+  "Address__type__changed": {
+    "message": "地址類型已更改"
+  },
+  "Address__Type": {
+    "message": "地址類型"
+  },
+  "First__Open__Source__Chrome__wallet__for__Kaspa__in__the__world__Simple__and__reliable": {
+    "message": "全球首款面向Kaspa的Chrome插件錢包！簡單可依賴。"
+  },
+  "Address": {
+    "message": "地址"
+  },
+  "You__may__increase__transfer__amount": {
+    "message": "建議增加發送數量"
+  },
+  "Done": {
+    "message": "完成"
+  },
+  "History": {
+    "message": "歷史"
+  },
+  "safe__to__send": {
+    "message": "可發送"
+  },
+  "Unconfirmed": {
+    "message": "未確認的"
+  },
+  "Priority__Fee__Rate": {
+    "message": "加速費率"
+  },
+  "Optional": {
+    "message": "可選"
+  },
+  "Balance": {
+    "message": "餘額"
+  },
+  "My__account": {
+    "message": "我的帳號"
+  },
+  "Contacts": {
+    "message": "聯絡人"
+  },
+  "Recent": {
+    "message": "近期交易"
+  },
+  "NO__DATA": {
+    "message": "無數據"
+  },
+  "no__contacts__yet": {
+    "message": "沒有聯絡人"
+  },
+  "Connected__Sites": {
+    "message": "連結的網站"
+  },
+  "Not__connected": {
+    "message": "無連接"
+  },
+  "Connected": {
+    "message": "已連接"
+  },
+  "Lock__Now": {
+    "message": "鎖定錢包"
+  },
+  "Expand__View": {
+    "message": "擴展視圖"
+  },
+  "Network": {
+    "message": "網路"
+  },
+  "Accelerating__Kaspa__adoption": {
+    "message": "加速Kaspa落地"
+  },
+  "No__contacts": {
+    "message": "沒有聯絡人"
+  },
+  "My__Contacts": {
+    "message": "我的聯絡人"
+  },
+  "Activity": {
+    "message": "動態"
+  },
+  "Latest__Transactions": {
+    "message": "最新交易"
+  },
+  "Success": {
+    "message": "成功"
+  },
+  "Switch__Account": {
+    "message": "更換帳號"
+  },
+  "Japanese__Yen": {
+    "message": "日元"
+  },
+  "British__Pound": {
+    "message": "英鎊"
+  },
+  "Import__an__existing__account": {
+    "message": "匯入一個現存帳號"
+  },
+  "English": {
+    "message": "英文"
+  },
+  "Login": {
+    "message": "登入"
+  },
+  "You__will__use__this__to__unlock__your__wallet": {
+    "message": "您使用它來解鎖錢包"
+  },
+  "Show__Private__Key": {
+    "message": "顯示私鑰"
+  },
+  "Spanish": {
+    "message": "西班牙語"
+  },
+  "Recipient": {
+    "message": "接收方"
+  },
+  "Confirm__payment": {
+    "message": "確認支付"
+  },
+  "I__saved__My__Secret__Recovery__Phrase": {
+    "message": "我已保存了助記詞"
+  },
+  "If__you__ever__change__browsers__or__move__computers": {
+    "message": "如果你更換過瀏覽器或電腦"
+  },
+  "appDescription": {
+    "message": "功能最豐富、最安全的Kaspa錢包——支援 KRC20、KNS、KRC721 和 L2 網路。"
+  },
+  "Password_must_contain_at_least_5_characters": {
+    "message": "密碼需要至少5位字符"
+  },
+  "This__is__an__imported__account": {
+    "message": "這是一個匯入的帳號"
+  },
+  "Successfully__imported": {
+    "message": "導入成功"
+  },
+  "Canadian__Dollar": {
+    "message": "加幣"
+  },
+  "Send": {
+    "message": "傳送"
+  },
+  "Back": {
+    "message": "返回"
+  },
+  "Add__New__Account": {
+    "message": "新增帳號"
+  },
+  "Chinese": {
+    "message": "中文（简体）"
+  },
+  "Create__a__new__wallet": {
+    "message": "創建新錢包"
+  },
+  "Create__a__new__account": {
+    "message": "建立新帳號"
+  },
+  "Current__Password": {
+    "message": "目前密碼"
+  },
+  "Your__transaction__has__not__been__successfully__sent": {
+    "message": "您的交易發送失敗"
+  },
+  "Next": {
+    "message": "下一步"
+  },
+  "Amount": {
+    "message": "數量"
+  },
+  "Import__wallet": {
+    "message": "導入錢包"
+  },
+  "Get__Started": {
+    "message": "開始"
+  },
+  "Password": {
+    "message": "密碼"
+  },
+  "Import__Private__Key": {
+    "message": "導入私鑰"
+  },
+  "Language": {
+    "message": "語言"
+  },
+  "Show__Secret__Recovery__Phrase": {
+    "message": "顯示助記詞"
+  },
+  "Deposit": {
+    "message": "存入"
+  },
+  "Do__NOT__share__it__with__anyone": {
+    "message": "不要與任何人分享"
+  },
+  "View__on__Block__Explorer": {
+    "message": "去區塊瀏覽器查看"
+  },
+  "Create__Account": {
+    "message": "建立帳號"
+  },
+  "Copied": {
+    "message": "已複製"
+  },
+  "Clipboard__cleared__for__security": {
+    "message": "為安全起見已清除剪貼簿"
+  },
+  "Change__your__lockscreen__password": {
+    "message": "修改鎖定螢幕密碼"
+  },
+  "US__Dollar": {
+    "message": "美元"
+  },
+  "Detected__multiple__requests__from__this__Dapp": {
+    "message": "偵測到來自此Dapp的多個請求"
+  },
+  "Cancel__current__transaction": {
+    "message": "取消當前連接"
+  },
+  "Block__Dapp__from__sending__requests__for__1__minute": {
+    "message": "阻止Dapp發送請求1分鐘"
+  },
+  "Do__you__want__to__delete": {
+    "message": "你要刪除"
+  },
+  "Related__tokens__will__be__removed__from__the__list__of__tokens": {
+    "message": "相關代幣將從代幣清單中移除。"
+  },
+  "Transaction__Data": {
+    "message": "交易數據"
+  },
+  "Reserve__Gas": {
+    "message": "預留油費"
+  },
+  "Instant": {
+    "message": "即時"
+  },
+  "Fast": {
+    "message": "快速"
+  },
+  "Normal": {
+    "message": "普通"
+  },
+  "Do__Not__Reserve__Gas": {
+    "message": "不預留油费"
+  },
+  "Collection": {
+    "message": "收藏"
+  },
+  "Chain": {
+    "message": "鏈"
+  },
+  "Last__Price": {
+    "message": "最新價格"
+  },
+  "Purchase__Date": {
+    "message": "購買日期"
+  },
+  "Only__ERC721__and__ERC1155__NFTs__are__supported__for__now": {
+    "message": "目前僅支持ERC721和ERC1155 NFT"
+  },
+  "Your__balance__is": {
+    "message": "您的餘額為"
+  },
+  "Only__one__NFT__of__ERC721__can__be__sent__at__a__time": {
+    "message": "一次只能發送一個ERC721 NFT"
+  },
+  "No__transactions__found": {
+    "message": "未找到交易"
+  },
+  "No__transactions": {
+    "message": "無交易"
+  },
+  "You__can__select__NFT__from__All__and__add__to__Starred": {
+    "message": "您可以從\"所有\"中選擇NFT並添加到\"收藏\""
+  },
+  "No__Starred__NFT": {
+    "message": "無收藏NFT"
+  },
+  "No__NFT": {
+    "message": "無NFT"
+  },
+  "Canceled__a__pending__transaction": {
+    "message": "已取消待處理交易"
+  },
+  "Contract__Interaction": {
+    "message": "合約交互"
+  },
+  "Contract__address__must__be__specified": {
+    "message": "必須指定合約地址"
+  },
+  "The__specified__address__is__invalid": {
+    "message": "指定的地址無效"
+  },
+  "transactions__need_to_sign": {
+    "message": "交易需要簽名"
+  },
+  "View": {
+    "message": "查看"
+  },
+  "View__first_one": {
+    "message": "查看第一個"
+  },
+  "No__Transactions": {
+    "message": "無交易"
+  },
+  "No__quotes__available__for__this__chain__yet": {
+    "message": "此鏈暫無可用的報價"
+  },
+  "Please__use__a__third__party__Dapp__to__proceed": {
+    "message": "請使用第三方Dapp繼續"
+  },
+  "View__Dapp__Options": {
+    "message": "查看Dapp選項"
+  },
+  "Select__a__Dapp": {
+    "message": "選擇Dapp"
+  },
+  "No__Dapps__available": {
+    "message": "無可用Dapp"
+  },
+  "Please__contact__the__official__team__of__this__chain__for__support": {
+    "message": "請聯繫此鏈的官方團隊獲取支持"
+  },
+  "Not__supported__on__this__chain": {
+    "message": "此鏈不支持"
+  },
+  "No__Dapp__available__on__this__chain": {
+    "message": "此鏈無可用Dapp"
+  },
+  "Swap__on__Dapp": {
+    "message": "在Dapp中交換"
+  },
+  "Bridge__on__Dapp": {
+    "message": "在Dapp中橋接"
+  },
+  "Not__supported": {
+    "message": "不支持"
+  },
+  "No__chains": {
+    "message": "無鏈"
+  },
+  "Search__by__Name__or__Address": {
+    "message": "按名稱或地址搜索"
+  },
+  "Add__to__my__token__list": {
+    "message": "添加到我的代幣列表"
+  },
+  "Edit": {
+    "message": "編輯"
+  },
+  "Delete": {
+    "message": "刪除"
+  },
+  "Speed__Up": {
+    "message": "加速"
+  },
+  "Fee": {
+    "message": "手續費"
+  },
+  "Add__Transaction__Fee__RBF": {
+    "message": "添加交易手續費 (RBF)"
+  },
+  "Enter__additional__fee": {
+    "message": "輸入額外手續費"
+  },
+  "New__Total__Fee": {
+    "message": "新手續費總額"
+  },
+  "Please__enter__a__valid__fee__amount": {
+    "message": "請輸入有效的手續費金額"
+  },
+  "Transaction__fee__added__successfully": {
+    "message": "交易手續費添加成功！"
+  }
+}

@@ -1,5 +1,5 @@
 import { useAccountBalance } from '@/ui/state/accounts/hooks';
-import { KaspaToken, Token } from '@/ui/utils2/interfaces';
+import type { KaspaToken, Token } from '@/ui/utils/types';
 import { useEffect } from 'react';
 import { formatNumberWithDecimal } from '../..';
 

@@ -1,11 +1,14 @@
-// TODO: write documentation for colors and palette in own markdown file and add links from here
+// Color system: LESS files use CSS custom properties (var(--r-*)) which support
+// theme switching. TSX inline styles use this static colors object which does NOT
+// respond to theme changes. For theme-aware components, prefer CSS var() in LESS.
+// Use colors.* only for static inline styles where theme support is not needed.
 
 const palette = {
   white: '#ffffff',
   white_muted: 'rgba(255, 255, 255, 0.5)',
   black: '#000000',
   black_muted: 'rgba(0, 0, 0, 0.5)',
-  black_muted2: 'rgba(0, 0, 0, 0.)',
+  black_muted2: 'rgba(0, 0, 0, 0.12)',
 
   dark: '#1E283C',
   grey: '#495361',
@@ -52,6 +55,8 @@ export const colors = Object.assign({}, palette, {
   error: '#e52937',
 
   danger: palette.red,
+  danger_muted: '#CC3333',
+  danger_bg: '#2c2323',
 
   card: '#262222',
   warning: palette.orange,
@@ -61,10 +66,14 @@ export const colors = Object.assign({}, palette, {
   bg3: '#434242',
   bg4: '#383535',
   bg5: '#1C1919',
+  bg_warm: '#322D1F',
 
   border: 'rgba(255,255,255,0.1)',
 
-  icon_yellow: '#FFBA33'
+  icon_yellow: '#FFBA33',
+
+  icon_secondary: '#888',
+  icon_tertiary: '#AAA'
 });
 
 export type ColorTypes = keyof typeof colors;

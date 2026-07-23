@@ -1,16 +1,10 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { I18N_NS, createAddResourceBundle } from '@/shared/utils/i18n';
 
-export const fetchLocale = async (locale) => {
-  const res = await fetch(`./_locales/${locale}/messages.json`);
-  const data: Record<string, { message: string; description: string }> = await res.json();
-  return Object.keys(data).reduce((res, key) => {
-    return {
-      ...res,
-      [key.replace(/__/g, ' ')]: data[key].message
-    };
-  }, {});
-};
+export { I18N_NS };
+
+export const addResourceBundle = createAddResourceBundle(i18n);
 
 i18n
   .use(initReactI18next) // passes i18n down to react-i18next
@@ -22,24 +16,13 @@ i18n
     }
   });
 
-export const I18N_NS = 'translations';
-
-export const addResourceBundle = async (locale: string) => {
-  if (i18n.hasResourceBundle(locale, I18N_NS)) return;
-  const bundle = await fetchLocale(locale);
-
-  i18n.addResourceBundle(locale, 'translations', bundle);
-};
-
-// addResourceBundle('en');
-
 i18n.on('languageChanged', function (lng: string) {
   addResourceBundle(lng);
 });
 
 export const changeLanguage = (locale: string) => {
-    i18n.changeLanguage(locale);
-    document.documentElement.lang = locale;
+  i18n.changeLanguage(locale);
+  document.documentElement.lang = locale;
 };
 
 export default i18n;

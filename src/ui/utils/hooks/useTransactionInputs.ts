@@ -1,4 +1,4 @@
-import { validateAmountToSend, validateRecipient } from '@/ui/utils2/validation';
+import { validateAmountToSend, validateRecipient } from '@/ui/utils/validation';
 import { useState } from 'react';
 import { formatAndValidateAmount } from '..';
 

@@ -1,5 +1,4 @@
-import React from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Icon } from '../Icon';
 import { Description, Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 
 interface PopupMessageDialogProps {
@@ -27,10 +26,10 @@ export function PopupMessageDialog({ title = 'Not Available', message, onClose, 
               onClick={onClose}
               aria-label="Close"
             >
-              <XMarkIcon className="w-7 h-7" />
+              <Icon icon="close" size={28} />
             </button>
           </div>
-          <Description className="text-base text-mutedtext" dangerouslySetInnerHTML={{ __html: message }} />
+          <Description className="text-base text-mutedtext">{message}</Description>
         </DialogPanel>
       </div>
     </Dialog>

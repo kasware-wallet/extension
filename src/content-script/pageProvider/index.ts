@@ -4,7 +4,6 @@
 import { ethErrors, serializeError } from 'eth-rpc-errors';
 import { EventEmitter } from 'events';
 import log from 'loglevel';
-import { evmProvider } from 'node_modules/@kasware-wallet/page-provider/dist/index.js';
 
 import type {
   BuildScriptType,
@@ -42,7 +41,6 @@ export class KaswareProvider extends EventEmitter {
   _isConnected = false;
   _initialized = false;
   _isUnlocked = false;
-  ethereum: typeof evmProvider | null = null;
 
   _state: StateProvider = {
     accounts: null,
@@ -62,7 +60,6 @@ export class KaswareProvider extends EventEmitter {
     this.setMaxListeners(maxListeners);
     this.initialize();
     this._pushEventHandlers = new PushEventHandlers(this);
-    this.ethereum = evmProvider;
   }
 
   initialize = async () => {

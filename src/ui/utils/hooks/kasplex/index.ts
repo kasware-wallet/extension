@@ -1,8 +1,15 @@
-import { KASPLEX_MAINNET, KASPLEX_TESTNET_10, KASPLEX_TESTNET_11, KASPLEX_TESTNET_12 } from '@/shared/constant';
+import {
+  KASPLEX_FALLBACK_MAINNET,
+  KASPLEX_FALLBACK_TESTNET_10,
+  KASPLEX_FALLBACK_TESTNET_11,
+  KASPLEX_FALLBACK_TESTNET_12
+} from '@/shared/constant';
 import type { IKRC20TokenInfo, IKRC20TokenInfoIssue, TNetworkId } from '@/shared/types';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
 import { useQuery } from '@tanstack/react-query';
+import { fetchWithRetryAndFallback } from '@/ui/utils/fetchWithRetry';
+import { getKasplexHost } from '../..';
 
 export function useKRC20TokenInfo(tick: string) {
   const networkId = useAppSelector(selectNetworkId);
@@ -49,103 +56,28 @@ export function useKRC20Blacklist(ca: string | undefined) {
   });
 }
 
-// export function useKRC20TokenName(tokenType: TTokenType | undefined, tick?: string, ca?: string) {
-//   if (!tokenType) return { name: undefined };
-
-//   const wallet = useWallet();
-//   const networkId = useNetworkId();
-//   const [name, setName] = useState<string | undefined>(undefined);
-
-//   const host = getKasplexHost(networkId);
-//   const fetchKRC20Info = async (ca: string) => {
-//     const name = await wallet.getKrc20CaToName(ca);
-//     if (name && name?.length > 0) return name;
-
-//     const infos = (await fetchKrc20TokenInfo(ca, host)) as IKRC20TokenInfoIssue[] | null;
-//     if (infos) {
-//       const infoName = infos[0].name;
-//       if (infoName && infoName.length > 0) {
-//         await wallet.updateKrc20CaToName(ca, infoName);
-//         return infoName;
-//       }
-//     }
-//     return shortAddress(ca, 3);
-//   };
-
-//   useEffect(() => {
-//     if (tokenType !== 'KRC20Issue' && tokenType !== 'KRC20Mint') return;
-//     if (tokenType == 'KRC20Mint') setName(tick as string);
-//     if (tokenType == 'KRC20Issue' && Boolean(tick)) setName(tick as string);
-//     if (tokenType == 'KRC20Issue' && !tick && ca) {
-//       fetchKRC20Info(ca)
-//         .then((name) => {
-//           if (name && name?.length > 0) setName(name);
-//         })
-//         .catch((err) => {
-//           log.debug(err);
-//         });
-//     }
-//   }, [ca, networkId, tick, tokenType]);
-
-//   return {
-//     name
-//   };
-// }
-// export function useKRC20TokenDec(tokenType: TTokenType, tick?: string, ca?: string) {
-//   const wallet = useWallet();
-//   const networkId = useNetworkId();
-//   const [dec, setDec] = useState<string | undefined>(undefined);
-
-//   const host = getKasplexHost(networkId);
-//   const fetchKRC20Info = async (ca: string | undefined) => {
-//     if (!ca) return undefined;
-//     const dec = await wallet.getKrc20TokenDec(ca);
-//     if (dec && dec?.length > 0) return dec;
-
-//     const infos = await fetchKrc20TokenInfo(ca, host);
-//     if (infos) {
-//       const infoName = infos[0].dec;
-//       if (infoName && infoName.length > 0) {
-//         await wallet.updateKrc20TokenDec(ca, infoName);
-//         return infoName;
-//       }
-//     }
-//     return undefined;
-//   };
-
-//   useEffect(() => {
-//     if (tokenType !== 'KRC20Issue' && tokenType !== 'KRC20Mint') return;
-//     let arg0 = undefined as unknown as string;
-//     if (tokenType == 'KRC20Mint') arg0 = tick as string;
-//     if (tokenType == 'KRC20Issue') arg0 = ca as string;
-
-//     fetchKRC20Info(arg0)
-//       .then((name) => {
-//         if (name && name?.length > 0) setDec(name);
-//       })
-//       .catch((err) => {
-//         log.debug(err);
-//       });
-//   }, [ca, networkId, tick, tokenType]);
-
-//   return {
-//     dec
-//   };
-// }
-
-export const getKasplexHost = (networkId: TNetworkId) => {
+// Returns primary + fallback hosts for retry logic
+export const getKasplexHosts = (networkId: TNetworkId): string[] => {
+  const primary = getKasplexHost(networkId);
+  let fallback: string | undefined;
   switch (networkId) {
     case 'mainnet':
-      return KASPLEX_MAINNET;
+      fallback = KASPLEX_FALLBACK_MAINNET;
+      break;
     case 'testnet-10':
-      return KASPLEX_TESTNET_10;
+      fallback = KASPLEX_FALLBACK_TESTNET_10;
+      break;
     case 'testnet-11':
-      return KASPLEX_TESTNET_11;
+      fallback = KASPLEX_FALLBACK_TESTNET_11;
+      break;
     case 'testnet-12':
-      return KASPLEX_TESTNET_12;
+      fallback = KASPLEX_FALLBACK_TESTNET_12;
+      break;
     default:
-      return KASPLEX_TESTNET_10;
+      break;
   }
+  fallback = undefined; // TODO, fallback hosts are not available now.
+  return fallback ? [primary, fallback] : [primary];
 };
 
 async function fetchKrc20TokenInfo(
@@ -173,17 +105,12 @@ interface IKRC20TokenBlacklistItem {
 async function fetchKrc20Blacklist(ca: string, host: string) {
   let data: { message: string; prev?: string; next?: string; result: IKRC20TokenBlacklistItem[] };
   const url = `${host}/krc20/blacklist/${ca}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Network response was not ok ' + response.statusText);
-  }
+  const response = await fetchWithRetryAndFallback([url]);
   data = await response.json();
   const results = data.result;
   while (data && data?.result?.length >= 50 && data?.next && data?.next?.length > 0) {
-    const res = await fetch(`${url}?next=${data?.next}`);
-    if (!res.ok) {
-      throw new Error('Network response was not ok ' + res.statusText);
-    }
+    const nextPageUrl = `${url}?next=${data?.next}`;
+    const res = await fetchWithRetryAndFallback([nextPageUrl]);
     data = await res.json();
     if (data && data?.result?.length > 0) {
       data.result.forEach((item) => {

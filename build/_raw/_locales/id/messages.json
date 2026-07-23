@@ -1,0 +1,467 @@
+{
+  "Copy__address": {
+    "message": "Salin alamat"
+  },
+  "Edit__Name": {
+    "message": "Sunting Nama"
+  },
+  "New__account": {
+    "message": "Akun baru"
+  },
+  "Your__transaction__has__been__successfully__sent": {
+    "message": "Transaksi Anda belum berhasil terkirim"
+  },
+  "Export__Private__Key": {
+    "message": "Ekspor Kunci Pribadi"
+  },
+  "Save__it__somewhere__safe__and__secret": {
+    "message": "Simpan di tempat yang aman dan rahasia"
+  },
+  "Discover__address": {
+    "message": "Telusuri Alamat"
+  },
+  "Change__Password": {
+    "message": "Ubah Kata Sandi"
+  },
+  "Receive": {
+    "message": "Terima"
+  },
+  "shortName": {
+    "message": "KasWare"
+  },
+  "appName": {
+    "message": "Dompet KasWare"
+  },
+  "Switch__Language": {
+    "message": "Ganti Bahasa"
+  },
+  "Reject__All": {
+    "message": "Tolak Semua"
+  },
+  "From__single__private__key": {
+    "message": "Dari kunci pribadi tunggal"
+  },
+  "24__words": {
+    "message": "24 Kata"
+  },
+  "From__seed__phrase": {
+    "message": "Dari frase benih"
+  },
+  "Restore__Wallet": {
+    "message": "Pulihkan Dompet"
+  },
+  "12__words": {
+    "message": "12 Kata"
+  },
+  "With__seed__phrase": {
+    "message": "Dengan frase benih"
+  },
+  "Create__Wallet": {
+    "message": "Buat Dompet"
+  },
+  "Create__Single__Wallet": {
+    "message": "Buat Dompet Tunggal"
+  },
+  "Invalid__PrivateKey": {
+    "message": "Kunci Pribadi tidak valid"
+  },
+  "Copied__address": {
+    "message": "Alamat disalin"
+  },
+  "HEX__Private__Key": {
+    "message": "Kunci Pribadi HEX"
+  },
+  "Change__Wallet__Name": {
+    "message": "Ubah Nama Dompet"
+  },
+  "Reset": {
+    "message": "Mengatur ulang"
+  },
+  "Change__Network__URL": {
+    "message": "Ubah URL Jaringan"
+  },
+  "Remove__Contact": {
+    "message": "Hapus Kontak"
+  },
+  "Change__Contact__Name": {
+    "message": "Ubah Nama Kontak"
+  },
+  "Change__Account__Name": {
+    "message": "Ubah Nama Akun"
+  },
+  "Address__type__changed": {
+    "message": "Jenis alamat diubah"
+  },
+  "Address__Type": {
+    "message": "Jenis Alamat"
+  },
+  "First__Open__Source__Chrome__wallet__for__Kaspa__in__the__world__Simple__and__reliable": {
+    "message": "Dompet Chrome Sumber Terbuka pertama untuk Kaspa di dunia Sederhana dan andal"
+  },
+  "Address": {
+    "message": "Alamat"
+  },
+  "You__may__increase__transfer__amount": {
+    "message": "Anda dapat menambah jumlah transfer"
+  },
+  "Done": {
+    "message": "Selesai"
+  },
+  "History": {
+    "message": "Riwayat"
+  },
+  "safe__to__send": {
+    "message": "aman untuk dikirim"
+  },
+  "Unconfirmed": {
+    "message": "Belum dikonfirmasi"
+  },
+  "Priority__Fee__Rate": {
+    "message": "Tarif Biaya Prioritas"
+  },
+  "Optional": {
+    "message": "Opsional"
+  },
+  "Balance": {
+    "message": "Saldo"
+  },
+  "My__account": {
+    "message": "akun saya"
+  },
+  "Contacts": {
+    "message": "Kontak"
+  },
+  "Recent": {
+    "message": "Terkini"
+  },
+  "NO__DATA": {
+    "message": "TIDAK ADA DATA"
+  },
+  "no__contacts__yet": {
+    "message": "belum ada kontak"
+  },
+  "Connected__Sites": {
+    "message": "Situs Yang Terhubung"
+  },
+  "Not__connected": {
+    "message": "Tidak terhubung"
+  },
+  "Connected": {
+    "message": "Terhubung"
+  },
+  "Lock__Now": {
+    "message": "Kunci Sekarang"
+  },
+  "Expand__View": {
+    "message": "Perluas Tampilan"
+  },
+  "Network": {
+    "message": "Jaringan"
+  },
+  "Accelerating__Kaspa__adoption": {
+    "message": "Mempercepat adopsi Kaspa"
+  },
+  "No__contacts": {
+    "message": "Tidak ada kontak"
+  },
+  "My__Contacts": {
+    "message": "Kontak Saya"
+  },
+  "Activity": {
+    "message": "Aktivitas"
+  },
+  "Latest__Transactions": {
+    "message": "Transaksi Terkini"
+  },
+  "Success": {
+    "message": "Sukses"
+  },
+  "Switch__Account": {
+    "message": "Ganti Akun"
+  },
+  "Japanese__Yen": {
+    "message": "Yen Jepang"
+  },
+  "British__Pound": {
+    "message": "Pound Inggris"
+  },
+  "Import__an__existing__account": {
+    "message": "Impor akun yang ada"
+  },
+  "English": {
+    "message": "Bahasa inggris"
+  },
+  "Login": {
+    "message": "Masuk"
+  },
+  "You__will__use__this__to__unlock__your__wallet": {
+    "message": "Anda akan menggunakan ini untuk membuka kunci dompet Anda"
+  },
+  "Show__Private__Key": {
+    "message": "Tampilkan Kunci Pribadi"
+  },
+  "Spanish": {
+    "message": "Spanyol"
+  },
+  "Recipient": {
+    "message": "Penerima"
+  },
+  "Confirm__payment": {
+    "message": "Konfirmasikan pembayaran"
+  },
+  "I__saved__My__Secret__Recovery__Phrase": {
+    "message": "Saya menyimpan Frase Pemulihan Rahasia Saya"
+  },
+  "If__you__ever__change__browsers__or__move__computers": {
+    "message": "Jika Anda pernah mengganti browser atau memindahkan komputer"
+  },
+  "appDescription": {
+    "message": "Dompet paling kaya fitur dan berorientasi keamanan untuk Kaspa – dengan dukungan untuk jaringan KRC20, KNS, KRC721 dan L2."
+  },
+  "Password_must_contain_at_least_5_characters": {
+    "message": "Kata Sandi_harus_berisi_sedikitnya_5_karakter"
+  },
+  "This__is__an__imported__account": {
+    "message": "Ini adalah akun yang diimpor"
+  },
+  "Successfully__imported": {
+    "message": "Berhasil diimpor"
+  },
+  "Canadian__Dollar": {
+    "message": "Dolar Kanada"
+  },
+  "Send": {
+    "message": "Kirim"
+  },
+  "Back": {
+    "message": "Kembali"
+  },
+  "Add__New__Account": {
+    "message": "Tambahkan Akun Baru"
+  },
+  "Chinese": {
+    "message": "Mandarin"
+  },
+  "Create__a__new__wallet": {
+    "message": "Buat dompet baru"
+  },
+  "Create__a__new__account": {
+    "message": "Buat akun baru"
+  },
+  "Current__Password": {
+    "message": "Kata Sandi Saat Ini"
+  },
+  "Your__transaction__has__not__been__successfully__sent": {
+    "message": "Transaksi Anda telah berhasil terkirim"
+  },
+  "Next": {
+    "message": "Berikutnya"
+  },
+  "Amount": {
+    "message": "Jumlah"
+  },
+  "Import__wallet": {
+    "message": "Impor dompet"
+  },
+  "Get__Started": {
+    "message": "Memulai"
+  },
+  "Password": {
+    "message": "Kata sandi"
+  },
+  "Import__Private__Key": {
+    "message": "Impor Kunci Pribadi"
+  },
+  "Language": {
+    "message": "Bahasa"
+  },
+  "Show__Secret__Recovery__Phrase": {
+    "message": "Tampilkan Frase Pemulihan Rahasia"
+  },
+  "Deposit": {
+    "message": "Deposit"
+  },
+  "Do__NOT__share__it__with__anyone": {
+    "message": "JANGAN membaginya dengan siapa pun"
+  },
+  "View__on__Block__Explorer": {
+    "message": "Lihat di Block Explorer"
+  },
+  "Create__Account": {
+    "message": "Buat Akun"
+  },
+  "Copied": {
+    "message": "Disalin"
+  },
+  "Clipboard__cleared__for__security": {
+    "message": "Papan klip dihapus untuk keamanan"
+  },
+  "Change__your__lockscreen__password": {
+    "message": "Ubah kata sandi layar kunci Anda"
+  },
+  "US__Dollar": {
+    "message": "Dolar Amerika"
+  },
+  "Cancel__current__transaction": {
+    "message": "Batalkan transaksi saat ini"
+  },
+  "Detected__multiple__requests__from__this__Dapp": {
+    "message": "Mendeteksi beberapa permintaan dari Dapp ini"
+  },
+  "Block__Dapp__from__sending__requests__for__1__minute": {
+    "message": "Blok Dapp dari mengirim permintaan selama 1 menit"
+  },
+  "Do__you__want__to__delete": {
+    "message": "Apakah Anda ingin menghapus"
+  },
+  "Related__tokens__will__be__removed__from__the__list__of__tokens": {
+    "message": "Token terkait akan dihapus dari daftar token."
+  },
+  "Transaction__Data": {
+    "message": "Data Transaksi"
+  },
+  "Reserve__Gas": {
+    "message": "Reservasi Gas"
+  },
+  "Instant": {
+    "message": "Instan"
+  },
+  "Fast": {
+    "message": "Cepat"
+  },
+  "Normal": {
+    "message": "Normal"
+  },
+  "Do__Not__Reserve__Gas": {
+    "message": "Jangan reservasi Gas"
+  },
+  "Collection": {
+    "message": "Koleksi"
+  },
+  "Chain": {
+    "message": " rantai"
+  },
+  "Last__Price": {
+    "message": "Harga Terakhir"
+  },
+  "Purchase__Date": {
+    "message": "Tanggal Pembelian"
+  },
+  "Only__ERC721__and__ERC1155__NFTs__are__supported__for__now": {
+    "message": "Hanya mendukung NFT ERC721 dan ERC1155 untuk saat ini"
+  },
+  "Your__balance__is": {
+    "message": "Keseimbangan Anda adalah "
+  },
+  "Only__one__NFT__of__ERC721__can__be__sent__at__a__time": {
+    "message": "Hanya satu NFT dari ERC721 yang dapat dikirim pada satu waktu"
+  },
+  "No__transactions__found": {
+    "message": "Tidak ada transaksi yang ditemukan"
+  },
+  "No__transactions": {
+    "message": "Tidak ada transaksi"
+  },
+  "You__can__select__NFT__from__All__and__add__to__Starred": {
+    "message": "Anda dapat memilih NFT dari \"Semua\" dan menambahkannya ke \"Bintang\""
+  },
+  "No__Starred__NFT": {
+    "message": "Tidak ada NFT yang disimpan"
+  },
+  "No__NFT": {
+    "message": "Tidak ada NFT"
+  },
+  "Canceled__a__pending__transaction": {
+    "message": "Membatalkan transaksi yang menunggu"
+  },
+  "Contract__Interaction": {
+    "message": "Interaksi Kontruksi"
+  },
+  "Contract__address__must__be__specified": {
+    "message": "Alamat kontruksi harus ditentukan"
+  },
+  "The__specified__address__is__invalid": {
+    "message": "Alamat yang ditentukan tidak valid"
+  },
+  "transactions__need_to_sign": {
+    "message": "Transaksi perlu ditandatangani"
+  },
+  "View": {
+    "message": "Lihat"
+  },
+  "View__first_one": {
+    "message": "Lihat yang pertama"
+  },
+  "No__Transactions": {
+    "message": "Tidak ada transaksi"
+  },
+  "No__quotes__available__for__this__chain__yet": {
+    "message": "Tidak ada kutipan yang tersedia untuk chain ini"
+  },
+  "Please__use__a__third__party__Dapp__to__proceed": {
+    "message": "Por favor, use una aplicación descentralizada (Dapp) de terceros para continuar"
+  },
+  "View__Dapp__Options": {
+    "message": "Lihat Opsi Dapp"
+  },
+  "Select__a__Dapp": {
+    "message": "Pilih Dapp"
+  },
+  "No__Dapps__available": {
+    "message": "Tidak ada Dapp yang tersedia"
+  },
+  "Please__contact__the__official__team__of__this__chain__for__support": {
+    "message": "Silakan hubungi tim resmi rantai ini untuk dukungan"
+  },
+  "Not__supported__on__this__chain": {
+    "message": "Tidak didukung pada chain ini"
+  },
+  "No__Dapp__available__on__this__chain": {
+    "message": "Tidak ada Dapp yang tersedia pada chain ini"
+  },
+  "Swap__on__Dapp": {
+    "message": "Intercambier pada Dapp"
+  },
+  "Bridge__on__Dapp": {
+    "message": "Ubah pada Dapp"
+  },
+  "Not__supported": {
+    "message": "Tidak didukung"
+  },
+  "No__chains": {
+    "message": "Tidak ada chain"
+  },
+  "Search__by__Name__or__Address": {
+    "message": "Cari berdasarkan Nama atau Alamat"
+  },
+  "Add__to__my__token__list": {
+    "message": "Tambahkan ke daftar token saya"
+  },
+  "Edit": {
+    "message": "Edit"
+  },
+  "Delete": {
+    "message": "Hapus"
+  },
+  "Speed__Up": {
+    "message": "Percepat"
+  },
+  "Fee": {
+    "message": "Biaya"
+  },
+  "Add__Transaction__Fee__RBF": {
+    "message": "Tambahkan biaya transaksi (RBF)"
+  },
+  "Enter__additional__fee": {
+    "message": "Masukkan biaya tambahan"
+  },
+  "New__Total__Fee": {
+    "message": "Total biaya baru"
+  },
+  "Please__enter__a__valid__fee__amount": {
+    "message": "Silakan masukkan jumlah biaya yang valid"
+  },
+  "Transaction__fee__added__successfully": {
+    "message": "Biaya transaksi berhasil ditambahkan!"
+  }
+}

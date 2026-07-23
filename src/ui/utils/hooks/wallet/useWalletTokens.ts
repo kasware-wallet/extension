@@ -5,8 +5,8 @@ import { selectCurrentAccount } from '@/ui/state/accounts/reducer';
 import { useRpcStatus } from '@/ui/state/global/hooks';
 import { useAppSelector } from '@/ui/state/hooks';
 import { selectNetworkId } from '@/ui/state/settings/reducer';
-import type { KaspaToken, Token, TokenFromApi } from '@/ui/utils2/interfaces';
-import { sortTokensByValue } from '@/ui/utils2/sorting';
+import type { KaspaToken, Token, TokenFromApi } from '@/ui/utils/types';
+import { sortTokensByValue } from '@/ui/utils/sorting';
 
 import { useKasFyiMarketData } from '../kas-fyi/fetchMarketData';
 import { useIsKrc20QueryEnabled, useKrc20TokensQuery } from '../kasplex/fetchKrc20AddressTokenList';

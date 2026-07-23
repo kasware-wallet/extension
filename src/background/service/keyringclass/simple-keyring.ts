@@ -1,34 +1,42 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// "use strict";
+import { EventEmitter } from 'events';
+import type { PendingTransaction, SighashType, Transaction } from 'kaspa-wasm';
+import {
+  Keypair,
+  PrivateKey,
+  signEcdsaTransaction,
+  signMessage,
+  signMessageECDSA,
+  signSchnorrTransaction,
+  verifyMessage,
+  verifyMessageECDSA
+} from 'kaspa-wasm';
 
-import { IOpts } from '@/shared/types';
-import * as kaspa_wasm from 'kaspa-wasm';
-import { PrivateKey } from 'kaspa-wasm';
+import type { IOpts, ToSignInput } from '@/shared/types';
+import type { Keyring } from '../keyring';
 
-type TKaspaWasm = typeof kaspa_wasm;
-type TKeyPair = kaspa_wasm.Keypair;
+type TKeyPair = Keypair;
 
 const type = 'Simple Key Pair';
-class SimpleKeyring {
-  static type: string;
-  type: string;
+class SimpleKeyring extends EventEmitter implements Keyring {
+  static type = type;
+  hdPath = '';
+  type = type;
   network: any;
   wallets: TKeyPair[];
-  kaspaWasm: TKaspaWasm;
-  constructor(password: string, kaspaWasm: TKaspaWasm, opts?: IOpts | string[]) {
-    // super();
+  constructor(opts?: IOpts | string[]) {
+    super();
     this.type = type;
-    this.kaspaWasm = kaspaWasm;
     this.wallets = [];
     if (opts) {
       this.deserialize(opts);
     }
   }
-  serialize() {
+  serialize(): any {
     const seralizedWallets = this.wallets.map((wallet) => wallet.privateKey.toString());
-    return Promise.resolve(seralizedWallets);
+    return seralizedWallets;
   }
-  deserialize(opts) {
+  deserialize(opts: any) {
     const privateKeys: string[] = opts;
     this.wallets = privateKeys.map((key) => {
       // From Hex string
@@ -37,55 +45,156 @@ class SimpleKeyring {
       return keyPair;
     });
   }
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   addAccounts(n = 1) {
-    // return __awaiter(this, void 0, void 0, function* () {
-    //     const newWallets = [];
-    //     for (let i = 0; i < n; i++) {
-    //         newWallets.push(kaspa_core.ECPair.makeRandom());
-    //     }
-    //     this.wallets = this.wallets.concat(newWallets);
-    //     const hexWallets = newWallets.map(({ publicKey }) => publicKey.toString("hex"));
-    //     return hexWallets;
-    // });
+    const newWallets: Keypair[] = [];
+    for (let i = 0; i < n; i++) {
+      newWallets.push(Keypair.random());
+    }
+    this.wallets = this.wallets.concat(newWallets);
+    const hexWallets = newWallets.map(({ publicKey }) => publicKey.toString());
+    return hexWallets;
   }
-  getAccounts() {
+  async getAccounts() {
     return this.wallets.map(({ publicKey }) => publicKey);
   }
   getAccountsAndIndexAndDType = async () => {
-    // const Arr: tempAccount[] = [];
-    const Arr = this.wallets.map(({ publicKey }) => {
+    const Arr = this.wallets.map(({ publicKey }, i) => {
       return {
         publickey: publicKey,
         deriveType: 0,
-        index: 0
+        index: 0,
       };
     });
-    // Arr.push(obj);
-
     const result = await Promise.all(Arr);
     return result;
   };
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-  signTransaction = async (psbt, inputs, opts) => {
-    // psbt means pending in generator
-    const privateKeys:any[] = [];
+
+  signPendingTransaction = async (psbt: PendingTransaction, inputs: ToSignInput[], checkFullSigned?: boolean) => {
+    const privateKeys: any[] = [];
     inputs.forEach((input) => {
       const keyPair = this._getPrivateKeyFor(input.publicKey);
       const privateKey = keyPair.privateKey;
       privateKeys.push(privateKey);
     });
-    await psbt.sign(privateKeys);
+    psbt.sign(privateKeys, checkFullSigned);
     return psbt;
   };
-  signMessage(publicKey: string, text: string) {
+  createInputSignature = (
+    pTx: PendingTransaction,
+    inputs: ToSignInput[],
+    input_index: number,
+    sighash_type?: SighashType
+  ) => {
+    const signatures: string[] = [];
+    for (const input of inputs) {
+      const keyPair = this._getPrivateKeyFor(input.publicKey);
+      const privateKey = new PrivateKey(keyPair.privateKey);
+      const signature = pTx.createInputSignature(input_index, privateKey, sighash_type);
+      signatures.push(signature);
+    }
+    return signatures;
+  };
+  signTransactionKaspa = async (tx: Transaction, inputs: ToSignInput[], verify_sig: boolean) => {
+    const privateKeys: any[] = [];
+    inputs.forEach((input) => {
+      const keyPair = this._getPrivateKeyFor(input.publicKey);
+      const privateKey = keyPair.privateKey;
+      privateKeys.push(privateKey);
+    });
+    const inputIndexs = new Uint8Array(this._createSequentialArray(0, tx.inputs.length));
+    const sigHashType = new Uint8Array(this._createSameArray(1, tx.inputs.length));
+    const result = signSchnorrTransaction(tx, privateKeys, verify_sig, inputIndexs, sigHashType);
+    return Promise.resolve(result);
+  };
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+  signTransactionOneKaspa = async (tx: Transaction, inputs: ToSignInput[], verify_sig: boolean, txInputsLength = 1) => {
+    const privateKeys: any[] = [];
+    inputs.forEach((input) => {
+      const keyPair = this._getPrivateKeyFor(input.publicKey);
+      const privateKey = keyPair.privateKey;
+      privateKeys.push(privateKey);
+    });
+    const inputIndexs = new Uint8Array(this._createSequentialArray(0, tx.inputs.length));
+    const sigHashType = new Uint8Array(this._createSameArray(1, tx.inputs.length));
+    const result = signSchnorrTransaction(tx, privateKeys, verify_sig, inputIndexs, sigHashType);
+    return Promise.resolve(result);
+  };
+
+  signSchnorrTransaction = async (
+    tx: Transaction,
+    inputs: ToSignInput[],
+    // signerLenght: number,
+    verify_sig: boolean
+    // inputIndexs: Uint8Array,
+    // sigHashType: Uint8Array
+  ) => {
+    const privateKeys: any[] = [];
+    const signers2: any[] = [];
+    const inputIndexs2: any[] = [];
+    const sigHashType2: any[] = [];
+    inputs.forEach((input) => {
+      const keyPair = this._getPrivateKeyFor(input.publicKey);
+      const privateKey = keyPair.privateKey;
+      privateKeys.push(privateKey);
+      signers2.push(privateKey);
+      inputIndexs2.push(input.index);
+      sigHashType2.push(input.sighashTypes ? input.sighashTypes[0] : 1);
+    });
+    const result = signSchnorrTransaction(
+      tx,
+      signers2,
+      verify_sig,
+      new Uint8Array(inputIndexs2),
+      new Uint8Array(sigHashType2)
+    );
+    return Promise.resolve(result);
+  };
+  signEcdsaTransaction = async (
+    tx: Transaction,
+    inputs: ToSignInput[],
+    // signerLenght: number,
+    verify_sig: boolean
+    // inputIndexs: Uint8Array,
+    // sigHashType: Uint8Array
+  ) => {
+    const privateKeys: any[] = [];
+    const signers2: any[] = [];
+    const inputIndexs2: any[] = [];
+    const sigHashType2: any[] = [];
+    inputs.forEach((input) => {
+      const keyPair = this._getPrivateKeyFor(input.publicKey);
+      const privateKey = keyPair.privateKey;
+      privateKeys.push(privateKey);
+      signers2.push(privateKey);
+      inputIndexs2.push(input.index);
+      sigHashType2.push(input.sighashTypes ? input.sighashTypes[0] : 1);
+    });
+    const result = signEcdsaTransaction(
+      tx,
+      signers2,
+      verify_sig,
+      new Uint8Array(inputIndexs2),
+      new Uint8Array(sigHashType2)
+    );
+
+    return Promise.resolve(result);
+  };
+
+  signMessageECDSA(publicKey: string, text: string, noAuxRand?: boolean) {
     const keyPair = this._getPrivateKeyFor(publicKey);
-    const { signMessage } = this.kaspaWasm;
-    const signature = signMessage({ message: text, privateKey: keyPair.privateKey.toString() });
+    const signature = signMessageECDSA({ message: text, privateKey: keyPair.privateKey.toString(), noAuxRand });
     return Promise.resolve(signature);
   }
+  signMessage(publicKey: string, text: string, noAuxRand?: boolean) {
+    const keyPair = this._getPrivateKeyFor(publicKey);
+    const signature = signMessage({ message: text, privateKey: keyPair.privateKey.toString(), noAuxRand });
+    return Promise.resolve(signature);
+  }
+  verifyMessageECDSA(publicKey: string, message: string, signature: string) {
+    const isVerified = verifyMessageECDSA({ message, signature, publicKey });
+    return Promise.resolve(isVerified);
+  }
   verifyMessage(publicKey: string, message: string, signature: string) {
-    const { verifyMessage } = this.kaspaWasm;
     const isVerified = verifyMessage({ message, signature, publicKey });
     return Promise.resolve(isVerified);
   }
@@ -96,7 +205,14 @@ class SimpleKeyring {
     const wallet = this._getWalletForAccount(publicKey);
     return wallet;
   }
-  exportAccount(publicKey) {
+  private _createSameArray(m: any, length: number) {
+    return Array.from({ length }, () => m);
+  }
+
+  private _createSequentialArray(m: number, n: number) {
+    return Array.from({ length: n }, (_, i) => m + i);
+  }
+  exportAccount(publicKey: string) {
     const wallet = this._getWalletForAccount(publicKey);
     return wallet.privateKey.toString();
   }
@@ -117,4 +233,3 @@ class SimpleKeyring {
 SimpleKeyring.type = type;
 
 export { SimpleKeyring };
-

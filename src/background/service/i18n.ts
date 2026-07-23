@@ -1,15 +1,12 @@
 import i18n from 'i18next';
+import browser from '../../shared/webapi/browser';
+import { LANGS } from '@/shared/constant/i18n';
+import log from 'loglevel';
+import { I18N_NS, createAddResourceBundle } from '@/shared/utils/i18n';
 
-export const fetchLocale = async (locale) => {
-  const res = await fetch(`./_locales/${locale}/messages.json`);
-  const data: Record<string, { message: string; description: string }> = await res.json();
-  return Object.keys(data).reduce((res, key) => {
-    return {
-      ...res,
-      [key.replace(/__/g, ' ')]: data[key].message
-    };
-  }, {});
-};
+export { I18N_NS };
+
+export const addResourceBundle = createAddResourceBundle(i18n);
 
 i18n.init({
   fallbackLng: 'en',
@@ -19,19 +16,27 @@ i18n.init({
   }
 });
 
-export const I18N_NS = 'translations';
-
-export const addResourceBundle = async (locale: string) => {
-  if (i18n.hasResourceBundle(locale, I18N_NS)) return;
-  const bundle = await fetchLocale(locale);
-
-  i18n.addResourceBundle(locale, 'translations', bundle);
-};
-
-addResourceBundle('en');
-
-i18n.on('languageChanged', function (lng) {
+i18n.on('languageChanged', function (lng: string) {
   addResourceBundle(lng);
 });
 
 export default i18n;
+
+export const getFirstPreferredLangCode = async (): Promise<string> => {
+  let userPreferredLocaleCodes: string[];
+
+  try {
+    userPreferredLocaleCodes = await browser.i18n.getAcceptLanguages();
+    log.debug('userPreferredLocaleCodes', userPreferredLocaleCodes);
+  } catch (e) {
+    userPreferredLocaleCodes = [];
+  }
+  const firstPreferredLangCode = LANGS.find((item) => {
+    return userPreferredLocaleCodes.find(
+      (code) =>
+        code.toLowerCase() === item.code.toLowerCase() ||
+        item.code.toLowerCase() === code.toLowerCase().split(/[-_]/)[0]
+    );
+  })?.code;
+  return firstPreferredLangCode || 'en';
+};

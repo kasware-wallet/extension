@@ -12,6 +12,8 @@ export interface GlobalState {
   isBooted: boolean;
   rpcStatus: boolean;
   // rpcStatusMap: BooleanByChain;
+  // history state (merged from history/reducer.ts)
+  mostRecentOverviewPage: string;
 }
 
 export const initialState: GlobalState = {
@@ -19,8 +21,10 @@ export const initialState: GlobalState = {
   isUnlocked: false,
   isReady: false,
   isBooted: false,
-  rpcStatus: false
+  rpcStatus: false,
   // rpcStatusMap: { [KASPA_CHAINS_ENUM.KASPA_MAINNET]: false, [KASPA_CHAINS_ENUM.KASPLEX_TN10]: false }
+  // history state (merged from history/reducer.ts)
+  mostRecentOverviewPage: '/main'
 };
 
 const slice = createSlice({
@@ -51,6 +55,15 @@ const slice = createSlice({
       if (action.payload.rpcStatus !== undefined) {
         state.rpcStatus = action.payload.rpcStatus;
       }
+    },
+    // history actions (merged from history/reducer.ts)
+    updateMostRecentOverviewPage(
+      state,
+      action: {
+        payload: string;
+      }
+    ) {
+      state.mostRecentOverviewPage = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -69,3 +82,6 @@ export const selectIsUnlocked = createSelector([selectGlobalState], (s) => s.isU
 export const selectIsReady = createSelector([selectGlobalState], (s) => s.isReady);
 export const selectIsBooted = createSelector([selectGlobalState], (s) => s.isBooted);
 export const selectRpcStatus = createSelector([selectGlobalState], (s) => s.rpcStatus);
+
+// history selectors (merged from history/reducer.ts)
+export const selectMostRecentOverviewPage = createSelector([selectGlobalState], (s) => s.mostRecentOverviewPage);
