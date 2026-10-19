@@ -2,12 +2,19 @@ import { openapiService, permissionService, sessionService } from '@/background/
 import { NETWORK_TYPES, VERSION } from '@/shared/constant';
 import type { TNetworkId } from '@/shared/types';
 import { NetworkType } from '@/shared/types';
+import { kaspaSompiFromDapp } from '@/shared/utils/kaspaApprovalDerive';
 import { amountToSompi } from '@/shared/utils/format';
 import { ethErrors } from 'eth-rpc-errors';
 import log from 'loglevel';
 import 'reflect-metadata';
 import BaseController from '../base';
 import wallet from '../wallet';
+
+/**
+ * The longest message `signMessage` will sign. 50 KB — a message past this is either
+ * a mistake or an attempt to flood the signing payload.
+ */
+const MAX_SIGN_TEXT_LENGTH = 50_000;
 
 class ProviderController extends BaseController {
   requestAccounts = async ({ session: { origin } }) => {
@@ -54,12 +61,14 @@ class ProviderController extends BaseController {
 
   @Reflect.metadata('SAFE', true)
   disconnect = async ({
+    session: { origin: sessionOrigin },
     data: {
       params: { origin }
     }
   }) => {
-    log.debug('origin', origin);
-    return await wallet.removeConnectedSite(origin);
+    // Trust session origin over parameter — the parameter is self-reported by the page.
+    log.debug('origin', sessionOrigin);
+    return await wallet.removeConnectedSite(sessionOrigin);
   };
 
   @Reflect.metadata('APPROVAL', [
@@ -388,6 +397,8 @@ class ProviderController extends BaseController {
   @Reflect.metadata('APPROVAL', [
     'SignPsbt',
     (req) => {
+      // Validate sompi amount before raising approval — rejects precision-lost values early.
+      kaspaSompiFromDapp(req.data.params?.sompi, 'sompi');
       return false;
     }
   ])
@@ -463,8 +474,14 @@ class ProviderController extends BaseController {
 
   @Reflect.metadata('APPROVAL', [
     'SignText',
-    () => {
-      // todo check text
+    (req) => {
+      const text = req.data.params?.text;
+      if (!text || typeof text !== 'string') {
+        throw ethErrors.rpc.invalidParams('text is required and must be a string');
+      }
+      if (text.length > MAX_SIGN_TEXT_LENGTH) {
+        throw ethErrors.rpc.invalidParams(`text exceeds maximum length of ${MAX_SIGN_TEXT_LENGTH}`);
+      }
     }
   ])
   signMessage = async ({
@@ -526,10 +543,14 @@ class ProviderController extends BaseController {
 
   @Reflect.metadata('SAFE', true)
   pushTx = async ({
+    session: { origin },
     data: {
       params: { rawtx }
     }
   }) => {
+    if (!permissionService.hasPermission(origin)) {
+      throw ethErrors.provider.unauthorized();
+    }
     return await wallet.pushTx(rawtx);
   };
 
@@ -539,12 +560,13 @@ class ProviderController extends BaseController {
       return false;
     }
   ])
-  signPskt = async ({ approvalRes: { psktJsonString, psktOptions }, session: { origin } }) => {
+  signPskt = async ({ approvalRes: { psktJsonString, psktOptions }, session: { origin }, preApprovalContext }) => {
     await wallet.updateApprovalHistory({
       origin,
       fnName: 'signPskt',
       params: JSON.stringify({ txJsonString: psktJsonString, options: psktOptions })
     });
+    // TODO: pass preApprovalContext to wallet.signPskt when wallet.ts is ported (D084)
     return await wallet.signPskt({ txJsonString: psktJsonString, options: psktOptions });
   };
 
