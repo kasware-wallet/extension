@@ -44,6 +44,17 @@ export const CHAINS: Record<KASPA_CHAINS_ENUM, IChain> = {
   }
 };
 
+/**
+ * The chain a connected site is recorded against, derived from the network the wallet is on.
+ *
+ * `rpcFlow` used to hardcode mainnet at the point a site first connects, so a site connected while
+ * the wallet was on a testnet was stored as mainnet. The wallet's current network is the honest answer.
+ */
+export function kaspaChainFromNetworkId(networkId: TNetworkId): KASPA_CHAINS_ENUM {
+  const match = (Object.keys(CHAINS) as KASPA_CHAINS_ENUM[]).find((chain) => CHAINS[chain].network === networkId);
+  return match ?? KASPA_CHAINS_ENUM.KASPA_MAINNET;
+}
+
 export const KEYRING_TYPE = {
   HdKeyring: 'HD Key Tree',
   SimpleKeyring: 'Simple Key Pair',
