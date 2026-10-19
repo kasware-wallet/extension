@@ -1,10 +1,10 @@
 import { ethErrors } from 'eth-rpc-errors';
 import 'reflect-metadata';
 
-import { keyringService, notificationService, permissionService } from '@/background/service';
+import { keyringService, notificationService, permissionService, preferenceService } from '@/background/service';
 import { PromiseFlow } from '@/background/utils';
 import { underline2Camelcase } from '@/shared/utils';
-import { KASPA_EVENTS, KASPA_CHAINS_ENUM } from '@/shared/constant';
+import { KASPA_EVENTS, kaspaChainFromNetworkId } from '@/shared/constant';
 import eventBus from '@/shared/eventBus';
 
 import providerController from './controller';
@@ -28,6 +28,12 @@ const flowContext = flow
         message: `method [${method}] doesn't has corresponding handler`,
         data: ctx.request.data
       });
+    }
+
+    // why: nine handlers destructure `data.params` in their parameter list, so a call that sends no params
+    // at all failed as `TypeError: Cannot destructure property …` instead of a named invalid-params error.
+    if (ctx.request.data.params === undefined || ctx.request.data.params === null) {
+      ctx.request.data.params = {};
     }
 
     return next();
@@ -68,7 +74,12 @@ const flowContext = flow
           },
           { height: windowHeight }
         );
-        permissionService.addConnectedSite(origin, name, icon, KASPA_CHAINS_ENUM.KASPA_MAINNET);
+        permissionService.addConnectedSite(
+          origin,
+          name,
+          icon,
+          kaspaChainFromNetworkId(preferenceService.getNetworkId())
+        );
       }
     }
 
@@ -88,6 +99,12 @@ const flowContext = flow
 
     if (approvalType && (!condition || !condition(ctx.request))) {
       ctx.request.requestedApproval = true;
+      // Snapshot the network+account the window is about to be raised under, so `signPskt` can bind the
+      // signature to what the user actually saw.
+      ctx.preApprovalContext = {
+        networkId: preferenceService.getNetworkId(),
+        accountAddress: preferenceService.getCurrentAccount()?.address ?? ''
+      };
       ctx.approvalRes = await notificationService.requestApproval(
         {
           approvalComponent: approvalType,
@@ -121,7 +138,9 @@ const flowContext = flow
     const requestDefer = Promise.resolve(
       providerController[mapMethod]({
         ...request,
-        approvalRes
+        approvalRes,
+        // The binding snapshot captured before the approval was raised; only `signPskt` reads it.
+        preApprovalContext: ctx.preApprovalContext
       })
     );
 
@@ -177,6 +196,8 @@ export default (request) => {
   return flowContext(ctx).finally(() => {
     if (ctx.request.requestedApproval) {
       flow.requestedApproval = false;
+      // Close the notification popup after the flow completes.
+      notificationService.removeNotifiWindow();
       // only unlock notification if current flow is an approval flow
       notificationService.unLock();
     }
