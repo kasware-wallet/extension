@@ -109,7 +109,7 @@
     "i18next": "^21.10.0",
     "immer": "9.0.21",
     "interval-promise": "1.4.0",
-    "kaspa-wasm": "link:src\\kaspaweb",
+    "kaspa-wasm": "link:src/kaspaweb",
     "koa-compose": "^4.1.0",
     "localforage": "^1.10.0",
     "lodash-es": "^4.17.21",
