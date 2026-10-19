@@ -4,12 +4,36 @@ import type { IKNSDomain } from './kns';
 export interface IResultPsbtHex {
   to: string;
   amount: number;
+  // The same amount in sompi. `amount` is the KAS figure the approval screen renders; anything that
+  // has to build or compare a transaction reads this one, because a decimal that has been through
+  // KAS and back is not exact.
+  amountSompi?: string;
   feeRate: number;
   fee: number;
   priorityFee?: number;
   mass?: number;
   payload?: string;
-  // rawtx: string;
+  // The amount is the whole spendable balance and the fee comes out of it, so the broadcast has to
+  // use FeeSource.ReceiverPays.
+  sendAll?: boolean;
+  // The exact outpoints this payment must spend, when the user picked them.
+  inputOutpoints?: {
+    transactionId: string;
+    index: number;
+  }[];
+  // Actual inputs/outputs from the generated transaction
+  inputs?: {
+    txid: string;
+    vout: number;
+    address: string;
+    value: number;
+    sighashType: number;
+  }[];
+  outputs?: {
+    address: string;
+    value: number;
+    isChange?: boolean;
+  }[];
 }
 export interface IFeeRate {
   feerate: number;
@@ -25,7 +49,8 @@ export enum TxType {
   SIGN_KRC20_TRANSFER_BATCH,
   SIGN_KRC20_MINT_BATCH,
   SIGN_KNS_TRANSFER,
-  SIGN_KSPRNFT_TRANSFER
+  SIGN_KSPRNFT_TRANSFER,
+  SIGN_KCC20_TRANSFER
 }
 
 interface BaseUserToSignInput {
@@ -59,10 +84,33 @@ export interface SignPsktOptions {
   }[];
 }
 
+/**
+ * The network and account a dApp `signPskt` request was created under, captured before the approval
+ * window opens and re-checked right before signing.
+ */
+export interface SignPsktDappContext {
+  networkId: string;
+  accountAddress: string;
+}
+
 export interface ToSignInput {
   index: number;
   publicKey: string;
   sighashTypes?: number[];
+}
+
+/**
+ * Severity of a risk raised while decoding a transaction.
+ *
+ * 'high' hides the Sign button in the approval screens, so it is reserved for
+ * findings that no legitimate transaction produces. 'medium' and 'low' are
+ * advisory: the user is told what was found and decides.
+ */
+export type TxRiskLevel = 'high' | 'medium' | 'low';
+
+export interface TxRisk {
+  level: TxRiskLevel;
+  desc: string;
 }
 
 export interface DecodedPsbt {
@@ -76,6 +124,7 @@ export interface DecodedPsbt {
   outputInfos: {
     address: string;
     value: number;
+    isChange?: boolean;
   }[];
   feeRate: number;
   priorityFee: number;
@@ -83,7 +132,7 @@ export interface DecodedPsbt {
   features: {
     rbf: boolean;
   };
-  risks: { level: 'high' | 'low'; desc: string }[];
+  risks: TxRisk[];
   payload?: string | undefined;
 }
 
@@ -93,10 +142,19 @@ export interface DecodedPskt {
   feeRate: number;
   priorityFee: number;
   fee: number;
+  /**
+   * The same fee in sompi as an integer decimal string. `''` for a partial PSKT.
+   */
+  feeSompi?: string;
+  /**
+   * True when an input is signed with a non-standard sighash (ANYONECANPAY / SINGLE / NONE),
+   * so the counterparty still has to add inputs or outputs.
+   */
+  isPartial?: boolean;
   features: {
     rbf: boolean;
   };
-  risks: { level: 'high' | 'low'; desc: string }[];
+  risks: TxRisk[];
   payload: string;
 }
 
@@ -105,12 +163,20 @@ export interface IInputInfo {
   vout: number;
   address: string;
   value: number;
+  /** The exact amount in sompi as an integer string. */
+  valueSompi?: string;
   sighashType: number;
+  isToSign?: boolean;
+  /** Detected script type for risk-display purposes. */
+  scriptType?: 'p2pk' | 'p2sh' | 'unknown';
 }
 
 export interface IOutputInfo {
   address: string;
   value: number;
+  /** The exact amount in sompi as an integer string. */
+  valueSompi?: string;
+  isChange?: boolean;
 }
 
 export interface ToAddressInfo {
@@ -124,7 +190,8 @@ export interface RawTxInfo {
   psbtHex: string;
   rawtx: string;
   toAddressInfo?: ToAddressInfo;
-  amount?: number;
+  // Decimal KAS. String when the send screen forwarded what the user typed.
+  amount?: number | string;
   priorityFee?: number;
   fee?: number;
   mass?: number;
@@ -132,6 +199,28 @@ export interface RawTxInfo {
 }
 
 export type TPendingTxType = 'sendkas' | 'retrieve' | 'commit' | 'reveal' | 'buykrc20token' | 'compound';
+
+export interface IKaspaApiTxInput {
+  previous_outpoint_address?: string;
+  previous_outpoint_amount?: number | string;
+}
+
+export interface IKaspaApiTxOutput {
+  script_public_key_address?: string;
+  amount?: number;
+}
+
+/**
+ * One entry of the kaspa.org `full-transactions` response.
+ */
+export interface IKaspaApiTransaction {
+  transaction_id: string;
+  block_time: number;
+  is_accepted: boolean;
+  inputs?: IKaspaApiTxInput[];
+  outputs?: IKaspaApiTxOutput[];
+  payload?: string;
+}
 
 export interface ITransactionInfo {
   mode: string;
@@ -197,5 +286,16 @@ export enum SighashBiType {
   NoneAnyOneCanPay = 0b10000010 as const, // 128 + 2 = 130
   SingleAnyOneCanPay = 0b10000100 as const // 128 + 4 = 132
 }
+
+/**
+ * The sighash types `signPskt` will sign for a dApp. NONE and NONE|ANYONECANPAY are excluded on
+ * purpose: a NONE signature does not commit to the outputs.
+ */
+export const ALLOWED_PSKT_SIGHASH: readonly number[] = [
+  SighashBiType.All,
+  SighashBiType.Single,
+  SighashBiType.AllAnyOneCanPay,
+  SighashBiType.SingleAnyOneCanPay
+];
 
 export type TSignMessage = 'schnorr' | 'ecdsa' | 'auto';
