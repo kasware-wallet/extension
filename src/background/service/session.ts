@@ -18,6 +18,15 @@ export class Session {
     this.icon = icon;
     this.name = name;
   }
+
+  /**
+   * Set only the page's self-declared name and icon, without touching origin.
+   * The origin is stamped from the port's sender URL and must not be page-controlled.
+   */
+  setPageInfo({ name, icon }) {
+    this.name = name;
+    this.icon = icon;
+  }
 }
 
 // for each tab
