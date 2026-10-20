@@ -1,5 +1,5 @@
+import { Buffer } from 'buffer';
 import compareVersions from 'compare-versions';
-import { formatUnits } from 'ethers/lib/utils';
 import type {
   IBalanceEvent,
   IFeeEstimate,
@@ -14,6 +14,7 @@ import {
   addressFromScriptPublicKey,
   Encoding,
   Generator,
+  isScriptPayToScriptHash,
   Resolver,
   RpcClient,
   sha256FromText,
@@ -73,8 +74,8 @@ import type {
 import { NetworkType, SighashBiType } from '@/shared/types';
 import { getKnsApi } from '@/shared/utils';
 
-import { sompiToAmount } from '@/shared/utils/format';
-import { preferenceService, sessionService } from '.';
+import { formatLocaleString, sompiToAmount } from '@/shared/utils/format';
+import { keyringService, preferenceService, sessionService } from '.';
 import { storage } from '../webapi';
 
 interface OpenApiStore {
@@ -1374,65 +1375,406 @@ export class OpenApiService {
     }
   }
 
-  async decodePsbt(psbtHex: string): Promise<DecodedPsbt> {
+  async decodePsbt(psbtHex: string, accountAddress?: string): Promise<DecodedPsbt> {
     const result: IResultPsbtHex = JSON.parse(psbtHex);
-    const decodedPsbt = {
-      inputInfos: [
+    const outputAddress = result.to || '';
+
+    // --- Input infos ---
+    // If the result contains actual inputs from the transaction, use them.
+    // Otherwise, fall back to a synthetic single-input entry (consolidated estimate).
+    let inputInfos: DecodedPsbt['inputInfos'];
+    if (result.inputs && result.inputs.length > 0) {
+      inputInfos = result.inputs.map((input) => ({
+        txid: input.txid,
+        vout: input.vout,
+        address: input.address,
+        value: input.value,
+        sighashType: input.sighashType
+      }));
+    } else {
+      // The simplified PSBT payload (IResultPsbtHex) does not carry UTXO data —
+      // the SDK constructs the full transaction internally and only exposes the
+      // high-level intent (to/amount/fee). For wallet-initiated sends, all
+      // input UTXOs come from the current account's address, so we use that for
+      // the inputInfos entry. The value is estimated as output + fee (consolidated
+      // single-UTXO approximation) and is mainly used for display / canChanged logic.
+      const estimatedInputValue = result.amount + result.fee;
+      inputInfos = [
         {
-          txid: 'string',
+          txid: '',
           vout: 0,
-          address: 'kaspadev:55555555555t550x8st82m73nujqe52j8plx2p',
-          value: 0,
+          address: accountAddress || '',
+          value: estimatedInputValue,
           sighashType: 1
         }
-      ],
-      outputInfos: [
+      ];
+    }
+
+    // --- Change detection ---
+    // In the simplified flow there is only one output (the recipient); the
+    // change output is handled internally by the SDK and is not visible here.
+    // An output is classified as "change" only when it returns to the current
+    // account — a legitimate user-initiated send never flags as change.
+    const isChange = !!(accountAddress && outputAddress && outputAddress === accountAddress);
+
+    const risks: DecodedPsbt['risks'] = [];
+
+    // --- Spoofing detection (limited) ---
+    // The simplified payload cannot expose the change output, so change-address
+    // spoofing is not detectable at this layer; the authoritative detection
+    // lives in decodePskt() where the full Transaction object is available.
+    // Only a sanity check on the amount is possible here.
+    if (result.amount < 0) {
+      risks.push({
+        level: 'high',
+        desc: 'Warning: The transaction amount is negative. Verify the transaction details before signing.'
+      });
+    }
+
+    // --- Output infos ---
+    // If the result contains actual outputs from the transaction, use them.
+    // Otherwise, fall back to a single output entry (the recipient).
+    let outputInfos: DecodedPsbt['outputInfos'];
+    if (result.outputs && result.outputs.length > 0) {
+      outputInfos = result.outputs.map((output) => ({
+        address: output.address,
+        value: output.value,
+        // Recompute isChange from accountAddress — never trust the parsed JSON value,
+        // as a malicious dApp could mark an attacker's output as change to bypass spoofing detection.
+        isChange: !!(accountAddress && output.address && output.address === accountAddress)
+      }));
+    } else {
+      outputInfos = [
         {
-          address: 'string',
-          // value:sompi unit
-          value: result.amount
+          address: outputAddress,
+          // value: sompi unit (matches result.amount in IResultPsbtHex)
+          value: result.amount,
+          isChange
         }
-      ],
+      ];
+      // NOTE: the change output is built by the SDK and is not part of this payload, so it is
+      // deliberately NOT synthesized here — inventing an output addressed to the current account
+      // would render as "Change (returning to you)" for an output we cannot verify exists.
+      // The UI must therefore use the authoritative `fee` below instead of Inputs − Outputs.
+    }
+
+    const decodedPsbt = {
+      inputInfos,
+      outputInfos,
       feeRate: result.feeRate,
-      priorityFee: result.priorityFee,
+      priorityFee: result.priorityFee ?? 0,
       fee: Number(result.fee),
       features: {
         rbf: false
       },
-      risks: [],
+      risks: risks.length > 0 ? risks : [],
       payload: result?.payload
     };
 
     return Promise.resolve(decodedPsbt);
   }
 
+  /**
+   * Verify that every input a dApp asks us to sign is a real unspent output on the network the wallet is
+   * connected to, with the same outpoint, amount and script the PSKT commits to.
+   *
+   * why: a Kaspa signature does not commit to a network id and one key controls the same scripts on every
+   * network, so a dApp approved on a testnet can present a PSKT spending the user's coin on another
+   * network and get a signature that is valid there while the window shows the testnet. Asking the active
+   * network's node whether the outpoint is actually unspent here is the only check that closes that gap.
+   *
+   * Scoped to non-mainnet on purpose: draining mainnet requires the wallet to sit on a testnet while
+   * signing a mainnet UTXO, so verifying only the non-mainnet case kills the mainnet-loss vector and
+   * leaves mainnet signing offline and unchanged. Fails OPEN when the node is unreachable or errors, so a
+   * node hiccup does not brick dev/test signing; a reachable node that does not report the outpoint as
+   * unspent here is a refusal, not a pass.
+   *
+   * `signIndices` are the input indices the wallet will sign (a dApp's `signInputs`, or every input when
+   * it named none). Counterparty inputs of an ANYONECANPAY PSKT are not ours to verify and are excluded.
+   */
+  async verifyPsktInputsOnActiveNetwork(
+    pskt: Transaction,
+    signIndices: number[]
+  ): Promise<{
+    ok: boolean;
+    reasons: string[];
+    verified: Map<number, { amountSompi: string; scriptHex: string; address: string }>;
+  }> {
+    const verified = new Map<number, { amountSompi: string; scriptHex: string; address: string }>();
+    const networkId = preferenceService.getNetworkId();
+    // Mainnet is out of scope by design (see the method note): pass through untouched.
+    if (networkId === 'mainnet' || signIndices.length === 0) return { ok: true, reasons: [], verified };
+    if (!this.rpc || this.rpc.isConnected !== true) {
+      log.warn('[verifyPsktInputs] RPC not connected - failing open');
+      return { ok: true, reasons: [], verified };
+    }
+
+    const scriptToHex = (spk: any): string => {
+      const raw = spk?.script ?? spk;
+      if (!raw) return '';
+      if (typeof raw === 'string') return raw.startsWith('0x') ? raw.slice(2).toLowerCase() : raw.toLowerCase();
+      if (raw instanceof Uint8Array) return Buffer.from(raw).toString('hex').toLowerCase();
+      return '';
+    };
+
+    try {
+      const targets: { index: number; key: string; amount: bigint; scriptHex: string; address: string }[] = [];
+      for (const index of signIndices) {
+        const input = pskt.inputs[index] as any;
+        const utxo = input?.utxo;
+        const outpoint = utxo?.entry?.outpoint ?? utxo?.outpoint ?? input?.previousOutpoint;
+        const txid = outpoint?.transactionId ?? '';
+        const vout = Number(outpoint?.index ?? 0);
+        const spk = utxo?.scriptPublicKey;
+        const address = spk ? addressFromScriptPublicKey(spk, networkId)?.toString() ?? '' : '';
+        // No derivable script/address cannot be looked up - and cannot yield a valid signature either - so
+        // it is skipped rather than refused, which keeps covenant/P2SH dev flows working.
+        if (!txid || !address) continue;
+        targets.push({
+          index,
+          key: `${txid}:${vout}`,
+          amount: BigInt(utxo?.amount ?? 0),
+          scriptHex: scriptToHex(spk),
+          address
+        });
+      }
+      if (targets.length === 0) return { ok: true, reasons: [], verified };
+
+      const addresses = Array.from(new Set(targets.map((t) => t.address)));
+      const { entries } = await this.rpc.getUtxosByAddresses(addresses);
+      const confirmed = new Map<string, { amount: bigint; scriptHex: string }>();
+      ((entries ?? []) as any[]).forEach((e) => {
+        const op = e?.entry?.outpoint ?? e?.outpoint;
+        if (!op) return;
+        confirmed.set(`${op.transactionId}:${Number(op.index ?? 0)}`, {
+          amount: BigInt(e?.amount ?? e?.entry?.amount ?? 0),
+          scriptHex: scriptToHex(e?.scriptPublicKey ?? e?.entry?.scriptPublicKey)
+        });
+      });
+
+      const reasons: string[] = [];
+      const unresolved: typeof targets = [];
+      for (const t of targets) {
+        const hit = confirmed.get(t.key);
+        if (!hit) {
+          unresolved.push(t);
+        } else if (hit.amount === t.amount && hit.scriptHex === t.scriptHex) {
+          verified.set(t.index, { amountSompi: hit.amount.toString(), scriptHex: hit.scriptHex, address: t.address });
+        } else {
+          // A confirmed output at this outpoint that disagrees with the PSKT is a definite tamper signal.
+          reasons.push(
+            `Input #${t.index} (${t.key}) does not match an unspent output on this network (amount or script differs).`
+          );
+        }
+      }
+
+      // Chained spends: an input may reference the output of a not-yet-confirmed transaction. Accept it
+      // only if a pending tx to the same address produces that exact outpoint and no pending tx already
+      // spends it (double-spend guard).
+      if (unresolved.length > 0) {
+        try {
+          const mempool = await this.rpc.getMempoolEntriesByAddresses({
+            addresses,
+            includeOrphanPool: false,
+            // Keep the transaction pool: a chained spend's creator and any pending tx that already spends
+            // the outpoint both live there, and both are what this check reads.
+            filterTransactionPool: false
+          });
+          // The SDK types this as IMempoolEntry[], but the node returns one { address, sending, receiving }
+          // object per address - read it defensively as that shape.
+          const pendingSpent = new Set<string>();
+          const pendingOutputs = new Map<string, { amount: bigint; scriptHex: string }>();
+          let sawPendingTx = false;
+          let pendingIdComputed = false;
+          for (const group of (mempool?.entries ?? []) as any[]) {
+            for (const me of [...((group?.sending ?? []) as any[]), ...((group?.receiving ?? []) as any[])]) {
+              const tx = me?.transaction;
+              if (!tx) continue;
+              sawPendingTx = true;
+              ((tx.inputs ?? []) as any[]).forEach((inp) => {
+                const op = inp?.previousOutpoint;
+                if (op) pendingSpent.add(`${op.transactionId}:${Number(op.index ?? 0)}`);
+              });
+              let txid = '';
+              try {
+                txid = new Transaction(tx).id;
+                if (txid) pendingIdComputed = true;
+              } catch {
+                txid = '';
+              }
+              if (!txid) continue;
+              ((tx.outputs ?? []) as any[]).forEach((out, oi) => {
+                pendingOutputs.set(`${txid}:${oi}`, {
+                  amount: BigInt(out?.value ?? 0),
+                  scriptHex: scriptToHex(out?.scriptPublicKey)
+                });
+              });
+            }
+          }
+          for (const t of unresolved) {
+            if (pendingSpent.has(t.key)) {
+              reasons.push(`Input #${t.index} (${t.key}) is already spent by a pending transaction on this network.`);
+              continue;
+            }
+            const hit = pendingOutputs.get(t.key);
+            if (hit && hit.amount === t.amount && hit.scriptHex === t.scriptHex) {
+              verified.set(t.index, {
+                amountSompi: hit.amount.toString(),
+                scriptHex: hit.scriptHex,
+                address: t.address
+              });
+            } else if (sawPendingTx && !pendingIdComputed) {
+              // There were pending transactions but not one tx id could be computed: that is our wasm
+              // tooling failing, not evidence the input is bogus, so fail open rather than block a
+              // legitimate chained spend. An *empty* mempool is not this case - see the else below.
+              log.warn('[verifyPsktInputs] could not compute pending tx ids - failing open for unresolved inputs');
+            } else {
+              // The node is reachable and answered both queries: this outpoint is neither a confirmed
+              // unspent output nor one produced by a pending transaction here, so it does not exist on
+              // this network. That is the cross-network case (#1) - a reachable node's silence is the
+              // answer, not a reason to fail open.
+              reasons.push(`Input #${t.index} (${t.key}) is not an unspent output on this network.`);
+            }
+          }
+        } catch (e) {
+          // The node answered the UTXO query but not the mempool query: fail open for the unresolved inputs.
+          log.warn('[verifyPsktInputs] mempool query failed - failing open for unresolved inputs:', e);
+          unresolved.forEach((t) => {
+            if (!reasons.some((r) => r.includes(t.key))) {
+              log.warn(`[verifyPsktInputs] input #${t.index} (${t.key}) unverified (mempool unavailable)`);
+            }
+          });
+        }
+      }
+
+      return { ok: reasons.length === 0, reasons, verified };
+    } catch (e) {
+      // Any RPC/shape error fails open: a node problem must not brick signing (see the method note).
+      log.warn('[verifyPsktInputs] verification errored - failing open:', e);
+      return { ok: true, reasons: [], verified };
+    }
+  }
+
   async decodePskt(psktJsonString: string, options?: SignPsktOptions): Promise<DecodedPskt> {
     const pskt = Transaction.deserializeFromSafeJSON(psktJsonString) as Transaction;
-    let signInputs = pskt.inputs.map((input, index) => {
-      return { index: index, sighashType: 0 };
-    });
-    if (options && options.signInputs?.length > 0) signInputs = options.signInputs;
 
-    const inputInfos = pskt.inputs
-      .map((input, index) => {
-        const txid = input.utxo?.entry.outpoint.transactionId || '';
-        const vout = 0;
-        const address = input.utxo?.address?.toString() || '';
-        const value = Number(formatUnits(input.utxo?.amount || BigInt(0), 8));
-        const signInput = signInputs.find((input) => input.index == index);
-        if (signInput) {
-          const sighashType = signInput.sighashType;
-          return {
-            txid,
-            vout,
-            address,
-            value,
-            sighashType
-          };
-        }
-      })
-      .filter((input) => input !== undefined);
+    // Build the set of input indices this wallet should sign.
+    // When options.signInputs is provided, only those indices are marked for signing.
+    // When not provided, all inputs are assumed to need signing.
+    const hasSignInputOptions = options && options.signInputs?.length > 0;
+    const signInputMap = new Map<number, number>();
+    if (hasSignInputOptions) {
+      options.signInputs!.forEach((si) => signInputMap.set(si.index, si.sighashType));
+    }
+
     const networkId = preferenceService.getNetworkId();
+
+    // Include ALL inputs for full transaction visibility, marking each
+    // with isToSign to indicate whether this wallet needs to sign it.
+    // For P2SH (covenant) UTXOs, utxo.address is empty — fall back to
+    // deriving the address from scriptPublicKey.
+    const inputInfos = pskt.inputs.map((input, index) => {
+      const txid = input.utxo?.entry.outpoint.transactionId || '';
+      const vout = 0;
+      const address =
+        input.utxo?.address?.toString() ||
+        (input.utxo?.scriptPublicKey
+          ? addressFromScriptPublicKey(input.utxo.scriptPublicKey, networkId)?.toString()
+          : '') ||
+        '';
+      const value = Number(sompiToAmount(input.utxo?.amount || BigInt(0), 8));
+      const isToSign = !hasSignInputOptions || signInputMap.has(index);
+      const sighashType = signInputMap.get(index) ?? 0;
+
+      // Detect script type for risk-display purposes.
+      // P2SH (covenant) scriptPubKeys encode differently from standard P2PK.
+      let scriptType: 'p2pk' | 'p2sh' | 'unknown' = 'unknown';
+      try {
+        const spk = input.utxo?.scriptPublicKey;
+        if (spk) {
+          // Extract the raw script bytes/hex from the ScriptPublicKey object
+          const scriptData = (spk as any).script;
+          if (scriptData) {
+            const scriptHex =
+              typeof scriptData === 'string'
+                ? scriptData.startsWith('0x')
+                  ? scriptData.slice(2)
+                  : scriptData
+                : scriptData instanceof Uint8Array
+                ? Buffer.from(scriptData).toString('hex')
+                : null;
+            if (scriptHex) {
+              scriptType = isScriptPayToScriptHash(scriptHex) ? 'p2sh' : 'p2pk';
+            }
+          }
+        }
+      } catch {
+        // ScriptPublicKey detection failed — leave as 'unknown'
+      }
+
+      return {
+        txid,
+        vout,
+        address,
+        value,
+        // The chain-exact figure the approval port carries: `value` above is KAS through a float for the
+        // legacy UI, and a sompi string is what a confirmation screen on a money path must answer with.
+        valueSompi: String(input.utxo?.amount ?? BigInt(0)),
+        sighashType,
+        isToSign,
+        scriptType
+      };
+    });
+
+    // Verify the inputs we will sign against the active network's node (non-mainnet only; fails open when
+    // the node is unreachable). A failure raises a 'high' risk below, which hides Sign in the approval
+    // screen; a success lets the window show the node's own amount/address per input rather than the
+    // site's (#3), so a doctored `utxo.amount` cannot understate what the signature actually spends.
+    const signIndices = hasSignInputOptions ? Array.from(signInputMap.keys()) : pskt.inputs.map((_, i) => i);
+    const netVerify = await this.verifyPsktInputsOnActiveNetwork(pskt, signIndices);
+    netVerify.verified.forEach((v, index) => {
+      const info = inputInfos[index];
+      if (!info) return;
+      info.address = v.address || info.address;
+      info.valueSompi = v.amountSompi;
+      info.value = Number(sompiToAmount(v.amountSompi, 8));
+    });
+
+    // Collect the addresses the user actually controls, for change-output detection.
+    // Using *all* input addresses is wrong: in a multi-party PSKT the counterparty's
+    // inputs would land in this set, so an output paying the counterparty would be
+    // shown as green "Change (returning to you)" and would also suppress the
+    // spoofed-change-address warning below.
+    const ownedAddresses = new Set<string>();
+
+    // The current account's active address — change often returns here in simple
+    // transactions.
+    const currentAccount = preferenceService.getCurrentAccount();
+    if (currentAccount?.address) {
+      ownedAddresses.add(currentAccount.address);
+    }
+
+    // Every address the keyrings can derive is ours too, so change returning to another of the
+    // wallet's own receive addresses is not mistaken for a spoofed change output. Failing here
+    // (e.g. the wallet is locked) only narrows the set back to the current account.
+    try {
+      const walletAddresses = await keyringService.getAccounts();
+      walletAddresses.forEach((walletAddress) => {
+        if (walletAddress) ownedAddresses.add(walletAddress);
+      });
+    } catch (e) {
+      log.debug('[decodePskt] could not list wallet addresses for change detection:', e);
+    }
+
+    // When the dApp explicitly listed which inputs we must sign, those inputs are
+    // ours, so their addresses are owned too (covers UTXO consolidation across the
+    // wallet's own addresses). Without an explicit list every input is marked
+    // to-sign, which tells us nothing about ownership — stay conservative there.
+    if (hasSignInputOptions) {
+      inputInfos.forEach((input) => {
+        if (input?.isToSign && input.address) ownedAddresses.add(input.address);
+      });
+    }
 
     let outputIndexes = [] as number[];
     if (options && options.signInputs) {
@@ -1470,30 +1812,143 @@ export class OpenApiService {
       outputIndexes = pskt.outputs.map((_, index) => index);
     }
 
+    // Decode outputs and classify each as change or spend.
+    // An output is "change" only when it pays an address we established as owned
+    // above — never merely because some input in the transaction used it.
     const outputInfos = pskt.outputs
       .map((output, index) => {
         if (outputIndexes.includes(index)) {
           const address = addressFromScriptPublicKey(output.scriptPublicKey, networkId)?.toString() || '';
-          const value = Number(formatUnits(output.value, 8));
+          const value = Number(sompiToAmount(output.value, 8));
+          const isChange = ownedAddresses.has(address);
           return {
             address,
-            value
+            value,
+            // See the matching note on the inputs: the port's money path takes the integer string.
+            valueSompi: String(output.value),
+            isChange
           };
         }
       })
-      .filter((output) => output !== undefined);
+      // The predicate is explicit: this tsconfig's TypeScript does not narrow `.filter(o => o !== undefined)`
+      // on its own, and the approval type has no room for `undefined` outputs.
+      .filter((output): output is NonNullable<typeof output> => output !== undefined);
 
-    const fee = getTxFeeFromTx(pskt);
+    // --- Partial-transaction detection ---
+    // Collect the inputs we are asked to sign with a sighash type other than
+    // SIGHASH_ALL (1), the only type that fully locks inputs and outputs.
+    const SIGHASH_ALL = SighashBiType.All; // 1
+    const nonStandardSighashInputs = inputInfos
+      .map((inp, idx) => ({ ...inp, inputIndex: idx }))
+      .filter((inp) => inp.isToSign && inp.sighashType !== 0 && inp.sighashType !== SIGHASH_ALL);
+
+    // A PSKT signed with a non-standard sighash is deliberately incomplete: the
+    // counterparty adds their own inputs (ANYONECANPAY) and/or outputs (SINGLE, NONE)
+    // before broadcasting. This is normal business for marketplace flows — e.g. listing
+    // an NFT with SIGHASH_SINGLE | ANYONECANPAY, where a small covenant input sits
+    // against a large sale output.
+    //
+    // For such a PSKT `inputs - outputs` is NOT the network fee: the sums are
+    // intentionally unbalanced (and usually negative), and the outputs decoded above are
+    // only the subset this signature commits to. The real fee is only known once the
+    // counterparty completes the transaction, so report it as unknown (0) instead of
+    // surfacing a bogus negative number.
+    const isPartial = nonStandardSighashInputs.length > 0;
+    const fee = isPartial ? 0 : getTxFeeFromTx(pskt);
+    // The same fee as an exact sompi string for the approval port — `getTxFeeFromTx` hands back a KAS
+    // float, which is the boundary a signing screen's totals must not cross. `''` for a partial PSKT:
+    // the counterparty completes the balance, so inputs minus outputs is not a fee anyone sets.
+    const feeSompi = isPartial
+      ? ''
+      : String(
+          pskt.inputs.reduce((sum, i) => sum + (i.utxo?.amount ?? BigInt(0)), BigInt(0)) -
+            pskt.outputs.reduce((sum, o) => sum + BigInt(o.value), BigInt(0))
+        );
+
+    // --- Spoofing detection ---
+    // Detect "change address spoofing" attacks where a malicious dApp
+    // redirects the change output to an attacker-controlled address.
+    //
+    // Strategy: Calculate the expected change amount (remainder after
+    // subtracting spending outputs and fees from total inputs), then verify
+    // that this amount is being returned to user-controlled addresses.
+    const risks: DecodedPskt['risks'] = [];
+    // A network-verification failure is the cross-network/tamper signal (#1): 'high' hides Sign, so the
+    // user cannot approve a signature over an output that is not unspent on the network they are on.
+    netVerify.reasons.forEach((reason) => risks.push({ level: 'high', desc: reason }));
+    const nonChangeOutputs = outputInfos.filter((o) => o && !o.isChange && o.value > 0);
+    const changeOutputs = outputInfos.filter((o) => o && o.isChange);
+
+    // Skipped for partial PSKTs: the heuristic needs a balanced transaction
+    // (total inputs cover all outputs plus the fee), which is exactly what a
+    // non-standard-sighash PSKT is not.
+    if (!isPartial && outputInfos.length >= 2) {
+      const totalInputValue = inputInfos.reduce((sum, i) => sum + (i?.value || 0), 0);
+      const nonChangeSum = nonChangeOutputs.reduce((sum, o) => sum + (o?.value || 0), 0);
+      const changeSum = changeOutputs.reduce((sum, o) => sum + (o?.value || 0), 0);
+
+      // The expected change is the remainder: what should return to the user
+      // after paying fees and sending non-change (spend) outputs.
+      const expectedChangeAmount = totalInputValue - fee - nonChangeSum;
+
+      // If expectedChangeAmount is positive and there are NO change outputs,
+      // the entire remainder is going to non-user-controlled addresses.
+      // This is the classic change-address-spoofing pattern.
+      if (expectedChangeAmount > 0 && changeOutputs.length === 0 && nonChangeOutputs.length > 0) {
+        // Only flag if the expected change is significant (more than dust)
+        if (expectedChangeAmount > 0.0001) {
+          risks.push({
+            level: 'medium',
+            desc:
+              'Warning: This transaction may contain a spoofed change address. An estimated ' +
+              `${formatLocaleString(expectedChangeAmount)} KAS in change appears to be routed to ` +
+              'an address you do not control. Verify all output addresses before signing.'
+          });
+        }
+      }
+
+      // If the expected change doesn't match the actual change outputs,
+      // some portion of the change is being redirected to non-user addresses.
+      if (expectedChangeAmount > 0 && changeOutputs.length > 0) {
+        const changeMismatch = Math.abs(expectedChangeAmount - changeSum);
+        // Allow small tolerance (0.01% of expected change or dust amount)
+        const tolerance = Math.max(expectedChangeAmount * 0.0001, 0.00001);
+        if (changeMismatch > tolerance && nonChangeOutputs.length > 0) {
+          // Only surface warning if there is a meaningful discrepancy
+          if (changeMismatch > 0.001) {
+            risks.push({
+              level: 'medium',
+              desc: `Warning: Change output mismatch detected. The expected change amount (${formatLocaleString(
+                expectedChangeAmount
+              )} KAS) does not match the output returning to your address (${formatLocaleString(
+                changeSum
+              )} KAS). The difference (${formatLocaleString(changeMismatch)} KAS) may be going to an attacker.`
+            });
+          }
+        }
+      }
+    }
+
+    // No risk is raised for non-standard sighash or covenant (P2SH/SmartScript) inputs.
+    // Both are the normal shape of a marketplace PSKT — an NFT listing signs with
+    // SIGHASH_SINGLE | ANYONECANPAY over a covenant input — so flagging them as 'high'
+    // hid the Sign button and blocked legitimate listings. The approval screen already
+    // carries a disclaimer about assets from unknown protocols, the partial-transaction
+    // note in the fee summary, and the full input/output breakdown. What stays here are
+    // the checks that indicate an actual attack: change-address spoofing above.
+
     const decodedPsbt = {
       inputInfos,
       outputInfos,
       feeRate: 1,
       priorityFee: 0,
       fee: fee,
+      feeSompi,
+      isPartial,
       features: {
         rbf: false
       },
-      risks: [],
+      risks: risks.length > 0 ? risks : [],
       payload: pskt.payload
     };
 

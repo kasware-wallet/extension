@@ -89,6 +89,7 @@ import type {
   NetworkType,
   PublicKeyUserToSignInput,
   SignPsbtOptions,
+  SignPsktDappContext,
   SignPsktOptions,
   TNetworkId,
   ToSignInput,
@@ -97,7 +98,7 @@ import type {
   TSignMessage,
   WalletKeyring
 } from '@/shared/types';
-import { AddressType, BuildScriptType, TxType } from '@/shared/types';
+import { ALLOWED_PSKT_SIGHASH, AddressType, BuildScriptType, SighashBiType, TxType } from '@/shared/types';
 import type { ContactBookItem } from '@/shared/types/contact-book';
 import type { ConnectedSite } from '@/shared/types/permission';
 import {
@@ -822,22 +823,74 @@ export class WalletController extends BaseController {
   /**
    * sign pskt
    * @param txJsonString is a serialized transaction object.
+   * @param dappContext the network+account a dApp request was approved under; present only on the dApp
+   * path, absent for the wallet's own covenant flows. When present, the request is bound to that context
+   * and its inputs are re-verified against the active network right before signing.
    * @returns  Serialized "Safe" JSON schema for a signed transaction.
    */
-  signPskt = async ({ txJsonString, options }: { txJsonString: string; options?: SignPsktOptions }) => {
+  signPskt = async ({
+    txJsonString,
+    options,
+    dappContext
+  }: {
+    txJsonString: string;
+    options?: SignPsktOptions;
+    dappContext?: SignPsktDappContext;
+  }) => {
     const account = await this.getCurrentAccount();
     if (!account) throw new Error('no current account');
     const keyring = await this.getCurrentKeyring();
     if (!keyring) throw new Error('no current keyring');
-    const pskt = Transaction.deserializeFromSafeJSON(txJsonString) as Transaction;
+
+    // Network + account binding (all networks): the window the user approved derived its addresses and
+    // network label from the context captured when the request was created. If either changed while the
+    // request was pending, the signature would be produced under a context the user never saw - refuse.
+    if (dappContext) {
+      if (preferenceService.getNetworkId() !== dappContext.networkId) {
+        throw new Error('signPskt: the network changed since this request was approved');
+      }
+      // Bind against preferenceService (same source rpcFlow captured from), not this.getCurrentAccount()
+      // which falls back to keyring.accounts[0] when the preference pubkey doesn't match — that fallback
+      // would otherwise trip the binding check on a legitimate request.
+      const prefAccount = preferenceService.getCurrentAccount();
+      if ((prefAccount?.address ?? '') !== dappContext.accountAddress) {
+        throw new Error('signPskt: the account changed since this request was approved');
+      }
+    }
+
     const publicKey = account.pubkey;
+    const pskt = Transaction.deserializeFromSafeJSON(txJsonString) as Transaction;
     let toSignInputs2: ToSignInput[] = Array.from({ length: pskt.inputs.length }, (_, i) => {
       return { index: i, publicKey, sighashTypes: [1] };
     });
     if (options?.signInputs) {
+      // sighash whitelist (#2): a NONE signature does not commit to the outputs, so the site can replace
+      // them with its own address after the user approves and the node still accepts it. Only ALL/SINGLE
+      // (with or without ANYONECANPAY) are signed; SINGLE also needs an output at the same index, else the
+      // signature locks nothing. KRON/KCC20 build with SIG_HASH_ALL, so this never blocks the wallet's own flows.
+      for (const si of options.signInputs) {
+        const sh = Number(si.sighashType);
+        if (!ALLOWED_PSKT_SIGHASH.includes(sh)) {
+          throw new Error(`signPskt: sighash type ${si.sighashType} is not allowed`);
+        }
+        if ((sh === SighashBiType.Single || sh === SighashBiType.SingleAnyOneCanPay) && !pskt.outputs[si.index]) {
+          throw new Error(`signPskt: SIGHASH_SINGLE input ${si.index} has no output at the same index`);
+        }
+      }
       toSignInputs2 = options.signInputs.map((input) => {
         return { index: input.index, publicKey, sighashTypes: [input.sighashType] };
       });
+    }
+
+    // #1 cross-network re-check right before signing, for a dApp request only. The helper is non-mainnet
+    // scoped and fails open when the node is unreachable, so mainnet signing and the wallet's own covenant
+    // flows (which pass no dappContext) are untouched.
+    if (dappContext) {
+      const signIndices = options?.signInputs ? options.signInputs.map((i) => i.index) : pskt.inputs.map((_, i) => i);
+      const netVerify = await openapiService.verifyPsktInputsOnActiveNetwork(pskt, signIndices);
+      if (!netVerify.ok) {
+        throw new Error(`signPskt: ${netVerify.reasons.join(' ')}`);
+      }
     }
 
     const signedTx = await this.walletSignTransaction(keyring, pskt, toSignInputs2, false);
@@ -4001,7 +4054,10 @@ export class WalletController extends BaseController {
 
   getFeeSummary = () => openapiService.getFeeSummary();
 
-  decodePsbt = (psbtHex: string) => openapiService.decodePsbt(psbtHex);
+  decodePsbt = async (psbtHex: string) => {
+    const currentAccount = preferenceService.getCurrentAccount();
+    return openapiService.decodePsbt(psbtHex, currentAccount?.address);
+  };
 
   decodePskt = (psktJsonString: string, options?: SignPsktOptions) =>
     openapiService.decodePskt(psktJsonString, options);

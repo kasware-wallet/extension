@@ -566,8 +566,13 @@ class ProviderController extends BaseController {
       fnName: 'signPskt',
       params: JSON.stringify({ txJsonString: psktJsonString, options: psktOptions })
     });
-    // TODO: pass preApprovalContext to wallet.signPskt when wallet.ts is ported (D084)
-    return await wallet.signPskt({ txJsonString: psktJsonString, options: psktOptions });
+    // `preApprovalContext` is the dApp path's binding snapshot; the wallet's own covenant flows call
+    // `wallet.signPskt` directly and pass none, so they stay unbound and unverified by design.
+    return await wallet.signPskt({
+      txJsonString: psktJsonString,
+      options: psktOptions,
+      dappContext: preApprovalContext
+    });
   };
 
   @Reflect.metadata('SAFE', true)

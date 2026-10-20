@@ -31,7 +31,9 @@ const flowContext = flow
     }
 
     // why: nine handlers destructure `data.params` in their parameter list, so a call that sends no params
-    // at all failed as `TypeError: Cannot destructure property …` instead of a named invalid-params error.
+    // at all — `kasware.request('pushTx')`, or `_request` on the extension — failed as
+    // `TypeError: Cannot destructure property …` instead of a named invalid-params error, and
+    // `signMessage`'s own validation never got to run. One default here rather than nine signatures.
     if (ctx.request.data.params === undefined || ctx.request.data.params === null) {
       ctx.request.data.params = {};
     }
@@ -100,7 +102,8 @@ const flowContext = flow
     if (approvalType && (!condition || !condition(ctx.request))) {
       ctx.request.requestedApproval = true;
       // Snapshot the network+account the window is about to be raised under, so `signPskt` can bind the
-      // signature to what the user actually saw.
+      // signature to what the user actually saw. If the wallet switches network or account while the
+      // request is pending, the signature would otherwise be produced under a context nobody approved.
       ctx.preApprovalContext = {
         networkId: preferenceService.getNetworkId(),
         accountAddress: preferenceService.getCurrentAccount()?.address ?? ''
@@ -196,7 +199,8 @@ export default (request) => {
   return flowContext(ctx).finally(() => {
     if (ctx.request.requestedApproval) {
       flow.requestedApproval = false;
-      // Close the notification popup after the flow completes.
+      // Close the notification popup after the flow completes, since all
+      // approvals in the chain have been resolved/rejected by this point.
       notificationService.removeNotifiWindow();
       // only unlock notification if current flow is an approval flow
       notificationService.unLock();

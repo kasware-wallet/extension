@@ -21,6 +21,21 @@ import { storage } from './webapi';
 
 const { PortMessage } = Message;
 
+/**
+ * The origin a port's sender URL belongs to — the key every permission, session and approval is stored
+ * under, so it must come from the browser and never from the page.
+ *
+ * A url that `new URL` cannot parse answers `''` rather than throwing: `''` matches no permission, so the
+ * request fails closed, while a throw here would take down the whole port listener.
+ */
+const getOriginFromUrl = (url: string) => {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return '';
+  }
+};
+
 let appStoreLoaded = false;
 async function restoreAppState() {
   const keyringState = await storage.get('keyringState');
@@ -154,7 +169,11 @@ browserRuntimeOnConnect((port) => {
       }
       result = providerControllerEVM(req);
     } else {
-      const session = sessionService.getOrCreateSession(sessionId);
+      // Stamped from the port's sender URL, never from the page: `origin` keys every permission, session
+      // and approval below this line, and `tabCheckin` used to set it from page-supplied params, so a page
+      // could check in as another site and inherit its grants. The EVM branch above never had that shape.
+      const senderOrigin = getOriginFromUrl(port.sender?.url || '');
+      const session = sessionService.getOrCreateSession(sessionId, senderOrigin);
 
       const req = { data, session };
       // for background push to respective page
