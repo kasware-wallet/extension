@@ -4,14 +4,15 @@ import * as necc from '@noble/secp256k1';
 import { Buffer } from 'buffer';
 
 necc.utils.sha256Sync = (...messages) => {
-  const length = messages.reduce((sum, m) => sum + m.length, 0);
-  const data = new Uint8Array(length);
+  const bufs = messages.map((m) => Uint8Array.from(Buffer.isBuffer(m) ? m : Buffer.from(m)));
+  const totalLength = bufs.reduce((sum, b) => sum + b.length, 0);
+  const combined = new Uint8Array(totalLength);
   let offset = 0;
-  messages.forEach((m) => {
-    data.set(m, offset);
-    offset += m.length;
-  });
-  return sha256(data);
+  for (const buf of bufs) {
+    combined.set(buf, offset);
+    offset += buf.length;
+  }
+  return sha256(combined);
 };
 necc.utils.hmacSha256Sync = (key, ...messages) => {
   const hash = hmac.create(sha256, Buffer.from(key));
@@ -75,11 +76,19 @@ const pointMultiply = (p: Uint8Array, tweak: Uint8Array, isCompressed?: boolean)
 };
 
 const defaultTrue = (param: boolean | undefined) => param !== false;
-function throwToNull(fn: () => Uint8Array | null) {
+
+// Marks an error so upstream logging skips it; see the OneKey error reporter.
+const markErrorIgnored = (e: unknown) => {
+  if (e && typeof e === 'object') {
+    (e as { $$autoPrintErrorIgnore?: boolean }).$$autoPrintErrorIgnore = true;
+  }
+};
+
+function throwToNull<T>(fn: () => T): T | null {
   try {
     return fn();
   } catch (e) {
-    if (e) e.$$autoPrintErrorIgnore = true;
+    markErrorIgnored(e);
     return null;
   }
 }
@@ -89,7 +98,7 @@ function innerIsPoint(p: Uint8Array, xOnly: boolean) {
   try {
     return !!necc.Point.fromHex(p);
   } catch (e) {
-    if (e) e.$$autoPrintErrorIgnore = true;
+    markErrorIgnored(e);
     return false;
   }
 }
