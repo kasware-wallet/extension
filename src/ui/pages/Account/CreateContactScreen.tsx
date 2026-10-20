@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, Column, Content, Header, Input, Layout } from '@/ui/components';
 import { useWallet } from '@/ui/utils';
-import { isValidAddress } from '@ethereumjs/util';
+import { isValidAddress } from '@/shared/modules/hexstring-utils';
 import { useAsync } from 'react-use';
 
 export default function CreateContactScreen() {

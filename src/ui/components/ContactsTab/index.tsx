@@ -6,7 +6,7 @@ import { useWallet } from '@/ui/utils';
 import { isValidKaspaAddress } from '@/ui/utils';
 import { Empty } from '../Empty';
 import { AddressTypeCardSimple } from '../AddressTypeCardSimple';
-import { isValidAddress } from '@ethereumjs/util';
+import { isValidAddress } from '@/shared/modules/hexstring-utils';
 
 interface ContactsTabProps {
   handleAddrInput: (address: string) => void;

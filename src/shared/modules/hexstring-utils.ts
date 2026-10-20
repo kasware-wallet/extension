@@ -1,14 +1,43 @@
-import {
-  isHexString,
-  isValidAddress,
-  isValidChecksumAddress,
-  addHexPrefix,
-  toChecksumAddress,
-  zeroAddress,
-  isHexPrefixed,
-} from 'ethereumjs-util';
+import { keccak_256 } from '@noble/hashes/sha3';
+import { Buffer } from 'buffer';
 
-export const BURN_ADDRESS = zeroAddress();
+// Local EVM address helpers. They used to come from `ethereumjs-util`, an EVM-only package this
+// Kaspa wallet no longer installs; behaviour is kept identical because `toChecksumHexAddress` still
+// formats the legacy `evmAddress` fields.
+function isHexPrefixed(value: unknown): value is string {
+  return typeof value === 'string' && value.slice(0, 2) === '0x';
+}
+
+function addHexPrefix(value: string) {
+  return isHexPrefixed(value) ? value : `0x${value}`;
+}
+
+function isHexString(value: unknown): value is string {
+  return typeof value === 'string' && /^0x[0-9a-fA-F]*$/.test(value);
+}
+
+export function isValidAddress(value: string): boolean {
+  return typeof value === 'string' && /^0x[0-9a-fA-F]{40}$/.test(value);
+}
+
+function toChecksumAddress(address: string) {
+  if (!/^(0x)?[0-9a-fA-F]{40}$/.test(address)) {
+    throw new Error(`Invalid address: ${address}`);
+  }
+  const hex = address.replace(/^0x/, '').toLowerCase();
+  const hash = Buffer.from(keccak_256(hex)).toString('hex');
+  let checksum = '0x';
+  for (let i = 0; i < hex.length; i++) {
+    checksum += parseInt(hash[i], 16) >= 8 ? hex[i].toUpperCase() : hex[i];
+  }
+  return checksum;
+}
+
+function isValidChecksumAddress(address: string) {
+  return isValidAddress(address) && toChecksumAddress(address) === address;
+}
+
+export const BURN_ADDRESS = `0x${'0'.repeat(40)}`;
 
 export function isBurnAddress(address: string) {
   return address === BURN_ADDRESS;

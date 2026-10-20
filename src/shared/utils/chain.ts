@@ -2,7 +2,6 @@ import type { EVM_CHAINS_ENUM } from '../constant';
 import { EvmChainLogoMap } from '../constant/chain';
 import type { TNetworkId } from '../types';
 import type { TestnetChain, TestnetChainBase } from '../types/chain';
-import { intToHex } from '@ethereumjs/util';
 
 export const createTestnetChain = (chain: TestnetChainBase): TestnetChain => {
   chain.id = +chain.id;
@@ -15,7 +14,7 @@ export const createTestnetChain = (chain: TestnetChainBase): TestnetChain => {
   return {
     ...chain,
     id: +chain.id,
-    hex: intToHex(+chain.id),
+    hex: `0x${(+chain.id).toString(16)}`,
     network: '' + chain.id,
     enum: `CUSTOM_${chain.id}` as EVM_CHAINS_ENUM,
     serverId: `custom_${chain.id}`,

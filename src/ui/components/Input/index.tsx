@@ -8,7 +8,7 @@ import type { IKNSDomain } from '@/shared/types';
 import { colors } from '@/ui/theme/colors';
 import { spacingGap } from '@/ui/theme/spacing';
 import { useWallet } from '@/ui/utils';
-import { isValidAddress } from '@ethereumjs/util';
+import { isValidAddress } from '@/shared/modules/hexstring-utils';
 
 import { AccordingInscription } from '../AccordingInscription';
 import { useTools } from '../ActionComponent';
