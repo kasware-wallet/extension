@@ -50,17 +50,10 @@ import {
   KASPA_CHAINS_ENUM,
   KASPA_EVENTS,
   KASPLEX,
-  KASPLEX_MAINNET,
-  KASPLEX_TESTNET_10,
-  KASPLEX_TESTNET_11,
-  KASPLEX_TESTNET_12,
+  KASPLEX_URL_MAP,
   KEYRING_TYPE,
   KEYRING_TYPES,
-  OPENAPI_URL_DEVNET,
-  OPENAPI_URL_MAINNET,
-  OPENAPI_URL_TESTNET_10,
-  OPENAPI_URL_TESTNET_11,
-  OPENAPI_URL_TESTNET_12
+  OPENAPI_URL_MAP
 } from '@/shared/constant';
 import { COMMIT_AMOUNT, KRC20_DEPLOY_TX_FEE } from '@/shared/constant/kasplex';
 import eventBus from '@/shared/eventBus';
@@ -1118,44 +1111,62 @@ export class WalletController extends BaseController {
   getRpcUrl = () => openapiService.getRpcUrl();
 
   setNetworkType = async (networkType: NetworkType, networkId: TNetworkId) => {
+    // why: a dapp's `switchNetwork` for the network the wallet is already on skips the approval
+    // (`rpcFlow`'s condition returns true) but the handler still ran the full switch, rewriting the
+    // preferences, resetting the hosts and re-emitting `networkChanged` for a wallet that never moved.
+    // Native returns early for the same case; the live client is already bound to this id.
+    const previousType = preferenceService.getNetworkType();
+    const previousId = preferenceService.getNetworkId();
+    if (previousId === networkId) return;
     preferenceService.setNetworkType(networkType);
     preferenceService.setNetworkId(networkId);
-    if (networkId == 'mainnet') {
-      openapiService.setHost(OPENAPI_URL_MAINNET);
-      openapiService.setKasplexHost(KASPLEX_MAINNET);
-      // openapiService.setNetworkId('mainnet');
-      const rpcurl = preferenceService.getRpcLinksUrl('mainnet');
-      openapiService.setRpcHost(rpcurl);
-    } else if (networkId === 'testnet-12') {
-      openapiService.setHost(OPENAPI_URL_TESTNET_12);
-      openapiService.setKasplexHost(KASPLEX_TESTNET_12);
-      const rpcurl = preferenceService.getRpcLinksUrl('testnet-12');
-      openapiService.setRpcHost(rpcurl);
-    } else if (networkId === 'testnet-11') {
-      openapiService.setHost(OPENAPI_URL_TESTNET_11);
-      openapiService.setKasplexHost(KASPLEX_TESTNET_11);
-      const rpcurl = preferenceService.getRpcLinksUrl('testnet-11');
-      openapiService.setRpcHost(rpcurl);
-    } else if (networkId === 'testnet-10') {
-      openapiService.setHost(OPENAPI_URL_TESTNET_10);
-      openapiService.setKasplexHost(KASPLEX_TESTNET_10);
-      const rpcurl = preferenceService.getRpcLinksUrl('testnet-10');
-      openapiService.setRpcHost(rpcurl);
-    } else if (networkId === 'devnet') {
-      openapiService.setHost(OPENAPI_URL_DEVNET);
-      openapiService.setKasplexHost(KASPLEX_TESTNET_11);
-      const rpcurl = preferenceService.getRpcLinksUrl('devnet');
-      openapiService.setRpcHost(rpcurl);
+    // One map per host family, so this path and openapiService.init() cannot disagree about what a
+    // networkId means. The five-branch chain that used to be here had drifted: its devnet arm set
+    // the Kasplex host to KASPLEX_TESTNET_11 while init() used KASPLEX_DEVNET.
+    const openapiHost = OPENAPI_URL_MAP[networkId];
+    const kasplexHost = KASPLEX_URL_MAP[networkId];
+    if (openapiHost && kasplexHost) {
+      await openapiService.setHost(openapiHost);
+      await openapiService.setKasplexHost(kasplexHost);
+      await openapiService.setRpcHost(preferenceService.getRpcLinksUrl(networkId));
+    } else {
+      log.warn(`setNetworkType: no host mapping for networkId ${networkId}, hosts left unchanged`);
     }
+
+    // The RpcClient and UtxoProcessor are bound to a networkId at construction, so the switch is not
+    // complete until they are torn down and rebuilt. It has to be the last step: changeKeyring()
+    // below calls setClientAddress(), and a Kaspa address is network-prefixed, so the address context
+    // the rebuilt processor subscribes to is only right once the keyring has been re-read for the new
+    // network. Native keeps the same order in its own setNetworkType.
+    try {
+      const currentAccount = await this.getCurrentAccount();
+      const keyring = await this.getCurrentKeyring();
+      if (!keyring) throw new Error('no current keyring');
+      this.changeKeyring(keyring, currentAccount?.index);
+
+      await openapiService.switchRpcNetwork();
+    } catch (e) {
+      // Back to the network the wallet is still on, hosts included. A failed switch that left the
+      // preference moved outlives the error: `getNetwork` and every `getNetworkId()` reader would
+      // answer the new id while the client and the address prefix stayed on the old one.
+      preferenceService.setNetworkType(previousType);
+      preferenceService.setNetworkId(previousId);
+      const previousOpenapi = OPENAPI_URL_MAP[previousId];
+      const previousKasplex = KASPLEX_URL_MAP[previousId];
+      if (previousOpenapi && previousKasplex) {
+        await openapiService.setHost(previousOpenapi);
+        await openapiService.setKasplexHost(previousKasplex);
+        await openapiService.setRpcHost(preferenceService.getRpcLinksUrl(previousId));
+      }
+      throw e;
+    }
+
+    // Announced only now: `networkChanged` and every `getNetwork` after it speak for a wallet that
+    // has finished moving.
     const network = this.getNetworkName();
     sessionService.broadcastEvent('networkChanged', {
       network
     });
-
-    const currentAccount = await this.getCurrentAccount();
-    const keyring = await this.getCurrentKeyring();
-    if (!keyring) throw new Error('no current keyring');
-    this.changeKeyring(keyring, currentAccount?.index);
   };
 
   setRpcLinks = (rpcLinks: { [key: string]: INetworkType }) => preferenceService.setRpcLinks(rpcLinks);

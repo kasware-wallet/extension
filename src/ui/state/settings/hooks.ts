@@ -107,6 +107,9 @@ export function useChangeNetworkTypeCallback() {
   const wallet = useWallet();
   return useCallback(
     async (type: NetworkType, id: TNetworkId) => {
+      // setNetworkType rebuilds the RPC itself (and rolls the selection back if that fails), so
+      // there is no disconnectRpc()/handleRpcConnect() pair here any more; running one would
+      // tear down the connection the switch had just established.
       await wallet.setNetworkType(type, id);
       dispatch(
         settingsActions.updateSettings({
@@ -114,8 +117,6 @@ export function useChangeNetworkTypeCallback() {
           networkId: id
         })
       );
-      await wallet.disconnectRpc();
-      await wallet.handleRpcConnect();
     },
     [dispatch, wallet]
   );

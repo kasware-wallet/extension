@@ -290,6 +290,13 @@ export const KASPLEX_TESTNET_12 = 'https://tn12api.kasplex.org/v1';
 export const KASPLEX_TESTNET_11 = 'https://tn11api.kasplex.org/v1';
 export const KASPLEX_TESTNET_10 = 'https://tn10api.kasplex.org/v1';
 export const KASPLEX_DEVNET = 'https://tn11api.kasplex.org/v1';
+export const KASPLEX_URL_MAP: Partial<Record<TNetworkId, string>> = {
+  ['mainnet']: KASPLEX_MAINNET,
+  ['testnet-12']: KASPLEX_TESTNET_12,
+  ['testnet-11']: KASPLEX_TESTNET_11,
+  ['testnet-10']: KASPLEX_TESTNET_10,
+  ['devnet']: KASPLEX_DEVNET
+};
 
 // Fallback Kasplex API hosts used when primary hosts are unreachable
 export const KASPLEX_FALLBACK_MAINNET = 'https://api-fallback.kasplex.org/v1';

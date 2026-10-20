@@ -32,15 +32,13 @@ import {
   KASPLEX_DEVNET,
   KASPLEX_MAINNET,
   KASPLEX_TESTNET_10,
-  KASPLEX_TESTNET_11,
-  KASPLEX_TESTNET_12,
+  KASPLEX_URL_MAP,
   KASWARE_IO_KRC20_PRICE,
   KRC20OTC_API_TESTNET_10,
   OPENAPI_URL_DEVNET,
   OPENAPI_URL_MAINNET,
+  OPENAPI_URL_MAP,
   OPENAPI_URL_TESTNET_10,
-  OPENAPI_URL_TESTNET_11,
-  OPENAPI_URL_TESTNET_12,
   VERSION
 } from '@/shared/constant';
 import eventBus from '@/shared/eventBus';
@@ -346,20 +344,21 @@ export class OpenApiService {
     const networkId = preferenceService.getNetworkId();
     const rpcUrl = preferenceService.getRpcLinksUrl(networkId);
     this.setRpcHost(rpcUrl);
-    if (networkType === NetworkType.Mainnet) {
+    // The same maps wallet.setNetworkType uses, so boot and switch cannot disagree about what a
+    // networkId means. The networkType arms stay as a fallback for the TNetworkId values in neither
+    // map ('testnet', 'simnet'): a wallet persisted under the legacy 'testnet' id has always
+    // resolved to testnet-10 here, and dropping that would leave it with no host at all.
+    const openapiHost = OPENAPI_URL_MAP[networkId];
+    const kasplexHost = KASPLEX_URL_MAP[networkId];
+    if (openapiHost && kasplexHost) {
+      this.setHost(openapiHost);
+      this.setKasplexHost(kasplexHost);
+    } else if (networkType === NetworkType.Mainnet) {
       this.setHost(OPENAPI_URL_MAINNET);
       this.setKasplexHost(KASPLEX_MAINNET);
     } else if (networkType === NetworkType.Testnet) {
-      if (networkId === 'testnet-11') {
-        this.setHost(OPENAPI_URL_TESTNET_11);
-        this.setKasplexHost(KASPLEX_TESTNET_11);
-      } else if (networkId === 'testnet-12') {
-        this.setHost(OPENAPI_URL_TESTNET_12);
-        this.setKasplexHost(KASPLEX_TESTNET_12);
-      } else {
-        this.setHost(OPENAPI_URL_TESTNET_10);
-        this.setKasplexHost(KASPLEX_TESTNET_10);
-      }
+      this.setHost(OPENAPI_URL_TESTNET_10);
+      this.setKasplexHost(KASPLEX_TESTNET_10);
     } else {
       this.setHost(OPENAPI_URL_DEVNET);
       this.setKasplexHost(KASPLEX_DEVNET);
@@ -369,7 +368,7 @@ export class OpenApiService {
       this.store.deviceId = nanoid(12);
     }
     this.getFeeSummary();
-    this.handleRpcConnect('init');
+    this.handleRpcConnect('init').catch((e) => log.debug('handleRpcConnect init failed', e));
   };
 
   clearOpenApi = async () => {
@@ -720,6 +719,26 @@ export class OpenApiService {
     await this.rpc.disconnect();
     this.rpc = null as unknown as RpcClient;
   }
+  // The rebuild half of a network switch: the preference and hosts are already written, the live
+  // RpcClient and UtxoProcessor are still bound to the previous networkId. Uses disconnectRpc (not
+  // rpc.disconnect) so the processor, the address contexts and the client are all replaced, which
+  // makes handleRpcConnect take the full rebuild path and pick up the new RPC URL.
+  async switchRpcNetwork() {
+    try {
+      await this.disconnectRpc();
+    } catch (e) {
+      log.debug('[RPC] disconnect before switching network failed:', (e as Error)?.message ?? e);
+      // A teardown that threw can leave a client bound to the old networkId behind; drop both so
+      // the rebuild cannot reuse them.
+      this.rpc = null as unknown as RpcClient;
+      this.processor = null as unknown as UtxoProcessor;
+    }
+    // Waited on, so a caller returns only once the switch has finished (or failed) rather than while
+    // the client is still in an intermediate state.
+    await this.handleRpcConnect('switchRpcNetwork').catch((e) =>
+      log.warn('[RPC] switchRpcNetwork reconnect failed:', (e as Error)?.message ?? e)
+    );
+  }
   // gradually close rpc when popup window is closed --shwan
   countDownToCloseRpc() {
     this.closeRpctimeID = setTimeout(() => {
@@ -752,8 +771,20 @@ export class OpenApiService {
       this.processor?.networkId == networkId &&
       this.rpc.isConnected == false
     ) {
-      // await this.rpc.connect();
-      return;
+      // why: this branch used to return with the reconnect commented out, so a socket the peer or the
+      // OS dropped was never reopened - every later caller saw the same dead client and the wallet
+      // stayed offline until the network was switched. Native reconnects in its
+      // `_handleRpcConnectInner`; keep the two in step.
+      try {
+        await this.rpc.connect({});
+        return;
+      } catch (e) {
+        log.warn('[RPC] reconnect failed, rebuilding the client:', (e as Error)?.message ?? e);
+        // The processor is bound to the dead client, so the rebuild below has to start from scratch.
+        await this.disconnectRpc().catch((err) =>
+          log.debug('[RPC] teardown of the dead client failed:', (err as Error)?.message ?? err)
+        );
+      }
     }
     if (this.rpc != null && this.rpc != undefined && this.rpc.isConnected == true) {
       await this.disconnectRpc();

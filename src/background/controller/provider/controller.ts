@@ -119,7 +119,9 @@ class ProviderController extends BaseController {
       fnName: 'switchNetwork',
       params: JSON.stringify({ networkId })
     });
-    wallet.setNetworkType(networkType, networkId);
+    // Awaited so the dapp hears the new network only once it is the one the RPC is actually on;
+    // without it a rejection here was an unhandled promise and the caller reported success.
+    await wallet.setNetworkType(networkType, networkId);
     return NETWORK_TYPES[networkId]?.name;
   };
 
