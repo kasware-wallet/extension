@@ -8,24 +8,26 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import eventBus from '@/shared/eventBus';
 import type {
-  DecodedPsbt,
-  DecodedPskt,
-  IBatchTransfer,
-  IInputInfo,
-  IOutputInfo,
-  KasplexData,
-  RawTxInfo,
-  SignPsbtOptions,
-  SignPsktOptions,
-  ToSignInput,
-  TTokenType
+    DecodedPsbt,
+    DecodedPskt,
+    IBatchTransfer,
+    IInputInfo,
+    IOutputInfo,
+    KasplexData,
+    RawTxInfo,
+    SignPsbtOptions,
+    SignPsktOptions,
+    ToSignInput,
+    TTokenType
 } from '@/shared/types';
 import { TxType } from '@/shared/types';
+import { sompiToAmount } from '@/shared/utils/format';
 import { Button, Card, Column, Content, Footer, Header, Layout, Row, Text } from '@/ui/components';
 import { useTools } from '@/ui/components/ActionComponent';
 import { AddressText } from '@/ui/components/AddressText';
 import KnsPreview from '@/ui/components/KnsPreview';
 import KsprNftPreview from '@/ui/components/KsprNftPreview';
+import { SendToComp } from '@/ui/components/SendTo';
 import { WarningPopover } from '@/ui/components/WarningPopover';
 import WebsiteBar from '@/ui/components/WebsiteBar';
 import { useAccountAddress, useCurrentAccount } from '@/ui/state/accounts/hooks';
@@ -33,14 +35,12 @@ import { useAppSelector } from '@/ui/state/hooks';
 import { selectKasTick, selectNetworkId } from '@/ui/state/settings/reducer';
 import { usePrepareSendKASCallback } from '@/ui/state/transactions/hooks';
 import { selectKnsAssets } from '@/ui/state/transactions/reducer';
-import { fontSizes } from '@/ui/theme/font';
 import { colors } from '@/ui/theme/colors';
+import { fontSizes } from '@/ui/theme/font';
 import { formatLocaleString, shortAddress, useApproval, useWallet } from '@/ui/utils';
 import { useKrc20DecName } from '@/ui/utils/hooks/kasplex/fetchKrc20AddressTokenList';
-import { sompiToAmount } from '@/shared/utils/format';
+import { LoadingView, ScammerView, Section } from '../common';
 import PayloadComp from '../PayloadComp';
-import { SendToComp } from '@/ui/components/SendTo';
-import { Section, LoadingView, ScammerView } from '../common';
 
 interface Props {
   header?: React.ReactNode;
@@ -102,6 +102,35 @@ function OutputInfo({ outputInfos }: { outputInfos: IOutputInfo[] | undefined })
         );
       })}
     </Column>
+  );
+}
+
+function PsktRiskNotice({ risks }: { risks: DecodedPskt['risks'] }) {
+  if (risks.length === 0) return null;
+  const highRisk = risks.some((risk) => risk.level === 'high');
+  return (
+    <Card
+      fullX
+      style={{
+        backgroundColor: highRisk ? colors.danger_bg : colors.bg_warm,
+        borderLeft: `3px solid ${highRisk ? colors.danger : colors.warning}`,
+        alignItems: 'stretch',
+        justifyContent: 'flex-start',
+        marginBottom: 8
+      }}
+    >
+      <Column gap="sm" fullX>
+        <Text
+          text={highRisk ? 'Critical Signing Warning' : 'Covenant Notice'}
+          preset="bold"
+          color={highRisk ? 'danger' : 'warning'}
+          selectText
+        />
+        {risks.map((risk, index) => (
+          <Text key={index} text={risk.desc} preset="xsub" color="textDim" selectText />
+        ))}
+      </Column>
+    </Card>
   );
 }
 
@@ -755,6 +784,12 @@ export default function SignPsbt({
       return false;
     }
   }, [txInfo]);
+  // A `signPskt` request never fills `txInfo.decodedPsbt` — it is decoded into `decodedPskt` below — so
+  // the PSBT risk source above cannot see it. Without these, a cross-network/tampered PSKT raised as a
+  // 'high' risk by `decodePskt` still rendered a working Sign button, and the background's refusal only
+  // surfaced after the window had already closed.
+  const psktRisks = useMemo(() => decodedPskt?.risks ?? [], [decodedPskt]);
+  const hasPsktHighRisk = useMemo(() => psktRisks.some((risk) => risk.level === 'high'), [psktRisks]);
   useEffect(() => {
     const handler = (e: string) => {
       setSignPercent(JSON.parse(e));
@@ -803,6 +838,7 @@ export default function SignPsbt({
       {header}
       <Content>
         <Column gap="xxs">
+          <PsktRiskNotice risks={psktRisks} />
           {detailsComponent}
           {canChanged === false && (
             <>
@@ -837,7 +873,7 @@ export default function SignPsbt({
         )}
         <Row full>
           <Button preset="default" text={LABELS.REJECT} onClick={handleCancel} full />
-          {hasHighRisk === false && (
+          {hasHighRisk === false && hasPsktHighRisk === false && (
             <Button
               preset="primary"
               text={type === TxType.SIGN_TX ? LABELS.SIGN : LABELS.SIGN_AND_PAY}

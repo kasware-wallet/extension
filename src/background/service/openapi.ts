@@ -15,6 +15,7 @@ import {
   Encoding,
   Generator,
   isScriptPayToScriptHash,
+  payToAddressScript,
   Resolver,
   RpcClient,
   sha256FromText,
@@ -87,6 +88,28 @@ interface OpenApiStore {
   mintCount?: number;
   krc20TradeCount?: number;
 }
+
+// `utxo.scriptPublicKey.script` arrives as hex, `0x`-prefixed hex or raw bytes depending on how the
+// PSKT was produced; reduce all three to lower-case hex so a comparison sees only the script.
+// Exported so `signPskt` can re-run the label check against the same byte representation the decode
+// path uses — the label is not in the sighash, so the signing path must not trust it either.
+export const scriptHexOf = (spk: any): string => {
+  const raw = spk?.script ?? spk;
+  if (!raw) return '';
+  if (typeof raw === 'string') return raw.startsWith('0x') ? raw.slice(2).toLowerCase() : raw.toLowerCase();
+  if (raw instanceof Uint8Array) return Buffer.from(raw).toString('hex').toLowerCase();
+  return '';
+};
+// Compare scripts, not strings: the address prefix does not change the script, so a `kaspa:` address
+// on testnet is the same destination, while another key's address still differs. An address that will
+// not parse counts as a mismatch - it is not a usable label. Exported for the `signPskt` re-check.
+export const addressPaysScript = (address: string, spk: any): boolean => {
+  try {
+    return scriptHexOf(payToAddressScript(address)) === scriptHexOf(spk);
+  } catch {
+    return false;
+  }
+};
 
 export class OpenApiService {
   store!: OpenApiStore;
@@ -1516,9 +1539,9 @@ export class OpenApiService {
    *
    * Scoped to non-mainnet on purpose: draining mainnet requires the wallet to sit on a testnet while
    * signing a mainnet UTXO, so verifying only the non-mainnet case kills the mainnet-loss vector and
-   * leaves mainnet signing offline and unchanged. Fails OPEN when the node is unreachable or errors, so a
-   * node hiccup does not brick dev/test signing; a reachable node that does not report the outpoint as
-   * unspent here is a refusal, not a pass.
+   * leaves mainnet signing offline and unchanged. Fails CLOSED when the node is unreachable or errors:
+   * a signature over an input this node cannot confirm is refused, so the cross-network vector (#1)
+   * stays closed even when the node is down. A node hiccup blocks dApp signing until the node recovers.
    *
    * `signIndices` are the input indices the wallet will sign (a dApp's `signInputs`, or every input when
    * it named none). Counterparty inputs of an ANYONECANPAY PSKT are not ours to verify and are excluded.
@@ -1535,18 +1558,14 @@ export class OpenApiService {
     const networkId = preferenceService.getNetworkId();
     // Mainnet is out of scope by design (see the method note): pass through untouched.
     if (networkId === 'mainnet' || signIndices.length === 0) return { ok: true, reasons: [], verified };
-    if (!this.rpc || this.rpc.isConnected !== true) {
-      log.warn('[verifyPsktInputs] RPC not connected - failing open');
-      return { ok: true, reasons: [], verified };
+    // Reach the node on the active network before trusting its answer. handleRpcConnect reconnects to the
+    // network preferenceService reports, and we confirm here that the socket is up and on that network —
+    // a stale socket on another network cannot substitute its UTXO set. If we cannot reach the right node,
+    // refuse: the cross-network vector stays closed even when the node is unreachable.
+    await this.handleRpcConnect('verifyPsktInputs');
+    if (!this.rpc || this.rpc.isConnected !== true || this.processor?.networkId !== networkId) {
+      return { ok: false, reasons: ['Cannot verify inputs: the active network node is unreachable.'], verified };
     }
-
-    const scriptToHex = (spk: any): string => {
-      const raw = spk?.script ?? spk;
-      if (!raw) return '';
-      if (typeof raw === 'string') return raw.startsWith('0x') ? raw.slice(2).toLowerCase() : raw.toLowerCase();
-      if (raw instanceof Uint8Array) return Buffer.from(raw).toString('hex').toLowerCase();
-      return '';
-    };
 
     try {
       const targets: { index: number; key: string; amount: bigint; scriptHex: string; address: string }[] = [];
@@ -1565,7 +1584,7 @@ export class OpenApiService {
           index,
           key: `${txid}:${vout}`,
           amount: BigInt(utxo?.amount ?? 0),
-          scriptHex: scriptToHex(spk),
+          scriptHex: scriptHexOf(spk),
           address
         });
       }
@@ -1579,7 +1598,7 @@ export class OpenApiService {
         if (!op) return;
         confirmed.set(`${op.transactionId}:${Number(op.index ?? 0)}`, {
           amount: BigInt(e?.amount ?? e?.entry?.amount ?? 0),
-          scriptHex: scriptToHex(e?.scriptPublicKey ?? e?.entry?.scriptPublicKey)
+          scriptHex: scriptHexOf(e?.scriptPublicKey ?? e?.entry?.scriptPublicKey)
         });
       });
 
@@ -1637,7 +1656,7 @@ export class OpenApiService {
               ((tx.outputs ?? []) as any[]).forEach((out, oi) => {
                 pendingOutputs.set(`${txid}:${oi}`, {
                   amount: BigInt(out?.value ?? 0),
-                  scriptHex: scriptToHex(out?.scriptPublicKey)
+                  scriptHex: scriptHexOf(out?.scriptPublicKey)
                 });
               });
             }
@@ -1655,10 +1674,15 @@ export class OpenApiService {
                 address: t.address
               });
             } else if (sawPendingTx && !pendingIdComputed) {
-              // There were pending transactions but not one tx id could be computed: that is our wasm
-              // tooling failing, not evidence the input is bogus, so fail open rather than block a
-              // legitimate chained spend. An *empty* mempool is not this case - see the else below.
-              log.warn('[verifyPsktInputs] could not compute pending tx ids - failing open for unresolved inputs');
+              // There were pending transactions but not one tx id could be computed: our wasm tooling
+              // could not identify them, so the unresolved inputs cannot be confirmed as pending outputs.
+              // Fail closed: an unverified chained spend is refused rather than signed blind.
+              log.warn('[verifyPsktInputs] could not compute pending tx ids - failing closed for unresolved inputs');
+              unresolved.forEach((t) => {
+                if (!reasons.some((r) => r.includes(t.key))) {
+                  reasons.push(`Input #${t.index} (${t.key}) could not be verified (pending tx id computation failed).`);
+                }
+              });
             } else {
               // The node is reachable and answered both queries: this outpoint is neither a confirmed
               // unspent output nor one produced by a pending transaction here, so it does not exist on
@@ -1668,11 +1692,13 @@ export class OpenApiService {
             }
           }
         } catch (e) {
-          // The node answered the UTXO query but not the mempool query: fail open for the unresolved inputs.
-          log.warn('[verifyPsktInputs] mempool query failed - failing open for unresolved inputs:', e);
+          // The node answered the UTXO query but not the mempool query: the unresolved inputs are
+          // neither confirmed nor verifiably pending, so they are refused. Fail-closed here keeps the
+          // cross-network vector closed when only the mempool half of the check is reachable.
+          log.warn('[verifyPsktInputs] mempool query failed - failing closed for unresolved inputs:', e);
           unresolved.forEach((t) => {
             if (!reasons.some((r) => r.includes(t.key))) {
-              log.warn(`[verifyPsktInputs] input #${t.index} (${t.key}) unverified (mempool unavailable)`);
+              reasons.push(`Input #${t.index} (${t.key}) could not be verified (mempool unavailable).`);
             }
           });
         }
@@ -1680,11 +1706,31 @@ export class OpenApiService {
 
       return { ok: reasons.length === 0, reasons, verified };
     } catch (e) {
-      // Any RPC/shape error fails open: a node problem must not brick signing (see the method note).
-      log.warn('[verifyPsktInputs] verification errored - failing open:', e);
-      return { ok: true, reasons: [], verified };
+      // Any RPC/shape error fails closed: if we cannot confirm the inputs exist on this network with the
+      // right amount and script, we must not sign. A node problem is a refusal, not a pass.
+      log.warn('[verifyPsktInputs] verification errored - failing closed:', e);
+      return { ok: false, reasons: ['Input verification failed: the active network node did not respond.'], verified };
     }
   }
+
+  /**
+   * Inputs whose `utxo.address` label disagrees with the script the signature actually commits to.
+   * The label is not part of the sighash, so a requester can set it without invalidating the
+   * signature; it drives what the approval screen shows for that input and whether an output counts
+   * as change. Shared with `signPskt`, which refuses such a request at signing time.
+   */
+  findPsktInputLabelMismatches = (pskt: Transaction, networkId = preferenceService.getNetworkId()) => {
+    const mismatches: { index: number; claimed: string; actual: string }[] = [];
+    pskt.inputs.forEach((input, index) => {
+      const claimed = input.utxo?.address?.toString() || '';
+      const spk = input.utxo?.scriptPublicKey;
+      if (!claimed || !spk) return;
+      const actual = addressFromScriptPublicKey(spk, networkId)?.toString() ?? '';
+      if (!actual || addressPaysScript(claimed, spk)) return;
+      mismatches.push({ index, claimed, actual });
+    });
+    return mismatches;
+  };
 
   async decodePskt(psktJsonString: string, options?: SignPsktOptions): Promise<DecodedPskt> {
     const pskt = Transaction.deserializeFromSafeJSON(psktJsonString) as Transaction;
@@ -1702,17 +1748,20 @@ export class OpenApiService {
 
     // Include ALL inputs for full transaction visibility, marking each
     // with isToSign to indicate whether this wallet needs to sign it.
-    // For P2SH (covenant) UTXOs, utxo.address is empty — fall back to
-    // deriving the address from scriptPublicKey.
+    //
+    // The address shown per input is derived from `scriptPublicKey`, and `utxo.address` is only a
+    // fallback for inputs whose script yields no address. That string is the one input field a PSKT
+    // can fake without invalidating the signature - it is not part of the sighash - and it drives
+    // both the Balance Change figure and the change-output classification, so a lie there hides a
+    // spend: the script is what the chain enforces, the label is only what the user reads.
+    // P2SH (covenant) UTXOs carry no `utxo.address` at all, so this is also the shorter path.
     const inputInfos = pskt.inputs.map((input, index) => {
       const txid = input.utxo?.entry.outpoint.transactionId || '';
       const vout = 0;
-      const address =
-        input.utxo?.address?.toString() ||
-        (input.utxo?.scriptPublicKey
-          ? addressFromScriptPublicKey(input.utxo.scriptPublicKey, networkId)?.toString()
-          : '') ||
-        '';
+      const claimedAddress = input.utxo?.address?.toString() || '';
+      const utxoSpk = input.utxo?.scriptPublicKey;
+      const scriptAddress = utxoSpk ? addressFromScriptPublicKey(utxoSpk, networkId)?.toString() ?? '' : '';
+      const address = scriptAddress || claimedAddress;
       const value = Number(sompiToAmount(input.utxo?.amount || BigInt(0), 8));
       const isToSign = !hasSignInputOptions || signInputMap.has(index);
       const sighashType = signInputMap.get(index) ?? 0;
@@ -1732,8 +1781,8 @@ export class OpenApiService {
                   ? scriptData.slice(2)
                   : scriptData
                 : scriptData instanceof Uint8Array
-                ? Buffer.from(scriptData).toString('hex')
-                : null;
+                  ? Buffer.from(scriptData).toString('hex')
+                  : null;
             if (scriptHex) {
               scriptType = isScriptPayToScriptHash(scriptHex) ? 'p2sh' : 'p2pk';
             }
@@ -1757,7 +1806,11 @@ export class OpenApiService {
       };
     });
 
-    // Verify the inputs we will sign against the active network's node (non-mainnet only; fails open when
+    // A disagreeing label is a deliberate lie by the request's author, not a display quirk: it is
+    // raised as 'high' below, and signPskt refuses the same request at signing time.
+    const addressMismatches = this.findPsktInputLabelMismatches(pskt, networkId);
+
+    // Verify the inputs we will sign against the active network's node (non-mainnet only; fails closed when
     // the node is unreachable). A failure raises a 'high' risk below, which hides Sign in the approval
     // screen; a success lets the window show the node's own amount/address per input rather than the
     // site's (#3), so a doctored `utxo.amount` cannot understate what the signature actually spends.
@@ -1892,9 +1945,9 @@ export class OpenApiService {
     const feeSompi = isPartial
       ? ''
       : String(
-          pskt.inputs.reduce((sum, i) => sum + (i.utxo?.amount ?? BigInt(0)), BigInt(0)) -
+        pskt.inputs.reduce((sum, i) => sum + (i.utxo?.amount ?? BigInt(0)), BigInt(0)) -
             pskt.outputs.reduce((sum, o) => sum + BigInt(o.value), BigInt(0))
-        );
+      );
 
     // --- Spoofing detection ---
     // Detect "change address spoofing" attacks where a malicious dApp
@@ -1907,6 +1960,17 @@ export class OpenApiService {
     // A network-verification failure is the cross-network/tamper signal (#1): 'high' hides Sign, so the
     // user cannot approve a signature over an output that is not unspent on the network they are on.
     netVerify.reasons.forEach((reason) => risks.push({ level: 'high', desc: reason }));
+    // A faked input address is the one lie the signature cannot catch, so it is refused rather than
+    // corrected: 'high' hides Sign. The screen already shows the script-derived address, which is
+    // why this is a separate signal and not a silent fix.
+    addressMismatches.forEach((m) =>
+      risks.push({
+        level: 'high',
+        desc:
+          `Input #${m.index} is labeled ${m.claimed}, but the script it spends pays ${m.actual}. ` +
+          'The label is not covered by the signature, so it cannot be trusted.'
+      })
+    );
     const nonChangeOutputs = outputInfos.filter((o) => o && !o.isChange && o.value > 0);
     const changeOutputs = outputInfos.filter((o) => o && o.isChange);
 

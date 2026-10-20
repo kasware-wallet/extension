@@ -876,9 +876,20 @@ export class WalletController extends BaseController {
     }
 
     // #1 cross-network re-check right before signing, for a dApp request only. The helper is non-mainnet
-    // scoped and fails open when the node is unreachable, so mainnet signing and the wallet's own covenant
+    // scoped and fails closed when the node is unreachable, so mainnet signing and the wallet's own covenant
     // flows (which pass no dappContext) are untouched.
     if (dappContext) {
+      // The per-input `address` label is not covered by the signature - only the script is. `decodePskt`
+      // already hides Sign when a label disagrees with its script; refusing here too means the verdict
+      // holds at the point the signature is produced, not only on the approval screen. The wallet's own
+      // covenant flows pass no dappContext and are untouched.
+      const labelMismatches = openapiService.findPsktInputLabelMismatches(pskt);
+      if (labelMismatches.length > 0) {
+        const m = labelMismatches[0];
+        throw new Error(
+          `signPskt: input #${m.index} is labeled ${m.claimed}, but the script it spends pays ${m.actual}`
+        );
+      }
       const signIndices = options?.signInputs ? options.signInputs.map((i) => i.index) : pskt.inputs.map((_, i) => i);
       const netVerify = await openapiService.verifyPsktInputsOnActiveNetwork(pskt, signIndices);
       if (!netVerify.ok) {
