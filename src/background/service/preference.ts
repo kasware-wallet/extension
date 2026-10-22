@@ -374,6 +374,7 @@ class PreferenceService {
     if (!this.store.rpcLinks['testnet-11']) this.store.rpcLinks['testnet-11'] = NETWORK_TYPES['testnet-11'];
     if (!this.store.rpcLinks['testnet-10']) this.store.rpcLinks['testnet-10'] = NETWORK_TYPES['testnet-10'];
     if (!this.store.rpcLinks['devnet']) this.store.rpcLinks['devnet'] = NETWORK_TYPES['devnet'];
+    if (!this.store.rpcLinks['simnet']) this.store.rpcLinks['simnet'] = NETWORK_TYPES['simnet'];
     if (this.store.currentAccount) {
       if (!this.store.currentAccount.pubkey) {
         // old version.

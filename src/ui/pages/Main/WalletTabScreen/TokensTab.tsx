@@ -29,6 +29,11 @@ export default function TokensTab() {
   const currentNetworkType = useAppSelector(selectNetworkType);
   const dispatch = useAppDispatch();
   const tokensTabKey = useAppSelector(selectTokensTabKey);
+  // Devnet and simnet are local development networks with no Kasplex indexer.
+  // Only the native KAS coin is shown and sendable.
+  if (currentNetworkType === NetworkType.Devnet || currentNetworkType === NetworkType.Simnet) {
+    return <KaspaOnlyTokenView />;
+  }
   if (currentNetworkType !== NetworkType.Mainnet && currentNetworkType !== NetworkType.Testnet) {
     return (
       <Row justifyCenter>
@@ -53,6 +58,40 @@ export default function TokensTab() {
     </>
   );
 }
+/**
+ * KAS-only token view for devnet/simnet.
+ *
+ * These networks run a local node with no Kasplex indexer, so the only asset
+ * the wallet can display and transfer is the native KAS coin. The regular
+ * KRC20Tab pulls KRC20 inscriptions from an indexer that does not exist here,
+ * so it renders a single KAS balance card instead.
+ */
+function KaspaOnlyTokenView() {
+  const accountBalance = useAppSelector((s) => selectAccountBalance(s, undefined));
+  const kasTick = useAppSelector(selectKasTick);
+
+  const kaspaItem = useMemo(
+    () => ({
+      tokenType: 'KAS' as TTokenType,
+      tick: kasTick,
+      priceInKas: 1,
+      balance: amountToSompi(accountBalance?.amount, 8),
+      locked: '0',
+      dec: '8',
+      opScoreMod: '0'
+    }),
+    [accountBalance?.amount, kasTick]
+  );
+
+  if (!kaspaItem.tick) return null;
+
+  return (
+    <div>
+      <KRC20Card inscription={kaspaItem} key="kaspa" />
+    </div>
+  );
+}
+
 function KRC20Tab() {
   const accountInscriptions = useAppSelector(selectAccountInscriptions);
   const [inputText, setInputText] = useState('');

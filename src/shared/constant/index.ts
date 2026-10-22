@@ -133,7 +133,7 @@ export const ADDRESS_TYPES: {
     value: AddressType.KASPA_44_111111,
     label: 'KASPA Default',
     name: 'Default',
-    hdPath: "m/44'/111111'/0'",
+    hdPath: 'm/44\'/111111\'/0\'',
     displayIndex: 0,
     isKaswareLegacy: false
   },
@@ -141,7 +141,7 @@ export const ADDRESS_TYPES: {
     value: AddressType.KASPA_44_972,
     label: 'KASPA Legacy',
     name: 'Legacy',
-    hdPath: "m/44'/972/0'",
+    hdPath: 'm/44\'/972/0\'',
     displayIndex: 1,
     isKaswareLegacy: false
   },
@@ -149,7 +149,7 @@ export const ADDRESS_TYPES: {
     value: AddressType.KASPA_ONEKEY_44_111111,
     label: 'OneKey',
     name: 'Onekey',
-    hdPath: "m/44'/111111'/0'",
+    hdPath: 'm/44\'/111111\'/0\'',
     displayIndex: 0,
     isKaswareLegacy: false
   },
@@ -157,7 +157,7 @@ export const ADDRESS_TYPES: {
     value: AddressType.KASPA_TANGEM_44_111111,
     label: 'Tangem',
     name: 'ECDSA',
-    hdPath: "m/44'/111111'/0'",
+    hdPath: 'm/44\'/111111\'/0\'',
     displayIndex: 0,
     isKaswareLegacy: false
   },
@@ -165,13 +165,13 @@ export const ADDRESS_TYPES: {
     value: AddressType.KASPA_CHAINGE_44_111111_0_0,
     label: 'Chainge',
     name: 'Chainge',
-    hdPath: "m/44'/111111'/0'/0'",
+    hdPath: 'm/44\'/111111\'/0\'/0\'',
     displayIndex: 0,
     isKaswareLegacy: false
   }
 ];
 
-export const OW_HD_PATH = "m/86'/0'/0'";
+export const OW_HD_PATH = 'm/86\'/0\'/0\'';
 
 export enum DeriveType {
   RECEIVE,
@@ -277,10 +277,15 @@ export const OPENAPI_URL_MAP: Partial<Record<TNetworkId, string>> = {
   ['testnet-12']: OPENAPI_URL_TESTNET_12,
   ['testnet-11']: OPENAPI_URL_TESTNET_11,
   ['testnet-10']: OPENAPI_URL_TESTNET_10,
-  ['devnet']: OPENAPI_URL_DEVNET
+  ['devnet']: OPENAPI_URL_DEVNET,
+  // Simnet runs a local node with no public REST indexer. KRC20 is disabled
+  // on this network, so the host is only a placeholder to keep the maps keyed
+  // identically.
+  ['simnet']: OPENAPI_URL_DEVNET
 };
 
 export const OPENAPI_RPC_DEVNET = 'ws://127.0.0.1:17610';
+export const OPENAPI_RPC_SIMNET = 'ws://127.0.0.1:17510';
 export const KSPR_KRC721_MAINNET = 'https://mainnet.krc721.stream/api/v1/krc721/mainnet';
 export const KSPR_KRC721_TESTNET_12 = 'https://testnet-12.krc721.stream/api/v1/krc721/testnet-12';
 export const KSPR_KRC721_TESTNET_11 = 'https://testnet-11.krc721.stream/api/v1/krc721/testnet-11';
@@ -295,7 +300,9 @@ export const KASPLEX_URL_MAP: Partial<Record<TNetworkId, string>> = {
   ['testnet-12']: KASPLEX_TESTNET_12,
   ['testnet-11']: KASPLEX_TESTNET_11,
   ['testnet-10']: KASPLEX_TESTNET_10,
-  ['devnet']: KASPLEX_DEVNET
+  ['devnet']: KASPLEX_DEVNET,
+  // Placeholder: simnet has no Kasplex indexer (KRC20 is disabled here).
+  ['simnet']: KASPLEX_DEVNET
 };
 
 // Fallback Kasplex API hosts used when primary hosts are unreachable
@@ -319,7 +326,7 @@ export const KNS_API_TESTNET_12 = 'https://api.knsdomains.org/tn12/api/v1';
 export const KNS_API_DEVNET = 'https://api.knsdomains.org/tn10/api/v1';
 
 export const NETWORK_TYPES: {
-  [networkId in 'mainnet' | 'testnet-12' | 'testnet-11' | 'testnet-10' | 'devnet']: INetworkType;
+  [networkId in 'mainnet' | 'testnet-12' | 'testnet-11' | 'testnet-10' | 'devnet' | 'simnet']: INetworkType;
 } = {
   mainnet: {
     value: NetworkType.Mainnet,
@@ -370,15 +377,17 @@ export const NETWORK_TYPES: {
     url: OPENAPI_RPC_DEVNET,
     isResolver: true,
     resolverUrls: []
+  },
+  simnet: {
+    value: NetworkType.Simnet,
+    label: 'Simnet',
+    id: 'simnet',
+    name: 'kaspa_simnet',
+    validNames: ['kaspa_simnet'],
+    url: OPENAPI_RPC_SIMNET,
+    isResolver: true,
+    resolverUrls: []
   }
-  // {
-  //   value: NetworkType.Simnet,
-  //   id: 'simnet',
-  //   label: 'Simnet',
-  //   name: 'kaspa_simnet',
-  //   validNames: ['kaspa_simnet'],
-  //   url: ''
-  // }
   // { value: NetworkType.MAINNET, label: 'LIVENET', name: 'livenet', validNames: [0, 'livenet', 'mainnet'] },
   // { value: NetworkType.TESTNET, label: 'TESTNET', name: 'testnet', validNames: ['testnet'] }
 };

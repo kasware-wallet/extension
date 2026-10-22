@@ -95,9 +95,14 @@ export const selectNetworkId = createSelector([selectSettings], (settings) => se
 export const selectKasTick = createSelector([selectNetworkType], (networkType) => {
   if (networkType === NetworkType.Mainnet) {
     return 'KAS';
-  } else {
-    return 'TKAS';
   }
+  if (networkType === NetworkType.Devnet) {
+    return 'DKAS';
+  }
+  if (networkType === NetworkType.Simnet) {
+    return 'SKAS';
+  }
+  return 'TKAS';
 });
 export const selectBlockstreamUrl = createSelector([selectNetworkId], (networkId) => {
   return getKaspaExplorerUrl(networkId);

@@ -25,6 +25,12 @@ export default function ActivityTab() {
   const dispatch = useAppDispatch();
   const activityTabKey = useActivityTabKey();
   const currentNetworkType = useAppSelector(selectNetworkType);
+  // Devnet and simnet have no Kasplex indexer, so only native KAS activity
+  // (from the Kaspa RPC) is available. Render the KAS list directly with no
+  // sub-tab selector.
+  if (currentNetworkType === NetworkType.Devnet || currentNetworkType === NetworkType.Simnet) {
+    return <KASActivityTab />;
+  }
   if (currentNetworkType !== NetworkType.Mainnet && currentNetworkType !== NetworkType.Testnet) {
     return (
       <Row justifyCenter>

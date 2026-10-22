@@ -140,6 +140,8 @@ export function getKasplexHost(networkId: TNetworkId): string {
     return KASPLEX_TESTNET_10;
   } else if (networkId === 'devnet') {
     return KASPLEX_TESTNET_10;
+  } else if (networkId === 'simnet') {
+    return KASPLEX_TESTNET_10;
   } else {
     return KASPLEX_MAINNET;
   }

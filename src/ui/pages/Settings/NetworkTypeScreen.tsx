@@ -15,10 +15,10 @@ import { selectNetworkId } from '@/ui/state/settings/reducer';
 import { useWallet } from '@/ui/utils';
 import { CheckCircleFilled, SettingOutlined } from '@ant-design/icons';
 
-import { useNavigate } from '../MainRoute';
-import { AHOOK_CACHE_KEY } from '@/ui/utils/constants';
 import { selectCurrentAccount } from '@/ui/state/accounts/reducer';
+import { AHOOK_CACHE_KEY } from '@/ui/utils/constants';
 import { clearCache } from 'ahooks';
+import { useNavigate } from '../MainRoute';
 
 export default function NetworkTypeScreen() {
   const networkId = useAppSelector(selectNetworkId);
@@ -62,6 +62,13 @@ export default function NetworkTypeScreen() {
     }
     return NETWORK_TYPES['devnet'];
   }, [currentRpcLinks]);
+  const itemSimnet = useMemo(() => {
+    const res = currentRpcLinks['simnet'];
+    if (res) {
+      return res;
+    }
+    return NETWORK_TYPES['simnet'];
+  }, [currentRpcLinks]);
   const ForwardMyItem = forwardRef(MyItem);
   const [rpcUrl, setRpcUrl] = useState<string | undefined>('');
   useEffect(() => {
@@ -90,7 +97,7 @@ export default function NetworkTypeScreen() {
         </Column>
         <VirtualList
           // data={items}
-          data={[itemMainnet, itemTest10, itemTest11, itemDevnet]}
+          data={[itemMainnet, itemTest10, itemTest11, itemDevnet, itemSimnet]}
           data-id="list"
           itemHeight={30}
           itemKey={(item) => item.id}

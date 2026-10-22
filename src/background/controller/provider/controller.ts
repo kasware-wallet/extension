@@ -90,6 +90,9 @@ class ProviderController extends BaseController {
       } else if (NETWORK_TYPES['devnet'].validNames.includes(network)) {
         req.data.params.networkType = NetworkType.Devnet;
         req.data.params.networkId = 'devnet';
+      } else if (NETWORK_TYPES['simnet'].validNames.includes(network)) {
+        req.data.params.networkType = NetworkType.Simnet;
+        req.data.params.networkId = 'simnet';
       } else {
         throw new Error(
           `the network is invalid, supported networks: ${Object.values(NETWORK_TYPES)

@@ -669,7 +669,8 @@ export function getNetworkShortLabel(networkId: TNetworkId): string | null {
     'testnet-10': 'TN10',
     'testnet-11': 'TN11',
     'testnet-12': 'TN12',
-    devnet: 'DEV'
+    devnet: 'DEV',
+    simnet: 'SIM'
   };
   return labels[networkId] ?? null;
 }

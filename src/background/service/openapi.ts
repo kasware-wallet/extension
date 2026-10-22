@@ -815,18 +815,21 @@ export class OpenApiService {
     if (this.rpc != null && this.rpc != undefined && this.rpc.isConnected == false) {
       this.rpc = null as unknown as RpcClient;
     }
-    if (networkId === 'devnet') {
+    // Devnet and simnet connect to a fixed local node, never through the
+    // resolver and never URL-cached. The RpcClient is built with the actual
+    // networkId so kaspa-wasm applies the right address prefix.
+    if (networkId === 'devnet' || networkId === 'simnet') {
       if (this.store.rpchost) {
         this.rpc = new RpcClient({
           url: this.store.rpchost,
           encoding: this.encoding,
-          networkId: 'devnet'
+          networkId
         });
       } else {
         this.rpc = new RpcClient({
           url: '127.0.0.1',
           encoding: this.encoding,
-          networkId: 'devnet'
+          networkId
         });
       }
     } else {
